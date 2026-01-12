@@ -84,20 +84,26 @@ const LandingPage = () => {
 
   const minAreaOptions = [
     { value: '', label: t('landing.anyArea', { defaultValue: 'Any size' }) },
-    { value: '25', label: '25 m2+' },
-    { value: '50', label: '50 m2+' },
-    { value: '75', label: '75 m2+' },
-    { value: '100', label: '100 m2+' },
-    { value: '150', label: '150 m2+' },
+    { value: '25', label: '25 m²\u00A0\u00A0+' },
+    { value: '50', label: '50 m²\u00A0\u00A0+' },
+    { value: '75', label: '75 m²\u00A0\u00A0+' },
+    { value: '100', label: '100 m²\u00A0\u00A0+' },
+    { value: '150', label: '150 m²\u00A0\u00A0+' },
   ];
 
   const vicinityOptions = [
-    { value: '', label: t('landing.anyVicinity', { defaultValue: 'Any vicinity' }) },
-    { value: '2', label: t('landing.vicinityWithin', { defaultValue: 'Within {{distance}} km', distance: 2 }) },
-    { value: '5', label: t('landing.vicinityWithin', { defaultValue: 'Within {{distance}} km', distance: 5 }) },
-    { value: '10', label: t('landing.vicinityWithin', { defaultValue: 'Within {{distance}} km', distance: 10 }) },
-    { value: '20', label: t('landing.vicinityWithin', { defaultValue: 'Within {{distance}} km', distance: 20 }) },
+    { value: '2', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 1 }) },
+    { value: '5', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 5 }) },
+    { value: '10', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 10 }) },
+    { value: '20', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 20 }) },
   ];
+
+  const vicinityStepIndex = Math.max(
+    0,
+    vicinityOptions.findIndex((option) => option.value === filters.vicinity)
+  );
+  const vicinityMax = Math.max(1, vicinityOptions.length - 1);
+  const vicinityPercent = Math.round((vicinityStepIndex / vicinityMax) * 100);
 
   useEffect(() => {
     fetchProperties();
@@ -437,7 +443,7 @@ const LandingPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
-                          {t('landing.minArea', { defaultValue: 'Minimum Area (m2)' })}
+                          {t('landing.minArea', { defaultValue: 'Minimum Area (m²)' })}
                         </label>
                         <Select
                           name="min_area"
@@ -452,14 +458,30 @@ const LandingPage = () => {
                         <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
                           {t('landing.vicinity', { defaultValue: 'Vicinity' })}
                         </label>
-                        <Select
-                          name="vicinity"
-                          value={filters.vicinity}
-                          onChange={(e) => handleFilterChange('vicinity', e.target.value)}
-                          options={vicinityOptions}
-                          placeholder={t('landing.anyVicinity', { defaultValue: 'Any vicinity' })}
-                          className="w-full"
-                        />
+                        <div className="w-full px-1 py-1">
+                          <input
+                            type="range"
+                            min="0"
+                            max={vicinityOptions.length - 1}
+                            step="1"
+                            value={vicinityStepIndex}
+                            onChange={(e) => {
+                              const nextIndex = Number(e.target.value);
+                              const nextValue = vicinityOptions[nextIndex]?.value ?? '';
+                              handleFilterChange('vicinity', nextValue);
+                            }}
+                            aria-label={t('landing.vicinity', { defaultValue: 'Vicinity' })}
+                            className="vicinity-slider w-full"
+                            style={{ '--vicinity-progress': `${vicinityPercent}%` }}
+                          />
+                          <div className="mt-2 flex justify-between text-[11px] font-semibold text-gray-600 sm:text-xs">
+                            {vicinityOptions.map((option) => (
+                              <span key={option.value || 'any'} className="text-center">
+                                {option.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
