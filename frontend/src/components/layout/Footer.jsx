@@ -13,10 +13,10 @@ const Footer = () => {
   return (
     <footer className="bg-propertree-dark text-propertree-cream-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
               <img src="/logo.jpg" alt="Propertree" className="h-10 w-auto object-contain" />
               <span className="text-xl font-bold text-white">Propertree</span>
             </div>
@@ -76,7 +76,7 @@ const Footer = () => {
           {/* Social */}
           <div>
             <h3 className="text-white font-semibold mb-4">{t('footer.socialMedia')}</h3>
-            <div className="flex space-x-4">
+            <div className="flex justify-center md:justify-start space-x-4">
               <a href="#" className="hover:text-propertree-green transition-colors" aria-label="Facebook">
                 <Facebook className="w-6 h-6" />
               </a>
@@ -102,4 +102,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

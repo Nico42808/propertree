@@ -43,7 +43,17 @@
 @layer components {
   /* Landing hero: shift background up so map pins don't sit behind the filter card on common laptop viewports */
   .landing-hero {
+    --landing-hero-bg: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url('/new2.png');
+    background-size: cover;
+    background-repeat: no-repeat;
     background-position: center calc(-1 * clamp(70px, 10vh, 160px));
+  }
+
+  @media (max-width: 767px) {
+    .landing-hero {
+      --landing-hero-bg: linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url('/landing-bg.jpg');
+      background-position: center;
+    }
   }
 
   @media (min-width: 768px) {

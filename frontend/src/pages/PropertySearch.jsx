@@ -81,8 +81,8 @@ const PropertySearch = () => {
   return (
     <Container className="py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-propertree-dark">Browse Properties</h1>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-propertree-dark">Browse Properties</h1>
         <p className="text-gray-600 mt-2">Find your perfect rental property</p>
       </div>
 
@@ -101,7 +101,7 @@ const PropertySearch = () => {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Input
                 type="number"
                 placeholder="Min Price"
@@ -126,7 +126,7 @@ const PropertySearch = () => {
                 value={filters.guests}
                 onChange={(e) => setFilters({ ...filters, guests: e.target.value })}
               />
-              <Button type="submit" variant="primary" className="w-full">
+              <Button type="submit" variant="primary" className="w-full sm:col-span-2 lg:col-span-1">
                 Search
               </Button>
             </div>
@@ -155,7 +155,7 @@ const PropertySearch = () => {
           actionLabel="Clear Filters"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredProperties.map((property) => (
             <Link key={property.id} to={`/properties/${property.id}`}>
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">

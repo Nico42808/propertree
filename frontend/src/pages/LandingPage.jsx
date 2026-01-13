@@ -321,9 +321,7 @@ const LandingPage = () => {
       <section
         className="landing-hero relative flex flex-col min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] text-propertree-green-800"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url('/new2.png')`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
+          backgroundImage: 'var(--landing-hero-bg)',
           backgroundBlendMode: 'soft-light',
         }}
       >
@@ -342,48 +340,48 @@ const LandingPage = () => {
         </div>
 
         {/* Bottom filters area */}
-        <div className="pb-4 md:pb-6">
+        <div className="pb-2 sm:pb-4 md:pb-6">
           <Container>
-            <div className="bg-white rounded-2xl shadow-2xl p-3 sm:p-4 md:p-5 max-w-6xl mx-auto border border-gray-200">
+            <div className="bg-white rounded-2xl shadow-2xl p-2 sm:p-4 md:p-5 max-w-6xl mx-auto border border-gray-200">
               <form onSubmit={handleSearch} className="">
                   {/* Term toggles like the reference */}
-                  <div className="mb-4">
-                    <div className="bg-gray-100/90 rounded-full p-1.5 border border-gray-200 shadow-inner">
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  <div className="mb-2 sm:mb-4">
+                    <div className="bg-gray-100/90 rounded-full p-0.5 sm:p-1.5 border border-gray-200 shadow-inner">
+                      <div className="grid grid-cols-3 gap-1 sm:gap-2">
                         <button
                           type="button"
                           onClick={() => handleTermSelect('short')}
-                          className={`py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'short' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
+                          className={`py-1 sm:py-2.5 rounded-full text-[10px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'short' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
                         >
                           {t('landing.shortTerm', { defaultValue: 'Short-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('mid')}
-                          className={`py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
+                          className={`py-1 sm:py-2.5 rounded-full text-[10px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
                         >
                           {t('landing.midTerm', { defaultValue: 'Mid-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('long')}
-                          className={`py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'long' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
+                          className={`py-1 sm:py-2.5 rounded-full text-[10px] sm:text-sm md:text-base font-semibold transition-all whitespace-nowrap ${term === 'long' ? 'bg-propertree-green text-white shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
                         >
                           {t('landing.longTerm', { defaultValue: 'Long-term' })}
                         </button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] sm:text-[11px] text-gray-500 text-center mt-1">
+                    <div className="hidden sm:grid grid-cols-3 gap-2 px-1.5 text-[11px] text-gray-500 text-center mt-1">
                       <span>{t('landing.shortTermHint', { defaultValue: 'Nights to a few weeks' })}</span>
                       <span>{t('landing.midTermHint', { defaultValue: '1-11 months stays' })}</span>
                       <span>{t('landing.longTermHint', { defaultValue: '12+ months rental contracts' })}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-1 sm:gap-2 items-end">
                     {/* City */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1 sm:mb-2 text-left">
                         {t('landing.city')}
                       </label>
                       <Select
@@ -398,7 +396,7 @@ const LandingPage = () => {
 
                     {/* Property Type */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1 sm:mb-2 text-left">
                         {t('landing.propertyType')}
                       </label>
                       <Select
@@ -413,7 +411,7 @@ const LandingPage = () => {
 
                     {/* Guests */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1 sm:mb-2 text-left">
                         {t('landing.guests')}
                       </label>
                       <Select
@@ -431,7 +429,7 @@ const LandingPage = () => {
                         type="submit"
                         variant="primary"
                         size="lg"
-                        className="w-full h-11 sm:h-12 whitespace-nowrap"
+                        className="w-full h-9 sm:h-12 whitespace-nowrap"
                         disabled={searchLoading}
                       >
                         {searchLoading ? t('landing.searching') : 'Show offers'}
@@ -440,9 +438,9 @@ const LandingPage = () => {
                   </div>
 
                   {(term === 'mid' || term === 'long') && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2 mt-2 sm:mt-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
+                        <label className="block text-xs font-semibold text-gray-600 mb-1 sm:mb-2 text-left">
                           {t('landing.minArea', { defaultValue: 'Minimum Area (m²)' })}
                         </label>
                         <Select
@@ -455,7 +453,7 @@ const LandingPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-2 text-left">
+                        <label className="block text-xs font-semibold text-gray-600 mb-1 sm:mb-2 text-left">
                           {t('landing.vicinity', { defaultValue: 'Vicinity' })}
                         </label>
                         <div className="w-full px-1 py-1">
@@ -474,7 +472,7 @@ const LandingPage = () => {
                             className="vicinity-slider w-full"
                             style={{ '--vicinity-progress': `${vicinityPercent}%` }}
                           />
-                          <div className="mt-2 flex justify-between text-[11px] font-semibold text-gray-600 sm:text-xs">
+                          <div className="mt-1 sm:mt-2 flex justify-between text-[11px] font-semibold text-gray-600 sm:text-xs">
                             {vicinityOptions.map((option) => (
                               <span key={option.value || 'any'} className="text-center">
                                 {option.label}

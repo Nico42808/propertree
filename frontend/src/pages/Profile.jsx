@@ -227,7 +227,7 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h1>
           <p className="mt-2 text-gray-600">
             Manage your personal information and preferences
           </p>
@@ -240,13 +240,13 @@ const Profile = () => {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Profile Header with Photo */}
-          <div className="relative bg-gradient-to-r from-primary to-primary-dark h-32"></div>
+          <div className="relative bg-gradient-to-r from-primary to-primary-dark h-28 sm:h-32"></div>
 
           <div className="relative px-6 pb-6">
             {/* Profile Photo */}
-            <div className="absolute -top-16 left-6">
+            <div className="absolute -top-12 sm:-top-16 left-1/2 -translate-x-1/2 sm:left-6 sm:translate-x-0">
               <div className="relative">
-                <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden">
                   {photoUrl ? (
                     <img
                       src={photoUrl}
@@ -264,13 +264,13 @@ const Profile = () => {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingPhoto}
-                  className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 sm:p-2 shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   type="button"
                 >
                   {uploadingPhoto ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-primary"></div>
                   ) : (
-                    <Camera className="w-5 h-5 text-gray-600" />
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   )}
                 </button>
 
@@ -285,25 +285,25 @@ const Profile = () => {
             </div>
 
             {/* Edit/Save Button */}
-            <div className="pt-20 flex justify-end mb-4">
+            <div className="pt-16 sm:pt-20 flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 mb-4">
               {!isEditing ? (
                 <button
                   onClick={() => {
                     setIsEditing(true);
                     console.log('Edit mode enabled');
                   }}
-                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium"
+                  className="flex items-center justify-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium w-full sm:w-auto"
                   type="button"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit Profile
                 </button>
               ) : (
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                   <button
                     onClick={handleCancel}
                     type="button"
-                    className="flex items-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    className="flex items-center justify-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium w-full sm:w-auto"
                   >
                     <X className="w-4 h-4" />
                     Cancel
@@ -312,7 +312,7 @@ const Profile = () => {
                     onClick={formik.handleSubmit}
                     disabled={formik.isSubmitting}
                     type="button"
-                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-md font-medium"
+                    className="flex items-center justify-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-md font-medium w-full sm:w-auto"
                   >
                     <Save className="w-4 h-4" />
                     {formik.isSubmitting ? 'Saving...' : 'Save Changes'}

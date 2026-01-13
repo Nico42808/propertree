@@ -237,8 +237,8 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+        <div className="md:hidden border-t border-gray-200 bg-white">
+          <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto px-2 pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
                 <Link
