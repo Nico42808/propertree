@@ -3,11 +3,14 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Card, Badge, Alert } from '../../../components/common';
-import { Check, AlertCircle } from 'lucide-react';
+import { Alert } from '../../../components/common';
+import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatters';
+import { useAuth } from '../../../hooks';
 
 const ReviewStep = ({ formData }) => {
+  const { isAdmin } = useAuth();
+  const isAdminUser = isAdmin();
   const sections = [
     { title: 'Property Type', value: formData.property_type, key: 'property_type' },
     { title: 'Place Type', value: formData.place_type, key: 'place_type' },
@@ -31,14 +34,20 @@ const ReviewStep = ({ formData }) => {
   return (
     <div>
       <p className="text-gray-600 mb-6">
-        Review all information before submitting for approval
+        {isAdminUser
+          ? 'Review all information before creating the property'
+          : 'Review all information before submitting for approval'}
       </p>
 
       {!isComplete && (
         <Alert
           type="warning"
           title="Incomplete Information"
-          message="Please fill in all required fields before submitting"
+          message={
+            isAdminUser
+              ? 'Please fill in all required fields before creating the property'
+              : 'Please fill in all required fields before submitting'
+          }
           className="mb-6"
         />
       )}
@@ -52,20 +61,22 @@ const ReviewStep = ({ formData }) => {
         ))}
       </div>
 
-      <div className="p-6 bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-200 rounded-lg">
-        <div className="flex items-start space-x-3">
-          <AlertCircle className="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-rose-900 mb-2">
-              Awaiting Administrator Approval
-            </h3>
-            <p className="text-sm text-rose-800">
-              After submission, your property will be reviewed by our team. You will receive a 
-              notification when it's approved or if we need additional information.
-            </p>
+      {!isAdminUser && (
+        <div className="p-6 bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-rose-900 mb-2">
+                Awaiting Administrator Approval
+              </h3>
+              <p className="text-sm text-rose-800">
+                After submission, your property will be reviewed by our team. You will receive a 
+                notification when it's approved or if we need additional information.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -75,4 +86,3 @@ ReviewStep.propTypes = {
 };
 
 export default ReviewStep;
-

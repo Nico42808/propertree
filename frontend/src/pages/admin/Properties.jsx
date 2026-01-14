@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Home, Search, Filter, CheckCircle, XCircle, 
-  Eye, Clock, MapPin, Euro, Edit, Trash2, Plus, X
+  Eye, Clock, MapPin, Euro, Trash2, Plus, X
 } from 'lucide-react';
   import { formatCurrency } from '../../utils/formatters';
 import { useNavigate } from 'react-router-dom';
@@ -212,10 +212,6 @@ const Properties = () => {
     }
   };
 
-  const handleEdit = (propertyId) => {
-    navigate(`/admin/properties/${propertyId}/edit`);
-  };
-
   const getStatusBadge = (status) => {
     const statusMap = {
       pending_approval: { variant: 'warning', label: 'Pending' },
@@ -262,7 +258,7 @@ const Properties = () => {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Property Management</h1>
-          <p className="text-gray-600 mt-2">Review, approve, edit, or remove property listings</p>
+          <p className="text-gray-600 mt-2">Review, approve, or remove property listings</p>
         </div>
         <Button
           variant="primary"
@@ -480,15 +476,6 @@ const Properties = () => {
                             onClick={() => window.open(`/properties/${property.id}`, '_blank')}
                           >
                             View
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            leftIcon={<Edit />}
-                            onClick={() => handleEdit(property.id)}
-                          >
-                            Edit
                           </Button>
 
                           {property.status === 'pending_approval' && (

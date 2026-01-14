@@ -1,9 +1,10 @@
 /**
  * Host Onboarding - 11-step wizard for becoming a host
  */
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../hooks';
 import { Container } from '../../components/layout';
 import { Button, Card } from '../../components/common';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -21,22 +22,34 @@ import BookingApprovalStep from './onboarding/BookingApprovalStep';
 import HouseRulesStep from './onboarding/HouseRulesStep';
 import ReviewStep from './onboarding/ReviewStep';
 
-const STEPS = [
-  { id: 1, title: 'Property Type', component: PropertyTypeStep },
-  { id: 2, title: 'Place Type', component: PlaceTypeStep },
-  { id: 3, title: 'Property Information', component: PropertyInfoStep },
-  { id: 4, title: 'Address', component: AddressStep },
-  { id: 5, title: 'Photos', component: PhotosStep },
-  { id: 6, title: 'Amenities', component: AmenitiesStep },
-  { id: 7, title: 'Check-in/Check-out', component: CheckInOutStep },
-  { id: 8, title: 'Pricing', component: PricingStep },
-  { id: 9, title: 'Booking Approval', component: BookingApprovalStep },
-  { id: 10, title: 'House Rules', component: HouseRulesStep },
-  { id: 11, title: 'Review & Submit', component: ReviewStep },
+const BASE_STEPS = [
+  { key: 'propertyType', title: 'Property Type', component: PropertyTypeStep },
+  { key: 'placeType', title: 'Place Type', component: PlaceTypeStep },
+  { key: 'propertyInfo', title: 'Property Information', component: PropertyInfoStep },
+  { key: 'address', title: 'Address', component: AddressStep },
+  { key: 'photos', title: 'Photos', component: PhotosStep },
+  { key: 'amenities', title: 'Amenities', component: AmenitiesStep },
+  { key: 'checkInOut', title: 'Check-in/Check-out', component: CheckInOutStep },
+  { key: 'pricing', title: 'Pricing', component: PricingStep },
+  { key: 'bookingApproval', title: 'Booking Approval', component: BookingApprovalStep },
+  { key: 'houseRules', title: 'House Rules', component: HouseRulesStep },
+  { key: 'review', title: 'Review & Submit', component: ReviewStep },
 ];
 
 const HostOnboarding = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+  const isAdminUser = isAdmin();
+  const steps = useMemo(() => {
+    const filteredSteps = isAdminUser
+      ? BASE_STEPS.filter((step) => step.key !== 'bookingApproval')
+      : BASE_STEPS;
+    return filteredSteps.map((step, index) => ({
+      ...step,
+      title: isAdminUser && step.key === 'review' ? 'Review & Create' : step.title,
+      id: index + 1,
+    }));
+  }, [isAdminUser]);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Property ID (set after creation)
@@ -65,11 +78,10 @@ const HostOnboarding = () => {
     check_out_time: '11:00',
     // Step 8
     base_price: '',
-    cleaning_fee: 0,
     service_fee_percent: 10,
     currency: 'EUR',
     // Step 9
-    approval_type: 'landlord',  // Default to landlord approval
+    approval_type: isAdminUser ? 'admin' : 'landlord',
     // Step 10
     title: '',
     description: '',
@@ -81,11 +93,23 @@ const HostOnboarding = () => {
     maximum_stay: null,
   });
 
-  const currentStepComponent = STEPS.find(step => step.id === currentStep);
+  const currentStepComponent = steps.find(step => step.id === currentStep);
   const StepComponent = currentStepComponent?.component;
 
+  useEffect(() => {
+    if (isAdminUser && formData.approval_type !== 'admin') {
+      setFormData(prev => ({ ...prev, approval_type: 'admin' }));
+    }
+  }, [isAdminUser, formData.approval_type]);
+
+  useEffect(() => {
+    if (currentStep > steps.length) {
+      setCurrentStep(steps.length);
+    }
+  }, [currentStep, steps.length]);
+
   const handleNext = () => {
-    if (currentStep < STEPS.length) {
+    if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -131,7 +155,7 @@ const HostOnboarding = () => {
         approval_type: formData.approval_type || 'landlord',
         amenities: formData.amenities || [],
         photos: formData.photos || [],
-        status: 'draft'
+        status: isAdminUser ? 'approved' : 'draft'
       };
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
@@ -205,6 +229,12 @@ const HostOnboarding = () => {
       }
 
       const createdProperty = await createResponse.json();
+      if (isAdminUser) {
+        toast.success('Property created successfully!');
+        navigate('/admin/properties');
+        return;
+      }
+
       // Step 2: Submit for approval
       const submitResponse = await fetch(`${API_BASE_URL}/properties/landlord/${createdProperty.id}/submit/`, {
         method: 'POST',
@@ -213,7 +243,7 @@ const HostOnboarding = () => {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
-      
+
       if (submitResponse.ok) {
         toast.success('Property submitted for approval!');
         navigate('/landlord/properties');
@@ -236,13 +266,13 @@ const HostOnboarding = () => {
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl font-bold">Add Property</h1>
             <span className="text-sm text-gray-600">
-              Step {currentStep} of {STEPS.length}
+              Step {currentStep} of {steps.length}
             </span>
           </div>
           
           {/* Progress Steps */}
           <div className="flex items-center space-x-2 overflow-x-auto pb-4">
-            {STEPS.map((step, index) => (
+            {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
                   onClick={() => handleStepChange(step.id)}
@@ -260,7 +290,7 @@ const HostOnboarding = () => {
                     step.id
                   )}
                 </button>
-                {index < STEPS.length - 1 && (
+                {index < steps.length - 1 && (
                   <div
                     className={`w-12 h-1 mx-1 ${
                       step.id < currentStep ? 'bg-green-600' : 'bg-gray-200'
@@ -275,7 +305,7 @@ const HostOnboarding = () => {
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-propertree-blue h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+              style={{ width: `${(currentStep / steps.length) * 100}%` }}
             />
           </div>
         </div>
@@ -320,7 +350,7 @@ const HostOnboarding = () => {
                   Save Draft
                 </Button>
 
-                {currentStep < STEPS.length ? (
+                {currentStep < steps.length ? (
                   <Button
                     variant="primary"
                     onClick={handleNext}
@@ -333,7 +363,7 @@ const HostOnboarding = () => {
                     variant="success"
                     onClick={handleSubmit}
                   >
-                    Submit for Approval
+                    {isAdminUser ? 'Create Property' : 'Submit for Approval'}
                   </Button>
                 )}
               </div>
@@ -353,4 +383,3 @@ const HostOnboarding = () => {
 };
 
 export default HostOnboarding;
-

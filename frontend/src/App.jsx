@@ -39,7 +39,6 @@ import AdminBookings from './pages/admin/Bookings'
 import AdminServiceBookings from './pages/admin/ServiceBookings'
 import AdminAnalytics from './pages/admin/Analytics'
 import AdminAssetPerformance from './pages/admin/AssetPerformance'
-import AdminEditProperty from './pages/admin/EditProperty'
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -128,7 +127,8 @@ function App() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="properties" element={<AdminProperties />} />
-        <Route path="properties/:id/edit" element={<AdminEditProperty />} />
+        <Route path="properties/new" element={<HostOnboarding />} />
+        <Route path="properties/:id/edit" element={<Navigate to="/admin/properties" replace />} />
         <Route path="bookings" element={<AdminBookings />} />
         <Route path="service-bookings" element={<AdminServiceBookings />} />
         <Route path="analytics" element={<AdminAnalytics />} />
