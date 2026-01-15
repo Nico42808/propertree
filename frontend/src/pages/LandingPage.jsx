@@ -368,9 +368,9 @@ const LandingPage = () => {
                       </div>
                     </div>
                     <div className="hidden sm:grid grid-cols-3 gap-2 px-1.5 text-[10px] text-gray-500 text-center mt-1">
-                      <span>{t('landing.shortTermHint', { defaultValue: 'Nights to a few weeks' })}</span>
-                      <span>{t('landing.midTermHint', { defaultValue: '1-11 months stays' })}</span>
-                      <span>{t('landing.longTermHint', { defaultValue: '12+ months rental contracts' })}</span>
+                      <span>{t('landing.shortTermHint', { defaultValue: 'Upto a month' })}</span>
+                      <span>{t('landing.midTermHint', { defaultValue: 'Upto a year' })}</span>
+                      <span>{t('landing.longTermHint', { defaultValue: '1 Year & above' })}</span>
                     </div>
                   </div>
 
