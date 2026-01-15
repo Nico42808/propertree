@@ -43,7 +43,7 @@
 @layer components {
   /* Landing hero: keep mobile full-image visibility, while keeping filters over the same map image */
   .landing-hero {
-    --landing-hero-bg: url('/Desktop1.png');
+    --landing-hero-bg: url('/Desktop.avif');
     --landing-hero-bg-y: 36%;
     background-image: var(--landing-hero-bg);
     background-size: cover;
@@ -73,7 +73,7 @@
 
   @media (min-width: 1536px) {
     .landing-hero {
-      --landing-hero-bg: url('/Desktop1.png');
+      --landing-hero-bg: url('/Desktop.avif');
     }
   }
 j
