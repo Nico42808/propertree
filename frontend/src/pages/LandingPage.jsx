@@ -319,10 +319,7 @@ const LandingPage = () => {
     <div className="min-h-screen">
       {/* Hero Section with Search */}
       <section
-        className="landing-hero relative flex flex-col min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] sm:min-h-[calc(100vh-4rem)] sm:min-h-[calc(100dvh-4rem)] text-propertree-green-800"
-        style={{
-          backgroundImage: 'var(--landing-hero-bg)',
-        }}
+        className="landing-hero relative flex flex-col min-h-[calc(100svh-4rem)] sm:min-h-[calc(100vh-4rem)] text-propertree-green-800"
       >
         {/* Background content */}
         <div className="flex-1 pt-4 md:pt-6 lg:pt-8 pb-6">

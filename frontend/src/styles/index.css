@@ -41,40 +41,39 @@
 }
 
 @layer components {
-  /* Landing hero: shift background up so map pins don't sit behind the filter card on common laptop viewports */
+  /* Landing hero: keep mobile full-image visibility, while keeping filters over the same map image */
   .landing-hero {
-    --landing-hero-bg: url('/River2.png');
-    --landing-hero-shift: clamp(120px, 16vh, 260px);
+    --landing-hero-bg: url('/Desktop.jpg');
+    --landing-hero-bg-y: 36%;
+    background-image: var(--landing-hero-bg);
     background-size: cover;
     background-repeat: no-repeat;
-    background-position: center calc(-1 * var(--landing-hero-shift));
+    background-position: center var(--landing-hero-bg-y);
+    background-color: #eef0f7;
   }
 
   @media (max-width: 767px) {
     .landing-hero {
-      --landing-hero-bg: url('/River2.png');
-      background-size: cover;
-      background-position: center 35%;
-      background-repeat: no-repeat;
-      background-color: #eef0f7;
+      --landing-hero-bg: url('/Main.jpg');
+      --landing-hero-bg-y: 12%;
     }
   }
 
   @media (min-width: 768px) {
     .landing-hero {
-      --landing-hero-shift: clamp(160px, 18vh, 320px);
+      --landing-hero-bg-y: 42%;
     }
   }
 
   @media (min-width: 1024px) {
     .landing-hero {
-      --landing-hero-shift: clamp(200px, 20vh, 380px);
+      --landing-hero-bg-y: 48%;
     }
   }
 
   @media (min-width: 1536px) {
     .landing-hero {
-      --landing-hero-bg: url('/River2.png');
+      --landing-hero-bg: url('/Desktop.jpg');
     }
   }
 
