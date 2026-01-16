@@ -134,6 +134,42 @@ SERVICES = [
         'icon': 'phone-call',
     },
 
+    # Painting
+    {
+        'name': 'Interior painting',
+        'category': 'painting',
+        'description': 'Prep and paint interior walls, ceilings and trim for a refreshed finish.',
+        'price': 25,
+        'estimated_duration_minutes': 240,
+        'icon': 'paintbrush',
+    },
+    {
+        'name': 'Touch-up painting',
+        'category': 'painting',
+        'description': 'Minor patch and touch-up work for scuffs, chips and wear.',
+        'price': 25,
+        'estimated_duration_minutes': 90,
+        'icon': 'paintbrush',
+    },
+
+    # Pest Control
+    {
+        'name': 'Pest inspection',
+        'category': 'pest_control',
+        'description': 'Inspection for pests and entry points with a recommended treatment plan.',
+        'price': 25,
+        'estimated_duration_minutes': 60,
+        'icon': 'bug',
+    },
+    {
+        'name': 'Pest treatment',
+        'category': 'pest_control',
+        'description': 'Targeted treatment for common household pests with follow-up guidance.',
+        'price': 25,
+        'estimated_duration_minutes': 120,
+        'icon': 'bug',
+    },
+
     # Inspections & Safety
     {
         'name': 'Property inspection',
