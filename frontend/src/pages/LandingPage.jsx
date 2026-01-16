@@ -63,6 +63,8 @@ const LandingPage = () => {
     { value: 'villa', label: t('propertyTypes.villa') },
     { value: 'studio', label: t('propertyTypes.studio') },
     { value: 'townhouse', label: t('propertyTypes.townhouse') },
+    { value: 'room', label: t('propertyTypes.room', { defaultValue: 'Room' }) },
+    { value: 'other', label: t('propertyTypes.other', { defaultValue: 'Other' }) },
   ];
 
   const guestOptions = [
@@ -172,10 +174,11 @@ const LandingPage = () => {
       
       // Handle sorting
       if (activeFilters.sort_by) {
+        const useMonthly = term === 'mid' || term === 'long';
         if (activeFilters.sort_by === 'price_low_high') {
-          params.append('ordering', 'price_per_night');
+          params.append('ordering', useMonthly ? 'monthly_price' : 'price_per_night');
         } else if (activeFilters.sort_by === 'price_high_low') {
-          params.append('ordering', '-price_per_night');
+          params.append('ordering', useMonthly ? '-monthly_price' : '-price_per_night');
         } else if (activeFilters.sort_by === 'newest') {
           params.append('ordering', '-created_at');
         } else if (activeFilters.sort_by === 'bedrooms') {
@@ -243,6 +246,40 @@ const LandingPage = () => {
     sessionStorage.setItem('bookingTerm', nextTerm);
     setFilters(prev => ({ ...prev, check_out: '' }));
   };
+
+  const getRentalTerms = (property) => {
+    const terms = Array.isArray(property?.rental_terms) ? property.rental_terms : [];
+    return terms;
+  };
+
+  const getNightlyPrice = (property) => {
+    const nightly = Number(property?.price_per_night);
+    if (Number.isNaN(nightly) || nightly <= 0) {
+      return null;
+    }
+    return nightly;
+  };
+
+  const getMonthlyPrice = (property) => {
+    const rawMonthly = property?.monthly_price;
+    if (rawMonthly !== null && rawMonthly !== undefined && rawMonthly !== '') {
+      const monthly = Number(rawMonthly);
+      return Number.isNaN(monthly) ? null : monthly;
+    }
+    const nightly = getNightlyPrice(property);
+    return nightly ? nightly * 30 : null;
+  };
+
+  const termFilter = (() => {
+    if (term === 'short') return 'short_term';
+    if (term === 'mid') return 'mid_term';
+    if (term === 'long') return 'long_term';
+    return '';
+  })();
+
+  const visibleProperties = termFilter
+    ? properties.filter((property) => getRentalTerms(property).includes(termFilter))
+    : properties;
 
   // Date helpers and term-based bounds
   const addDays = (dateStr, days) => {
@@ -497,7 +534,7 @@ const LandingPage = () => {
               {filters.city || filters.property_type || filters.guests ? t('landing.searchResults') : t('landing.featuredProperties')}
             </h2>
             <p className="text-sm text-gray-600">
-              {t('landing.propertiesAvailable', { count: properties.length })}
+              {t('landing.propertiesAvailable', { count: visibleProperties.length })}
             </p>
           </div>
 
@@ -505,7 +542,7 @@ const LandingPage = () => {
             <div className="text-center py-12">
               <Loading />
             </div>
-          ) : properties.length === 0 ? (
+          ) : visibleProperties.length === 0 ? (
             <div className="text-center py-12">
               <HomeIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.noPropertiesFound')}</h3>
@@ -513,9 +550,16 @@ const LandingPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
-                <Link key={property.id} to={`/properties/${property.id}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative">
+              {visibleProperties.map((property) => {
+                const monthlyPrice = getMonthlyPrice(property);
+                const nightlyPrice = getNightlyPrice(property);
+                const showMonthly = term === 'mid' || term === 'long';
+                const displayPrice = showMonthly ? monthlyPrice : nightlyPrice;
+                const priceSuffix = showMonthly ? t('landing.month', { defaultValue: 'month' }) : t('landing.night');
+
+                return (
+                  <Link key={property.id} to={`/properties/${property.id}`}>
+                    <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative">
                     {/* Property Image */}
                     <div className="card-media bg-gray-200 overflow-hidden rounded-t-2xl relative">
                       {property.primary_photo ? (
@@ -578,9 +622,9 @@ const LandingPage = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <span className="text-xl sm:text-2xl font-bold text-propertree-green">
-                            {formatCurrency(property.price_per_night)}
+                            {displayPrice !== null ? formatCurrency(displayPrice) : formatCurrency(0)}
                           </span>
-                          <span className="text-gray-600 text-sm ml-1">{t('landing.night')}</span>
+                          <span className="text-gray-600 text-sm ml-1">/{priceSuffix}</span>
                         </div>
                         <Badge variant="success">{propertyTypes.find(pt => pt.value === property.property_type)?.label || property.property_type}</Badge>
                       </div>
@@ -590,9 +634,10 @@ const LandingPage = () => {
                         {t('landing.hostedBy')} {property.landlord_name}
                       </div>
                     </Card.Body>
-                  </Card>
-                </Link>
-              ))}
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </Container>

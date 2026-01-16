@@ -16,10 +16,12 @@ class Property(models.Model):
     PROPERTY_TYPES = [
         ('apartment', 'Apartment'),
         ('house', 'House'),
+        ('room', 'Room'),
         ('condo', 'Condo'),
         ('villa', 'Villa'),
         ('studio', 'Studio'),
         ('townhouse', 'Townhouse'),
+        ('other', 'Other'),
     ]
     
     STATUS_CHOICES = [
@@ -72,6 +74,10 @@ class Property(models.Model):
     
     # Pricing
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
+    monthly_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # Rental term availability
+    rental_terms = models.JSONField(default=list, blank=True)
 
     # Booking Approval Settings
     approval_type = models.CharField(

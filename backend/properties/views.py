@@ -53,6 +53,10 @@ class PropertyListView(generics.ListAPIView):
         if guests:
             queryset = queryset.filter(max_guests__gte=guests)
 
+        rental_term = self.request.query_params.get('rental_term')
+        if rental_term:
+            queryset = queryset.filter(rental_terms__contains=[rental_term])
+
         # Filter by availability for a given date range.
         # Only return properties that are not already booked (pending or confirmed)
         # for any of the requested dates.

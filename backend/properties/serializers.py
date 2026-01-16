@@ -17,8 +17,8 @@ class PropertyListSerializer(serializers.ModelSerializer):
         model = Property
         fields = [
             'id', 'title', 'description', 'property_type', 'city', 'state', 'country',
-            'bedrooms', 'bathrooms', 'max_guests', 'price_per_night', 'approval_type',
-            'status', 'primary_photo', 'landlord_name', 'rejection_reason', 'created_at',
+            'bedrooms', 'bathrooms', 'max_guests', 'price_per_night', 'monthly_price', 'approval_type',
+            'rental_terms', 'status', 'primary_photo', 'landlord_name', 'rejection_reason', 'created_at',
             'booked_dates'
         ]
     
@@ -73,7 +73,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'landlord', 'landlord_name', 'landlord_email', 'landlord_profile', 'title', 'description',
             'property_type', 'address', 'city', 'state', 'country', 'postal_code',
-            'bedrooms', 'bathrooms', 'max_guests', 'price_per_night', 'approval_type',
+            'bedrooms', 'bathrooms', 'max_guests', 'price_per_night', 'monthly_price', 'approval_type',
+            'rental_terms',
             'amenities', 'photos', 'primary_photo', 'status', 'rejection_reason',
             'approved_by', 'approved_at', 'created_at', 'updated_at', 'booked_dates', 'owner_name'
         ]
@@ -137,7 +138,7 @@ class PropertyCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'description', 'property_type', 'address', 'city', 'state',
             'country', 'postal_code', 'bedrooms', 'bathrooms', 'max_guests',
-            'price_per_night', 'approval_type', 'amenities', 'photos', 'status'
+            'price_per_night', 'monthly_price', 'approval_type', 'rental_terms', 'amenities', 'photos', 'status'
         ]
 
 

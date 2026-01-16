@@ -47,6 +47,7 @@ const EditProperty = () => {
     country: '',
     postal_code: '',
     price_per_night: '',
+    monthly_price: '',
     approval_type: 'landlord',
     amenities: [],
     photos: [],
@@ -105,6 +106,7 @@ const EditProperty = () => {
           country: data.country || '',
           postal_code: data.postal_code || '',
           price_per_night: data.price_per_night ? parseFloat(data.price_per_night).toString() : '',
+          monthly_price: data.monthly_price ? parseFloat(data.monthly_price).toString() : '',
           approval_type: data.approval_type || 'landlord',
           amenities: data.amenities || [],
           photos: normalizedPhotos,
@@ -226,6 +228,7 @@ const EditProperty = () => {
         bathrooms: parseFloat(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 1,
         price_per_night: parseFloat(formData.price_per_night) || 0,
+        monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
         approval_type: formData.approval_type || 'landlord',
         amenities: formData.amenities || [],
         photos: normalizedPhotos,
@@ -648,6 +651,15 @@ const EditProperty = () => {
                   placeholder="150.00"
                   step="0.01"
                   required
+                />
+                <Input
+                  label="Price per Month (€)"
+                  type="number"
+                  name="monthly_price"
+                  value={formData.monthly_price}
+                  onChange={handleChange}
+                  placeholder="3000.00"
+                  step="0.01"
                 />
               </Card.Body>
             </Card>

@@ -115,6 +115,24 @@ const Properties = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const getNightlyPrice = (property) => {
+    const nightly = Number(property?.price_per_night);
+    if (Number.isNaN(nightly) || nightly <= 0) {
+      return null;
+    }
+    return nightly;
+  };
+
+  const getMonthlyPrice = (property) => {
+    const rawMonthly = property?.monthly_price;
+    if (rawMonthly !== null && rawMonthly !== undefined && rawMonthly !== '') {
+      const monthly = Number(rawMonthly);
+      return Number.isNaN(monthly) ? null : monthly;
+    }
+    const nightly = getNightlyPrice(property);
+    return nightly ? nightly * 30 : null;
+  };
+
   if (loading) {
     return (
       <Container className="py-8">
@@ -194,8 +212,12 @@ const Properties = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((property) => (
-            <Card key={property.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+          {properties.map((property) => {
+            const nightlyPrice = getNightlyPrice(property);
+            const monthlyPrice = getMonthlyPrice(property);
+
+            return (
+              <Card key={property.id} className="hover:shadow-lg transition-shadow overflow-hidden">
               {/* Property Image */}
               <div className="card-media bg-gray-200 overflow-hidden rounded-t-2xl">
                 {property.primary_photo ? (
@@ -243,9 +265,19 @@ const Properties = () => {
                 </div>
 
                 {/* Price */}
-                <div className="text-xl font-bold text-propertree-green mb-5">
-                  {formatCurrency(property.price_per_night)}
-                    <span className="text-sm text-gray-600 font-normal ml-1"> / night</span>
+                <div className="mb-5">
+                  {nightlyPrice !== null && (
+                    <div className="text-xl font-bold text-propertree-green">
+                      {formatCurrency(nightlyPrice)}
+                      <span className="text-sm text-gray-600 font-normal ml-1"> / night</span>
+                    </div>
+                  )}
+                  {monthlyPrice !== null && (
+                    <div className="text-sm text-gray-600">
+                      {formatCurrency(monthlyPrice)}
+                      <span className="text-xs font-normal ml-1"> / month</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -294,8 +326,9 @@ const Properties = () => {
                   </div>
                 )}
               </Card.Body>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </Container>

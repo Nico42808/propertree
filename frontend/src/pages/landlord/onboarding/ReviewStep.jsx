@@ -8,9 +8,19 @@ import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatters';
 import { useAuth } from '../../../hooks';
 
+const RENTAL_TERM_LABELS = {
+  short_term: 'Short Term (Up to a month)',
+  mid_term: 'Mid-Term (Up to a year)',
+  long_term: 'Long Term (1 year and above)',
+};
+
 const ReviewStep = ({ formData }) => {
   const { isAdmin } = useAuth();
   const isAdminUser = isAdmin();
+  const rentalTerms = formData.rental_terms || [];
+  const rentalTermLabels = rentalTerms
+    .map((term) => RENTAL_TERM_LABELS[term] || term)
+    .filter(Boolean);
   const sections = [
     { title: 'Property Type', value: formData.property_type, key: 'property_type' },
     { title: 'Place Type', value: formData.place_type, key: 'place_type' },
@@ -21,8 +31,13 @@ const ReviewStep = ({ formData }) => {
     { title: 'City', value: formData.city, key: 'city' },
     { title: 'Photos', value: `${formData.photos?.length || 0} photos`, key: 'photos' },
     { title: 'Amenities', value: `${formData.amenities?.length || 0} selected`, key: 'amenities' },
-    { title: 'Check-in', value: formData.check_in_time, key: 'check_in_time' },
-    { title: 'Check-out', value: formData.check_out_time, key: 'check_out_time' },
+    { title: 'Rental Terms', value: rentalTermLabels.join(', '), key: 'rental_terms' },
+    ...(rentalTerms.includes('short_term')
+      ? [
+          { title: 'Short-term Check-in', value: formData.short_term_check_in_time, key: 'short_term_check_in_time' },
+          { title: 'Short-term Check-out', value: formData.short_term_check_out_time, key: 'short_term_check_out_time' },
+        ]
+      : []),
     { title: 'Base Price', value: formData.base_price ? formatCurrency(formData.base_price) : '', key: 'base_price' },
     { title: 'Title', value: formData.title, key: 'title' },
     { title: 'Description', value: formData.description?.substring(0, 100) + '...', key: 'description' },

@@ -225,6 +225,24 @@ const Properties = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const getNightlyPrice = (property) => {
+    const nightly = Number(property?.price_per_night);
+    if (Number.isNaN(nightly) || nightly <= 0) {
+      return null;
+    }
+    return nightly;
+  };
+
+  const getMonthlyPrice = (property) => {
+    const rawMonthly = property?.monthly_price;
+    if (rawMonthly !== null && rawMonthly !== undefined && rawMonthly !== '') {
+      const monthly = Number(rawMonthly);
+      return Number.isNaN(monthly) ? null : monthly;
+    }
+    const nightly = getNightlyPrice(property);
+    return nightly ? nightly * 30 : null;
+  };
+
   const clearFilters = () => {
     setCountryFilter('');
     setCityFilter('');
@@ -376,7 +394,11 @@ const Properties = () => {
         />
       ) : (
         <div className="space-y-4">
-          {filteredProperties.map((property) => (
+          {filteredProperties.map((property) => {
+            const nightlyPrice = getNightlyPrice(property);
+            const monthlyPrice = getMonthlyPrice(property);
+
+            return (
             <Card key={property.id} className="hover:shadow-lg transition-shadow">
               <Card.Body>
                 <div className="flex flex-col md:flex-row gap-6">
@@ -437,7 +459,7 @@ const Properties = () => {
                       {property.description}
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                       <div>
                         <p className="text-xs text-gray-500">Type</p>
                         <p className="font-semibold text-gray-900 capitalize">
@@ -455,7 +477,13 @@ const Properties = () => {
                       <div>
                         <p className="text-xs text-gray-500">Price/Night</p>
                         <p className="font-semibold text-gray-900 flex items-center">
-                            {formatCurrency(property.price_per_night)}
+                            {nightlyPrice !== null ? formatCurrency(nightlyPrice) : '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Price/Month</p>
+                        <p className="font-semibold text-gray-900 flex items-center">
+                          {monthlyPrice !== null ? formatCurrency(monthlyPrice) : '-'}
                         </p>
                       </div>
                     </div>
@@ -520,7 +548,8 @@ const Properties = () => {
                 </div>
               </Card.Body>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

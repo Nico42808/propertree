@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks';
 import { Container } from '../../components/layout';
 import { Button, Card } from '../../components/common';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from '../../services/api';
 
 // Import all step components
 import PropertyTypeStep from './onboarding/PropertyTypeStep';
@@ -16,7 +17,7 @@ import PropertyInfoStep from './onboarding/PropertyInfoStep';
 import AddressStep from './onboarding/AddressStep';
 import PhotosStep from './onboarding/PhotosStep';
 import AmenitiesStep from './onboarding/AmenitiesStep';
-import CheckInOutStep from './onboarding/CheckInOutStep';
+import RentalTermStep from './onboarding/RentalTermStep';
 import PricingStep from './onboarding/PricingStep';
 import BookingApprovalStep from './onboarding/BookingApprovalStep';
 import HouseRulesStep from './onboarding/HouseRulesStep';
@@ -29,7 +30,7 @@ const BASE_STEPS = [
   { key: 'address', title: 'Address', component: AddressStep },
   { key: 'photos', title: 'Photos', component: PhotosStep },
   { key: 'amenities', title: 'Amenities', component: AmenitiesStep },
-  { key: 'checkInOut', title: 'Check-in/Check-out', component: CheckInOutStep },
+  { key: 'rentalTerm', title: 'Rental Term', component: RentalTermStep },
   { key: 'pricing', title: 'Pricing', component: PricingStep },
   { key: 'bookingApproval', title: 'Booking Approval', component: BookingApprovalStep },
   { key: 'houseRules', title: 'House Rules', component: HouseRulesStep },
@@ -74,10 +75,12 @@ const HostOnboarding = () => {
     // Step 6
     amenities: [],
     // Step 7
-    check_in_time: '15:00',
-    check_out_time: '11:00',
+    rental_terms: [],
+    short_term_check_in_time: '',
+    short_term_check_out_time: '',
     // Step 8
     base_price: '',
+    monthly_price: '',
     service_fee_percent: 10,
     currency: 'EUR',
     // Step 9
@@ -152,34 +155,20 @@ const HostOnboarding = () => {
         bathrooms: parseFloat(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 1,
         price_per_night: parseFloat(formData.base_price) || 0,
+        monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
         approval_type: formData.approval_type || 'landlord',
+        rental_terms: formData.rental_terms || [],
         amenities: formData.amenities || [],
         photos: formData.photos || [],
         status: isAdminUser ? 'approved' : 'draft'
       };
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${API_BASE_URL}/properties/landlord/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify(propertyData)
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        toast.success('Draft saved successfully!');
-        // Store property ID for future updates
-        setFormData(prev => ({ ...prev, propertyId: data.id }));
-      } else {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        toast.error('Failed to save draft');
-      }
+      const response = await api.post('/properties/landlord/create/', propertyData);
+      toast.success('Draft saved successfully!');
+      // Store property ID for future updates
+      setFormData(prev => ({ ...prev, propertyId: response.data.id }));
     } catch (error) {
-      console.error('Error saving draft:', error);
+      console.error('Error saving draft:', error?.response?.data || error);
       toast.error('Error saving draft');
     }
   };
@@ -205,30 +194,16 @@ const HostOnboarding = () => {
         bathrooms: parseFloat(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 1,
         price_per_night: parseFloat(formData.base_price) || 0,
+        monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
         approval_type: formData.approval_type || 'landlord',
+        rental_terms: formData.rental_terms || [],
         amenities: formData.amenities || [],
         photos: formData.photos || [],
         status: 'draft'
       };
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      const createResponse = await fetch(`${API_BASE_URL}/properties/landlord/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify(propertyData)
-      });
-      
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        console.error('Error creating property:', errorData);
-        toast.error('Failed to create property');
-        return;
-      }
-
-      const createdProperty = await createResponse.json();
+      const createResponse = await api.post('/properties/landlord/create/', propertyData);
+      const createdProperty = createResponse.data;
       if (isAdminUser) {
         toast.success('Property created successfully!');
         navigate('/admin/properties');
@@ -236,24 +211,11 @@ const HostOnboarding = () => {
       }
 
       // Step 2: Submit for approval
-      const submitResponse = await fetch(`${API_BASE_URL}/properties/landlord/${createdProperty.id}/submit/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-
-      if (submitResponse.ok) {
-        toast.success('Property submitted for approval!');
-        navigate('/landlord/properties');
-      } else {
-        const errorData = await submitResponse.json();
-        console.error('Error submitting:', errorData);
-        toast.error('Failed to submit property for approval');
-      }
+      await api.post(`/properties/landlord/${createdProperty.id}/submit/`);
+      toast.success('Property submitted for approval!');
+      navigate('/landlord/properties');
     } catch (error) {
-      console.error('Error submitting property:', error);
+      console.error('Error submitting property:', error?.response?.data || error);
       toast.error('Error submitting property');
     }
   };
