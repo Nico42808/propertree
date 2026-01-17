@@ -411,7 +411,7 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl sm:rounded-full bg-slate-50/80 border border-slate-200/80 overflow-hidden">
+                  <div className="rounded-2xl sm:rounded-full bg-slate-50/80 border border-slate-200/80 overflow-visible">
                     <div className="flex flex-col md:flex-row md:items-center">
                       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
                         <div className="group flex flex-col px-4 sm:px-5 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
