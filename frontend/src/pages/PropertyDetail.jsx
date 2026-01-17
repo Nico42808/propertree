@@ -58,44 +58,63 @@ const PropertyDetail = () => {
     return d;
   };
 
-  const getCheckoutBounds = (checkInValue) => {
+  const getEffectiveBookingTerm = (fallbackTerm = '') => {
+    const directTerm = fallbackTerm || bookingTerm;
+    if (directTerm) {
+      return directTerm;
+    }
+    const rentalTerms = Array.isArray(property?.rental_terms) ? property.rental_terms : [];
+    const hasShort = rentalTerms.includes('short_term');
+    const hasMid = rentalTerms.includes('mid_term');
+    const hasLong = rentalTerms.includes('long_term');
+    if (!hasShort && (hasMid || hasLong)) return 'mid';
+    if (hasShort) return 'short';
+    if (hasMid) return 'mid';
+    if (hasLong) return 'long';
+    return '';
+  };
+
+  const getCheckoutBounds = (checkInValue, termOverride = '') => {
     if (!checkInValue) return { minDate: null, maxDate: null };
     const checkIn = normalizeDate(checkInValue);
+    const activeTerm = getEffectiveBookingTerm(termOverride);
 
-    if (bookingTerm === 'short') {
+    if (activeTerm === 'short') {
       return { minDate: addDays(checkIn, 1), maxDate: addDays(checkIn, 28) };
     }
-    if (bookingTerm === 'mid') {
+    if (activeTerm === 'mid') {
       return { minDate: addMonths(checkIn, 1), maxDate: addMonths(checkIn, 12) };
     }
-    if (bookingTerm === 'long') {
+    if (activeTerm === 'long') {
       return { minDate: addDays(addMonths(checkIn, 12), 1), maxDate: null };
     }
 
     return { minDate: addDays(checkIn, 1), maxDate: null };
   };
 
-  const isCheckoutWithinBounds = (checkOutDate, checkInValue) => {
-    if (!bookingTerm || !checkInValue || !checkOutDate) return true;
-    const { minDate, maxDate } = getCheckoutBounds(checkInValue);
+  const isCheckoutWithinBounds = (checkOutDate, checkInValue, termOverride = '') => {
+    const activeTerm = getEffectiveBookingTerm(termOverride);
+    if (!activeTerm || !checkInValue || !checkOutDate) return true;
+    const { minDate, maxDate } = getCheckoutBounds(checkInValue, activeTerm);
     const checkout = normalizeDate(checkOutDate);
     if (minDate && checkout < minDate) return false;
     if (maxDate && checkout > maxDate) return false;
     return true;
   };
 
-  const getTermLimitMessage = () => {
-    if (bookingTerm === 'short') {
+  const getTermLimitMessage = (termOverride = '') => {
+    const activeTerm = getEffectiveBookingTerm(termOverride);
+    if (activeTerm === 'short') {
       return t('propertyDetail.shortTermLimit', {
         defaultValue: 'Short-term stays allow check-out up to 4 weeks from check-in.',
       });
     }
-    if (bookingTerm === 'mid') {
+    if (activeTerm === 'mid') {
       return t('propertyDetail.midTermLimit', {
         defaultValue: 'Mid-term stays require check-out between 1 month and 1 year from check-in.',
       });
     }
-    if (bookingTerm === 'long') {
+    if (activeTerm === 'long') {
       return t('propertyDetail.longTermLimit', {
         defaultValue: 'Long-term stays require check-out at least 1 year after check-in.',
       });
@@ -166,11 +185,12 @@ const PropertyDetail = () => {
       return true;
     }
 
-    if (!bookingData.check_in || !bookingTerm) {
+    const activeTerm = getEffectiveBookingTerm();
+    if (!bookingData.check_in || !activeTerm) {
       return false;
     }
 
-    const { minDate, maxDate } = getCheckoutBounds(bookingData.check_in);
+    const { minDate, maxDate } = getCheckoutBounds(bookingData.check_in, activeTerm);
     const target = normalizeDate(date);
 
     if (minDate && target < minDate) return true;
@@ -226,8 +246,9 @@ const PropertyDetail = () => {
       return;
     }
 
-    if (!isCheckoutWithinBounds(checkOut, bookingData.check_in)) {
-      const message = getTermLimitMessage();
+    const activeTerm = getEffectiveBookingTerm();
+    if (!isCheckoutWithinBounds(checkOut, bookingData.check_in, activeTerm)) {
+      const message = getTermLimitMessage(activeTerm);
       toast.error(message || t('propertyDetail.checkoutAfterCheckin'));
       return;
     }
@@ -455,10 +476,27 @@ const PropertyDetail = () => {
               </div>
             </div>
             <div className="text-left md:text-right mt-4 md:mt-0">
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900">
-                {formatCurrency(property.price_per_night)}
-              </div>
-              <div className="text-gray-600">{t('propertyDetail.perNight')}</div>
+              {(() => {
+                const term = sessionStorage.getItem('bookingTerm') || '';
+                const rentalTerms = Array.isArray(property.rental_terms) ? property.rental_terms : [];
+                const hasShortTerm = rentalTerms.includes('short_term');
+                const hasMidOrLong = rentalTerms.includes('mid_term') || rentalTerms.includes('long_term');
+                const showMonthly = (term === 'mid' || term === 'long') ? hasMidOrLong : (!term && !hasShortTerm && hasMidOrLong);
+                const monthlyPrice = property.monthly_price ?? (property.price_per_night ? property.price_per_night * 30 : 0);
+                const displayPrice = showMonthly ? monthlyPrice : property.price_per_night;
+                const priceLabel = showMonthly
+                  ? t('propertyDetail.perMonth', { defaultValue: 'per month' })
+                  : t('propertyDetail.perNight');
+
+                return (
+                  <>
+                    <div className="text-3xl sm:text-4xl font-bold text-gray-900">
+                      {formatCurrency(displayPrice)}
+                    </div>
+                    <div className="text-gray-600">{priceLabel}</div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -631,14 +669,37 @@ const PropertyDetail = () => {
                   onChange={(date) => {
                     if (date) {
                       const dateString = date.toISOString().split('T')[0];
+                      const activeTerm = getEffectiveBookingTerm();
                       const nextData = { ...bookingData, check_in: dateString };
                       if (bookingData.check_out) {
                         const isValid = isCheckoutWithinBounds(
                           new Date(bookingData.check_out),
-                          dateString
+                          dateString,
+                          activeTerm
                         );
                         if (!isValid) {
                           nextData.check_out = '';
+                        }
+                      }
+                      if (!nextData.check_out && (activeTerm === 'mid' || activeTerm === 'long')) {
+                        const { minDate } = getCheckoutBounds(dateString, activeTerm);
+                        if (minDate) {
+                          const checkOutDate = minDate;
+                          let hasConflict = false;
+                          if (property?.booked_dates) {
+                            const checkInDate = new Date(dateString);
+                            for (const booking of property.booked_dates) {
+                              const bookedCheckIn = new Date(booking.check_in);
+                              const bookedCheckOut = new Date(booking.check_out);
+                              if (checkInDate < bookedCheckOut && checkOutDate > bookedCheckIn) {
+                                hasConflict = true;
+                                break;
+                              }
+                            }
+                          }
+                          if (!hasConflict && isCheckoutWithinBounds(checkOutDate, dateString, activeTerm)) {
+                            nextData.check_out = checkOutDate.toISOString().split('T')[0];
+                          }
                         }
                       }
                       setBookingData(nextData);
@@ -676,8 +737,9 @@ const PropertyDetail = () => {
                         return;
                       }
 
-                      if (checkInDate && !isCheckoutWithinBounds(checkOutDate, bookingData.check_in)) {
-                        const message = getTermLimitMessage();
+                      const activeTerm = getEffectiveBookingTerm();
+                      if (checkInDate && !isCheckoutWithinBounds(checkOutDate, bookingData.check_in, activeTerm)) {
+                        const message = getTermLimitMessage(activeTerm);
                         toast.error(message || t('propertyDetail.checkoutAfterCheckin'));
                         return;
                       }
@@ -707,10 +769,10 @@ const PropertyDetail = () => {
                   filterDate={(date) => !isCheckoutDateDisabled(date)}
                   minDate={
                     bookingData.check_in
-                      ? (getCheckoutBounds(bookingData.check_in).minDate || new Date(bookingData.check_in))
+                      ? (getCheckoutBounds(bookingData.check_in, getEffectiveBookingTerm()).minDate || new Date(bookingData.check_in))
                       : new Date()
                   }
-                  maxDate={getCheckoutBounds(bookingData.check_in).maxDate || null}
+                  maxDate={getCheckoutBounds(bookingData.check_in, getEffectiveBookingTerm()).maxDate || null}
                   dateFormat="dd-MM-yyyy"
                   placeholderText={t('propertyDetail.selectCheckOutDate')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-propertree-green"
@@ -738,20 +800,49 @@ const PropertyDetail = () => {
               {/* Price Calculation */}
               {bookingData.check_in && bookingData.check_out && (
                 <div className="border-t pt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">
-                        {formatCurrency(property.price_per_night)} x {Math.ceil((new Date(bookingData.check_out) - new Date(bookingData.check_in)) / (1000 * 60 * 60 * 24))} {t('propertyDetail.nights')}
-                      </span>
-                      <span className="font-semibold">
-                        {formatCurrency(property.price_per_night * Math.ceil((new Date(bookingData.check_out) - new Date(bookingData.check_in)) / (1000 * 60 * 60 * 24)))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold border-t pt-2">
-                      <span>{t('propertyDetail.total')}</span>
-                      <span className="text-propertree-green">
-                        {formatCurrency(property.price_per_night * Math.ceil((new Date(bookingData.check_out) - new Date(bookingData.check_in)) / (1000 * 60 * 60 * 24)))}
-                      </span>
-                    </div>
+                  {(() => {
+                    const checkIn = new Date(bookingData.check_in);
+                    const checkOut = new Date(bookingData.check_out);
+                    const nights = Math.max(0, Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)));
+                    const rentalTerms = Array.isArray(property.rental_terms) ? property.rental_terms : [];
+                    const hasShortTerm = rentalTerms.includes('short_term');
+                    const activeTerm = getEffectiveBookingTerm();
+                    const useMonthly = activeTerm === 'mid' || activeTerm === 'long' || (!activeTerm && !hasShortTerm);
+                    const nightlyRate = Number.isFinite(Number(property.price_per_night)) ? Number(property.price_per_night) : 0;
+                    const monthlyRate = property.monthly_price !== null && property.monthly_price !== undefined && property.monthly_price !== ''
+                      ? Number(property.monthly_price)
+                      : null;
+                    const baseMonthly = Number.isFinite(monthlyRate)
+                      ? monthlyRate
+                      : (nightlyRate ? nightlyRate * 30 : 0);
+                    const dailyRate = useMonthly ? (baseMonthly ? baseMonthly / 30 : 0) : nightlyRate;
+                    const total = useMonthly ? baseMonthly * (nights / 30) : nightlyRate * nights;
+                    const rateLabel = useMonthly
+                      ? t('propertyDetail.perDay', { defaultValue: 'per day' })
+                      : t('propertyDetail.perNight');
+                    const durationLabel = useMonthly
+                      ? t('propertyDetail.days', { defaultValue: 'days' })
+                      : t('propertyDetail.nights');
+
+                    return (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            {formatCurrency(dailyRate)} {rateLabel} x {nights} {durationLabel}
+                          </span>
+                          <span className="font-semibold">
+                            {formatCurrency(total)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold border-t pt-2">
+                          <span>{t('propertyDetail.total')}</span>
+                          <span className="text-propertree-green">
+                            {formatCurrency(total)}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 

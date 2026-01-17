@@ -39,7 +39,7 @@ const LandingPage = () => {
     return map;
   }, [favoritesData]);
   
-  const [filters, setFilters] = useState({
+  const initialFilters = {
     city: '',
     property_type: '',
     guests: '',
@@ -50,7 +50,8 @@ const LandingPage = () => {
     max_price: '',
     min_area: '',
     vicinity: ''
-  });
+  };
+  const [filters, setFilters] = useState(initialFilters);
 
   // Term selection: '', 'short', 'mid', 'long'
   const [term, setTerm] = useState(() => sessionStorage.getItem('bookingTerm') || '');
@@ -108,6 +109,9 @@ const LandingPage = () => {
   const vicinityPercent = Math.round((vicinityStepIndex / vicinityMax) * 100);
 
   useEffect(() => {
+    setFilters(initialFilters);
+    setTerm('');
+    sessionStorage.removeItem('bookingTerm');
     fetchProperties();
     fetchCities();
   }, []);
@@ -246,6 +250,17 @@ const LandingPage = () => {
     sessionStorage.setItem('bookingTerm', nextTerm);
     setFilters(prev => ({ ...prev, check_out: '' }));
   };
+
+  const clearFilters = () => {
+    setFilters(initialFilters);
+    setTerm('');
+    sessionStorage.removeItem('bookingTerm');
+    fetchProperties(initialFilters);
+  };
+
+  const hasActiveFilters = Boolean(
+    term || Object.entries(filters).some(([key, value]) => key !== 'sort_by' && value)
+  );
 
   const getRentalTerms = (property) => {
     const terms = Array.isArray(property?.rental_terms) ? property.rental_terms : [];
@@ -442,7 +457,16 @@ const LandingPage = () => {
                         </div>
                       </div>
 
-                      <div className="p-2 md:pr-2 md:pl-3">
+                      <div className="p-2 md:pr-2 md:pl-3 flex items-center gap-2">
+                        {hasActiveFilters && (
+                          <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/30"
+                          >
+                            {t('landing.clearFilters', { defaultValue: 'Clear filters' })}
+                          </button>
+                        )}
                         <button
                           type="submit"
                           className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-propertree-green text-white px-5 py-3 text-sm font-semibold shadow-[0_12px_22px_rgba(47,111,78,0.3)] hover:bg-propertree-green-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/30 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -541,7 +565,10 @@ const LandingPage = () => {
               {visibleProperties.map((property) => {
                 const monthlyPrice = getMonthlyPrice(property);
                 const nightlyPrice = getNightlyPrice(property);
-                const showMonthly = term === 'mid' || term === 'long';
+                const terms = getRentalTerms(property);
+                const hasShortTerm = terms.includes('short_term');
+                const hasMidOrLong = terms.includes('mid_term') || terms.includes('long_term');
+                const showMonthly = term === 'mid' || term === 'long' || (!term && !hasShortTerm && hasMidOrLong);
                 const displayPrice = showMonthly ? monthlyPrice : nightlyPrice;
                 const priceSuffix = showMonthly ? t('landing.month', { defaultValue: 'month' }) : t('landing.night');
                 const normalizedSuffix = String(priceSuffix || '').replace(/^\/\s*/, '');

@@ -48,6 +48,7 @@ const EditProperty = () => {
     postal_code: '',
     price_per_night: '',
     monthly_price: '',
+    rental_terms: [],
     approval_type: 'landlord',
     amenities: [],
     photos: [],
@@ -107,6 +108,7 @@ const EditProperty = () => {
           postal_code: data.postal_code || '',
           price_per_night: data.price_per_night ? parseFloat(data.price_per_night).toString() : '',
           monthly_price: data.monthly_price ? parseFloat(data.monthly_price).toString() : '',
+          rental_terms: Array.isArray(data.rental_terms) ? data.rental_terms : [],
           approval_type: data.approval_type || 'landlord',
           amenities: data.amenities || [],
           photos: normalizedPhotos,
@@ -230,6 +232,7 @@ const EditProperty = () => {
         price_per_night: parseFloat(formData.price_per_night) || 0,
         monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
         approval_type: formData.approval_type || 'landlord',
+        rental_terms: formData.rental_terms || [],
         amenities: formData.amenities || [],
         photos: normalizedPhotos,
         status: property?.status || 'draft'
@@ -285,6 +288,10 @@ const EditProperty = () => {
   }
 
   const selectedPropertyType = PROPERTY_TYPES.find(t => t.value === formData.property_type);
+  const hasShortTerm = (formData.rental_terms || []).includes('short_term');
+  const hasMidOrLong = (formData.rental_terms || []).includes('mid_term') || (formData.rental_terms || []).includes('long_term');
+  const showNightlyPrice = hasShortTerm;
+  const showMonthlyPrice = !hasShortTerm || hasMidOrLong;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -642,25 +649,30 @@ const EditProperty = () => {
                 <Card.Title>Pricing</Card.Title>
               </Card.Header>
               <Card.Body className="space-y-4">
-                <Input
-                  label="Price per Night (€)"
-                  type="number"
-                  name="price_per_night"
-                  value={formData.price_per_night}
-                  onChange={handleChange}
-                  placeholder="150.00"
-                  step="0.01"
-                  required
-                />
-                <Input
-                  label="Price per Month (€)"
-                  type="number"
-                  name="monthly_price"
-                  value={formData.monthly_price}
-                  onChange={handleChange}
-                  placeholder="3000.00"
-                  step="0.01"
-                />
+                {showNightlyPrice && (
+                  <Input
+                    label="Price per Night (€)"
+                    type="number"
+                    name="price_per_night"
+                    value={formData.price_per_night}
+                    onChange={handleChange}
+                    placeholder="150.00"
+                    step="0.01"
+                    required
+                  />
+                )}
+                {showMonthlyPrice && (
+                  <Input
+                    label="Price per Month (€)"
+                    type="number"
+                    name="monthly_price"
+                    value={formData.monthly_price}
+                    onChange={handleChange}
+                    placeholder="3000.00"
+                    step="0.01"
+                    required={!hasShortTerm}
+                  />
+                )}
               </Card.Body>
             </Card>
 
