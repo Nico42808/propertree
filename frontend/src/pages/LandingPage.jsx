@@ -379,26 +379,26 @@ const LandingPage = () => {
               >
                 <div className="flex flex-col gap-4 sm:gap-5">
                   <div>
-                    <div className="bg-slate-100/80 rounded-full p-1 shadow-inner">
-                      <div className="grid grid-cols-3 gap-1">
+                    <div className="bg-slate-100/80 rounded-full p-1.5 sm:p-2 shadow-inner">
+                      <div className="grid grid-cols-3 gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleTermSelect('short')}
-                          className={`py-1 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold transition-all whitespace-nowrap ${term === 'short' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'short' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
                         >
                           {t('landing.shortTerm', { defaultValue: 'Short-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('mid')}
-                          className={`py-1 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold transition-all whitespace-nowrap ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
                         >
                           {t('landing.midTerm', { defaultValue: 'Mid-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('long')}
-                          className={`py-1 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold transition-all whitespace-nowrap ${term === 'long' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'long' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
                         >
                           {t('landing.longTerm', { defaultValue: 'Long-term' })}
                         </button>
@@ -462,14 +462,14 @@ const LandingPage = () => {
                           <button
                             type="button"
                             onClick={clearFilters}
-                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/30"
+                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none"
                           >
                             {t('landing.clearFilters', { defaultValue: 'Clear filters' })}
                           </button>
                         )}
                         <button
                           type="submit"
-                          className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-propertree-green text-white px-5 py-3 text-sm font-semibold shadow-[0_12px_22px_rgba(47,111,78,0.3)] hover:bg-propertree-green-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-propertree-green text-white px-5 py-3 text-sm font-semibold transition-colors hover:bg-propertree-green-600 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                           disabled={searchLoading}
                         >
                           <Search className="w-5 h-5" />
