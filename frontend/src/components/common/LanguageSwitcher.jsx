@@ -46,10 +46,10 @@ const LanguageSwitcher = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 transition-colors focus:outline-none"
+        className="flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-base font-medium text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 transition-colors focus:outline-none"
         aria-label={t('language.selectLanguage')}
       >
-        <Globe className="w-4 h-4" />
+        <Globe className="w-5 h-5" />
         <span className="hidden md:inline">{currentLanguage.name}</span>
       </button>
 
@@ -59,13 +59,13 @@ const LanguageSwitcher = () => {
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
-              className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-left hover:bg-gray-100 transition-colors ${
+              className={`w-full flex items-center space-x-3 px-4 py-2 text-base text-left hover:bg-gray-100 transition-colors ${
                 i18n.language === lang.code ? 'bg-propertree-cream-100 text-propertree-green font-medium' : 'text-gray-700'
               }`}
             >
               <span>{lang.name}</span>
               {i18n.language === lang.code && (
-                <Check className="w-4 h-4 ml-auto text-propertree-green" />
+                <Check className="w-5 h-5 ml-auto text-propertree-green" />
               )}
             </button>
           ))}

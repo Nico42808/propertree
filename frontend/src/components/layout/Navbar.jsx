@@ -2,7 +2,7 @@
  * Navbar component - Main navigation bar
  */
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks';
 import { Avatar, Button, LanguageSwitcher } from '../common';
@@ -12,6 +12,9 @@ const Navbar = () => {
   const { t } = useTranslation();
   const { user, isAuthenticated, logout, isLandlord, isTenant, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
+  const isAdminUser = isAuthenticated && isAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
@@ -27,36 +30,42 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-subtle sticky top-0 z-40 border-b border-propertree-cream-300">
+    <nav className={`sticky top-0 z-40 ${isLanding ? 'bg-slate-50' : 'bg-white shadow-subtle border-b border-propertree-cream-300'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 sm:h-16 gap-3 sm:gap-4">
+        <div className="flex justify-between items-center h-16 sm:h-[4.5rem] gap-4 sm:gap-5">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <img src="/logo.jpg" alt="Propertree" className="h-8 sm:h-10 w-auto object-contain" />
-              <span className="text-base sm:text-lg lg:text-2xl font-bold text-propertree-dark whitespace-nowrap">Propertree</span>
+              <img
+                src="/logo.jpg"
+                alt="Propertree"
+                className={`${isAdminUser ? 'h-8 sm:h-9' : 'h-9 sm:h-11'} w-auto object-contain`}
+              />
+              <span className={`${isAdminUser ? 'text-base sm:text-lg' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-propertree-dark whitespace-nowrap`}>
+                Propertree
+              </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 min-w-0 justify-end">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-1 min-w-0 justify-end">
             {isAuthenticated ? (
               <>
-                <div className="flex items-center space-x-1 lg:space-x-2">
+                <div className={`flex items-center ${isAdminUser ? 'gap-1 lg:gap-2' : 'gap-2 lg:gap-3'}`}>
                   {isTenant() && (
                     <>
                       <Link
                         to="/tenant/bookings"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <Calendar className="w-5 h-5 flex-shrink-0" />
                         {t('navbar.myBookings')}
                       </Link>
                       <Link
                         to="/tenant/favorites"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Heart className="w-4 h-4 flex-shrink-0" />
+                        <Heart className="w-5 h-5 flex-shrink-0" />
                         {t('navbar.favorites')}
                       </Link>
                     </>
@@ -66,30 +75,30 @@ const Navbar = () => {
                     <>
                       <Link
                         to="/landlord/dashboard"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+                        <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
                         {t('common.dashboard')}
                       </Link>
                       <Link
                         to="/landlord/properties"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Building className="w-4 h-4 flex-shrink-0" />
+                        <Building className="w-5 h-5 flex-shrink-0" />
                         {t('navbar.myProperties')}
                       </Link>
                       <Link
                         to="/landlord/bookings"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <Calendar className="w-5 h-5 flex-shrink-0" />
                         {t('navbar.bookings')}
                       </Link>
                       <Link
                         to="/landlord/services"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Wrench className="w-4 h-4 flex-shrink-0" />
+                        <Wrench className="w-5 h-5 flex-shrink-0" />
                         {t('navbar.services')}
                       </Link>
                     </>
@@ -99,51 +108,51 @@ const Navbar = () => {
                     <>
                       <Link
                         to="/admin/dashboard"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+                        <LayoutDashboard className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('common.dashboard')}
                       </Link>
                       <Link
                         to="/admin/properties"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <Building className="w-4 h-4 flex-shrink-0" />
+                        <Building className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.properties')}
                       </Link>
                       <Link
                         to="/admin/bookings"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <Calendar className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.bookings')}
                       </Link>
                       <Link
                         to="/admin/service-bookings"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <Wrench className="w-4 h-4 flex-shrink-0" />
+                        <Wrench className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.serviceRequests')}
                       </Link>
                       <Link
                         to="/admin/users"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <User className="w-4 h-4 flex-shrink-0" />
+                        <User className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.users')}
                       </Link>
                       <Link
                         to="/admin/analytics"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <TrendingUp className="w-4 h-4 flex-shrink-0" />
+                        <TrendingUp className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.analytics')}
                       </Link>
                       <Link
                         to="/admin/performance"
-                        className="text-propertree-dark hover:text-propertree-green px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className={`text-propertree-dark hover:text-propertree-green rounded-lg font-medium transition-colors flex items-center whitespace-nowrap ${isAdminUser ? 'px-2.5 lg:px-3 py-2 text-sm gap-1.5' : 'px-3 lg:px-4 py-2.5 text-base gap-2'}`}
                       >
-                        <Activity className="w-4 h-4 flex-shrink-0" />
+                        <Activity className={`${isAdminUser ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                         {t('navbar.performance')}
                       </Link>
                     </>
@@ -151,12 +160,12 @@ const Navbar = () => {
                 </div>
 
                 {/* Language Switcher */}
-                <div className="flex-shrink-0 ml-2">
+                <div className={`flex-shrink-0 ml-2 ${isAdminUser ? 'scale-90 origin-right [&_span]:hidden lg:[&_span]:inline' : ''}`}>
                   <LanguageSwitcher />
                 </div>
 
                 {/* Profile Dropdown */}
-                <div className="relative flex-shrink-0 ml-2">
+                <div className={`relative flex-shrink-0 ${isAdminUser ? 'ml-1' : 'ml-2'}`}>
                   <button
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     className="flex items-center space-x-2 focus:outline-none"
@@ -164,7 +173,7 @@ const Navbar = () => {
                     <Avatar 
                       src={user?.profile_photo} 
                       name={user?.first_name} 
-                      size="sm" 
+                      size={isAdminUser ? 'sm' : 'md'} 
                     />
                   </button>
 
@@ -200,17 +209,19 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex items-center space-x-2 flex-shrink-0">
-                <LanguageSwitcher />
+                <div className={`${isAdminUser ? 'scale-90 origin-right' : ''}`}>
+                  <LanguageSwitcher />
+                </div>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="md"
                   onClick={() => navigate('/login')}
                 >
                   {t('common.login')}
                 </Button>
                 <Button
                   variant="primary"
-                  size="sm"
+                  size="md"
                   onClick={() => navigate('/register')}
                 >
                   {t('common.signUp')}
@@ -223,12 +234,12 @@ const Navbar = () => {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 focus:outline-none"
+              className="inline-flex items-center justify-center p-2.5 rounded-lg text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 focus:outline-none"
             >
               {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
+                <X className="w-7 h-7" />
               ) : (
-                <Menu className="w-6 h-6" />
+                <Menu className="w-7 h-7" />
               )}
             </button>
           </div>

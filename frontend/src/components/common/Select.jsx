@@ -17,6 +17,8 @@ const Select = ({
   touched,
   disabled = false,
   required = false,
+  variant = 'default',
+  showChevron = true,
   className = '',
   ...props
 }) => {
@@ -25,10 +27,31 @@ const Select = ({
   const selectRef = useRef(null);
   const dropdownRef = useRef(null);
   const hasError = touched && error;
+  const isMinimal = variant === 'minimal';
 
   // Find the selected option label
   const selectedOption = options.find(opt => opt.value === value);
   const displayValue = selectedOption ? selectedOption.label : placeholder;
+  const minimalPadding = showChevron ? 'pr-6' : 'pr-0';
+  const buttonClasses = isMinimal
+    ? `
+      w-full text-left bg-transparent border-0 px-0 py-1 ${minimalPadding}
+      text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/20
+      disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-200
+      font-medium text-sm sm:text-base
+      ${!selectedOption ? 'text-gray-400' : ''}
+    `
+    : `
+      w-full rounded-lg sm:rounded-xl border-2 ${hasError ? 'border-red-500' : 'border-gray-200'}
+      px-3 sm:px-4 py-2.5 sm:py-3 pr-10 text-left text-gray-900 bg-white
+      shadow-sm hover:shadow-md hover:border-gray-300 hover:bg-gray-50
+      focus:outline-none focus:ring-2 focus:ring-propertree-green/20 focus:border-propertree-green focus:shadow-md
+      disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 disabled:shadow-none
+      transition-all duration-300 ease-in-out
+      font-medium text-sm sm:text-base
+      ${!selectedOption ? 'text-gray-400' : ''}
+      ${isOpen ? 'ring-2 ring-propertree-green/20 border-propertree-green shadow-md' : ''}
+    `;
 
   const handleOptionSelect = useCallback((optionValue) => {
     const syntheticEvent = {
@@ -130,17 +153,7 @@ const Select = ({
           id={name}
           onClick={handleToggle}
           disabled={disabled}
-          className={`
-            w-full rounded-lg sm:rounded-xl border-2 ${hasError ? 'border-red-500' : 'border-gray-200'}
-            px-3 sm:px-4 py-2.5 sm:py-3 pr-10 text-left text-gray-900 bg-white
-            shadow-sm hover:shadow-md hover:border-gray-300 hover:bg-gray-50
-            focus:outline-none focus:ring-2 focus:ring-propertree-green/20 focus:border-propertree-green focus:shadow-md
-            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 disabled:shadow-none
-            transition-all duration-300 ease-in-out
-            font-medium text-sm sm:text-base
-            ${!selectedOption ? 'text-gray-400' : ''}
-            ${isOpen ? 'ring-2 ring-propertree-green/20 border-propertree-green shadow-md' : ''}
-          `}
+          className={buttonClasses}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           {...props}
@@ -149,13 +162,15 @@ const Select = ({
         </button>
         
         {/* Chevron Icon */}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <ChevronDown 
-            className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
-              disabled ? 'opacity-50' : ''
-            } ${isOpen ? 'transform rotate-180' : ''}`} 
-          />
-        </div>
+        {showChevron && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <ChevronDown 
+              className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
+                disabled ? 'opacity-50' : ''
+              } ${isOpen ? 'transform rotate-180' : ''}`} 
+            />
+          </div>
+        )}
 
         {/* Custom Dropdown Menu */}
         {isOpen && !disabled && (
@@ -234,6 +249,8 @@ Select.propTypes = {
   touched: PropTypes.bool,
   disabled: PropTypes.bool,
   required: PropTypes.bool,
+  variant: PropTypes.oneOf(['default', 'minimal']),
+  showChevron: PropTypes.bool,
   className: PropTypes.string,
 };
 
