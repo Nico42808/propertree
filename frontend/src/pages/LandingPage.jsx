@@ -375,7 +375,7 @@ const LandingPage = () => {
             <div className="mx-auto max-w-5xl">
               <form
                 onSubmit={handleSearch}
-                className="rounded-[28px] bg-white/90 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] border border-white/70 p-3 sm:p-4"
+                className="relative z-30 rounded-[28px] bg-white/90 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] border border-white/70 p-3 sm:p-4"
               >
                 <div className="flex flex-col gap-4 sm:gap-5">
                   <div>
