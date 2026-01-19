@@ -372,10 +372,10 @@ const LandingPage = () => {
       <section className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6 sm:py-8">
-            <div className="mx-auto max-w-5xl">
+            <div className="mx-auto max-w-7xl">
               <form
                 onSubmit={handleSearch}
-                className="relative z-30 rounded-[28px] bg-white/90 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] border border-white/70 p-3 sm:p-4"
+                className="relative z-30 mt-4 sm:mt-6 rounded-[28px] bg-white/90 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] border border-white/70 p-5 sm:p-6"
               >
                 <div className="flex flex-col gap-4 sm:gap-5">
                   <div>
@@ -384,37 +384,37 @@ const LandingPage = () => {
                         <button
                           type="button"
                           onClick={() => handleTermSelect('short')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'short' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'short' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.shortTerm', { defaultValue: 'Short-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('mid')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.midTerm', { defaultValue: 'Mid-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('long')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${term === 'long' ? 'bg-propertree-green text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'long' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.longTerm', { defaultValue: 'Long-term' })}
                         </button>
                       </div>
                     </div>
                     <div className="hidden sm:grid grid-cols-3 gap-2 px-2 text-[10px] text-slate-500 text-center mt-2">
-                      <span>{t('landing.shortTermHint', { defaultValue: 'Upto a month' })}</span>
-                      <span>{t('landing.midTermHint', { defaultValue: 'Upto a year' })}</span>
-                      <span>{t('landing.longTermHint', { defaultValue: '1 Year & above' })}</span>
+                      <span>{t('landing.shortTermHint', { defaultValue: '< 1 month' })}</span>
+                      <span>{t('landing.midTermHint', { defaultValue: '1-12 months' })}</span>
+                      <span>{t('landing.longTermHint', { defaultValue: '12+ months' })}</span>
                     </div>
                   </div>
 
                   <div className="rounded-2xl sm:rounded-full bg-slate-50/80 border border-slate-200/80 overflow-visible">
                     <div className="flex flex-col md:flex-row md:items-center">
                       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-                        <div className="group flex flex-col px-4 sm:px-5 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                        <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
                           <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.city')}</span>
                           <Select
                             name="city"
@@ -428,7 +428,7 @@ const LandingPage = () => {
                           />
                         </div>
 
-                        <div className="group flex flex-col px-4 sm:px-5 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                        <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
                           <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.propertyType')}</span>
                           <Select
                             name="property_type"
@@ -442,7 +442,7 @@ const LandingPage = () => {
                           />
                         </div>
 
-                        <div className="group flex flex-col px-4 sm:px-5 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                        <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
                           <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.guests')}</span>
                           <Select
                             name="guests"
@@ -538,10 +538,10 @@ const LandingPage = () => {
       <section
         ref={resultsRef}
         id="properties-section"
-        className="py-12 md:py-16 bg-white"
+        className="pt-6 pb-12 md:pt-8 md:pb-14 bg-white"
       >
         <Container>
-          <div className="mb-8">
+          <div className="mb-4">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               {filters.city || filters.property_type || filters.guests ? t('landing.searchResults') : t('landing.featuredProperties')}
             </h2>
