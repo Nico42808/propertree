@@ -12,6 +12,20 @@ import { useAuth } from '../hooks';
 import { formatCurrency } from '../utils/formatters';
 import { useFavorite, useFavorites } from '../hooks/useProperties';
 
+const T = {
+  title: 'text-3xl font-bold leading-tight text-slate-900',
+  value: 'text-sm sm:text-sm font-semibold leading-snug text-slate-900',
+  control: 'text-sm font-semibold leading-snug',
+  label: 'text-xs font-medium tracking-wide text-slate-500',
+  micro: 'text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500',
+  subtleControl: 'text-sm font-medium leading-snug text-slate-600',
+};
+
+const selectValueToken = T.value
+  .split(' ')
+  .map((cls) => `[&>div>button]:${cls}`)
+  .join(' ');
+
 const LandingPage = () => {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -95,11 +109,15 @@ const LandingPage = () => {
   ];
 
   const vicinityOptions = [
-    { value: '2', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 1 }) },
-    { value: '5', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 5 }) },
-    { value: '10', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 10 }) },
-    { value: '20', label: t('landing.vicinityDistance', { defaultValue: '{{distance}} km', distance: 20 }) },
-  ];
+    { value: '2', distance: 1 },
+    { value: '5', distance: 5 },
+    { value: '10', distance: 10 },
+    { value: '20', distance: 20 },
+  ].map(({ value, distance }) => ({
+    value,
+    distance,
+    label: t('landing.vicinityDistance', { defaultValue: `${distance} km`, distance }),
+  }));
 
   const vicinityStepIndex = Math.max(
     0,
@@ -369,7 +387,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen">
-      <section className="bg-slate-50 border-b border-slate-200">
+      <section className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6 sm:py-8">
             <div className="mx-auto max-w-7xl">
@@ -379,80 +397,74 @@ const LandingPage = () => {
               >
                 <div className="flex flex-col gap-4 sm:gap-5">
                   <div>
-                    <div className="bg-slate-100/80 rounded-full p-1.5 sm:p-2 shadow-inner">
+                    <div className="p-1.5 sm:p-2">
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleTermSelect('short')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'short' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
+                          className={`py-2.5 sm:py-3 rounded-full font-semibold leading-snug text-base transition-all whitespace-nowrap border ${term === 'short' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.shortTerm', { defaultValue: 'Short-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('mid')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
+                          className={`py-2.5 sm:py-3 rounded-full font-semibold leading-snug text-base transition-all whitespace-nowrap border ${term === 'mid' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.midTerm', { defaultValue: 'Mid-term' })}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleTermSelect('long')}
-                          className={`py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border ${term === 'long' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
+                          className={`py-2.5 sm:py-3 rounded-full font-semibold leading-snug text-base transition-all whitespace-nowrap border ${term === 'long' ? 'bg-propertree-green text-white shadow-sm border-propertree-green' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}
                         >
                           {t('landing.longTerm', { defaultValue: 'Long-term' })}
                         </button>
                       </div>
                     </div>
-                    <div className="hidden sm:grid grid-cols-3 gap-2 px-2 text-[10px] text-slate-500 text-center mt-2">
+                    <div className={`hidden sm:grid grid-cols-3 gap-2 px-2 ${T.label} text-center mt-2`}>
                       <span>{t('landing.shortTermHint', { defaultValue: '< 1 month' })}</span>
-                      <span>{t('landing.midTermHint', { defaultValue: '1-12 months' })}</span>
+                      <span>{t('landing.midTermHint', { defaultValue: '1–12 months' })}</span>
                       <span>{t('landing.longTermHint', { defaultValue: '12+ months' })}</span>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl sm:rounded-full bg-slate-50/80 border border-slate-200/80 overflow-visible">
+                  <div className="rounded-2xl bg-white/70 border border-slate-200 overflow-visible">
                     <div className="flex flex-col md:flex-row md:items-center">
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3">
                         <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
-                          <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.city')}</span>
+                          <span className={T.micro}>{t('landing.city')}</span>
                           <Select
                             name="city"
                             value={filters.city}
                             onChange={(e) => handleFilterChange('city', e.target.value)}
                             options={cities}
                             placeholder={t('landing.allCities')}
-                            variant="minimal"
-                            showChevron={false}
-                            className="mt-1"
+                            className={`mt-1 ${selectValueToken}`}
                           />
                         </div>
 
                         <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
-                          <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.propertyType')}</span>
+                          <span className={T.micro}>{t('landing.propertyType')}</span>
                           <Select
                             name="property_type"
                             value={filters.property_type}
                             onChange={(e) => handleFilterChange('property_type', e.target.value)}
                             options={propertyTypes}
                             placeholder={t('landing.allTypes')}
-                            variant="minimal"
-                            showChevron={false}
-                            className="mt-1"
+                            className={`mt-1 ${selectValueToken}`}
                           />
                         </div>
 
                         <div className="group flex flex-col px-4 sm:px-5 py-4 sm:py-5 transition-colors hover:bg-white/80 focus-within:bg-white">
-                          <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('landing.guests')}</span>
+                          <span className={T.micro}>{t('landing.guests')}</span>
                           <Select
                             name="guests"
                             value={filters.guests}
                             onChange={(e) => handleFilterChange('guests', e.target.value)}
                             options={guestOptions}
                             placeholder={`1 ${t('landing.guest')}`}
-                            variant="minimal"
-                            showChevron={false}
-                            className="mt-1"
+                            className={`mt-1 ${selectValueToken}`}
                           />
                         </div>
                       </div>
@@ -462,14 +474,14 @@ const LandingPage = () => {
                           <button
                             type="button"
                             onClick={clearFilters}
-                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none"
+                            className={`w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 ${T.subtleControl} transition-colors hover:bg-slate-50 focus-visible:outline-none`}
                           >
                             {t('landing.clearFilters', { defaultValue: 'Clear filters' })}
                           </button>
                         )}
                         <button
                           type="submit"
-                          className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-propertree-green text-white px-5 py-3 text-sm font-semibold transition-colors hover:bg-propertree-green-600 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                          className={`w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-propertree-green text-white px-5 py-3 ${T.control} transition-colors hover:bg-propertree-green-600 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                           disabled={searchLoading}
                         >
                           <Search className="w-5 h-5" />
@@ -483,8 +495,8 @@ const LandingPage = () => {
                     <div className="rounded-2xl border border-slate-200 bg-white/70 p-3 sm:p-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-2 text-left">
-                            {t('landing.minArea', { defaultValue: 'Minimum Area (m2)' })}
+                          <label className={`block ${T.label} mb-2 text-left`}>
+                            {t('landing.minArea', { defaultValue: 'Minimum Area' })} (m<sup>2</sup>)
                           </label>
                           <Select
                             name="min_area"
@@ -492,11 +504,11 @@ const LandingPage = () => {
                             onChange={(e) => handleFilterChange('min_area', e.target.value)}
                             options={minAreaOptions}
                             placeholder={t('landing.anyArea', { defaultValue: 'Any size' })}
-                            className="w-full"
+                            className={`w-full ${selectValueToken}`}
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-2 text-left">
+                          <label className={`block ${T.label} mb-2 text-left`}>
                             {t('landing.vicinity', { defaultValue: 'Vicinity' })}
                           </label>
                           <div className="w-full px-1 py-1">
@@ -515,10 +527,10 @@ const LandingPage = () => {
                               className="vicinity-slider w-full"
                               style={{ '--vicinity-progress': `${vicinityPercent}%` }}
                             />
-                            <div className="mt-2 flex justify-between text-[11px] font-semibold text-slate-600 sm:text-xs">
+                            <div className={`mt-2 flex justify-between ${T.label}`}>
                               {vicinityOptions.map((option) => (
                                 <span key={option.value || 'any'} className="text-center">
-                                  {option.label}
+                                  {t('landing.vicinityDistance', { defaultValue: `${option.distance} km`, distance: option.distance })}
                                 </span>
                               ))}
                             </div>
@@ -542,10 +554,10 @@ const LandingPage = () => {
       >
         <Container>
           <div className="mb-4">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className={`${T.title} mb-2`}>
               {filters.city || filters.property_type || filters.guests ? t('landing.searchResults') : t('landing.featuredProperties')}
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className={T.label}>
               {t('landing.propertiesAvailable', { count: visibleProperties.length })}
             </p>
           </div>

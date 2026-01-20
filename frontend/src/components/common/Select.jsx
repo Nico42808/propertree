@@ -38,7 +38,7 @@ const Select = ({
       w-full text-left bg-transparent border-0 px-0 py-1 ${minimalPadding}
       text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/20
       disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-200
-      font-medium text-sm sm:text-base
+      font-medium text-sm
       ${!selectedOption ? 'text-gray-400' : ''}
     `
     : `
@@ -48,7 +48,7 @@ const Select = ({
       focus:outline-none focus:ring-2 focus:ring-propertree-green/20 focus:border-propertree-green focus:shadow-md
       disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 disabled:shadow-none
       transition-all duration-300 ease-in-out
-      font-medium text-sm sm:text-base
+      font-medium text-sm
       ${!selectedOption ? 'text-gray-400' : ''}
       ${isOpen ? 'ring-2 ring-propertree-green/20 border-propertree-green shadow-md' : ''}
     `;
