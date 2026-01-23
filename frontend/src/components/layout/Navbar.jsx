@@ -364,12 +364,17 @@ const Navbar = () => {
                 >
                   {t('common.logout')}
                 </button>
+                <div className="mt-2 pt-2 border-t border-gray-100 px-1">
+                  <LanguageSwitcher
+                    align="left"
+                    direction="up"
+                    fullWidth
+                    showLabelOnMobile
+                  />
+                </div>
               </>
             ) : (
               <>
-                <div className="px-3 py-2">
-                  <LanguageSwitcher />
-                </div>
                 <Link
                   to="/login"
                   className="block px-3 py-2 rounded-md text-sm sm:text-base font-medium text-gray-700 hover:text-propertree-blue hover:bg-gray-50"
@@ -384,6 +389,14 @@ const Navbar = () => {
                 >
                   {t('common.signUp')}
                 </Link>
+                <div className="mt-2 pt-2 border-t border-gray-100 px-1">
+                  <LanguageSwitcher
+                    align="left"
+                    direction="up"
+                    fullWidth
+                    showLabelOnMobile
+                  />
+                </div>
               </>
             )}
           </div>

@@ -896,13 +896,13 @@ const LandingPage = () => {
           aria-hidden="true"
         />
         <div className="relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(60vh-4rem)] sm:min-h-[calc(60vh-4.5rem)] flex flex-col">
-            <div className="pt-8 sm:pt-12 lg:pt-14">
+          <div className="landing-hero-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(60vh-4rem)] sm:min-h-[calc(60vh-4.5rem)] flex flex-col">
+            <div className="pt-6 sm:pt-12 lg:pt-14">
               <div className="max-w-3xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white">
+                <h1 className="landing-hero-title text-3xl sm:text-4xl lg:text-5xl font-semibold text-white">
                   {t('landing.title', { defaultValue: 'Find it. Book it. Live it.' })}
                 </h1>
-                <p className="mt-2 text-sm sm:text-base font-medium text-white mb-6 sm:mb-8">
+                <p className="landing-hero-subtitle mt-2 text-sm sm:text-base font-medium text-white mb-4 sm:mb-8">
                   {t('landing.subtitle', {
                     defaultValue: 'From new branches to new beginnings, choose your next home.',
                   })}
@@ -910,7 +910,7 @@ const LandingPage = () => {
               </div>
             </div>
 
-            <div className="mt-auto pb-6 sm:pb-8">
+            <div className="mt-auto pb-4 sm:pb-8">
               <form
                 onSubmit={handleSearch}
                 className={`landing-search-form relative z-30 overflow-visible rounded-[28px] border border-white/70 p-5 sm:p-6 transition-[padding,box-shadow] duration-200 ${
@@ -974,7 +974,7 @@ const LandingPage = () => {
                     >
                       <div className="flex flex-col gap-4 sm:gap-5">
                   <div>
-                    <div ref={termTabsRef} className="p-1.5 sm:p-2">
+                    <div ref={termTabsRef} className="landing-term-tabs p-1.5 sm:p-2">
                       <div className="relative rounded-full border border-slate-200 bg-slate-50 p-1">
                         <span
                           className={`absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-propertree-green transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${term ? 'opacity-100' : 'opacity-0'} ${term === 'mid' ? 'translate-x-full' : term === 'long' ? 'translate-x-[200%]' : ''}`}
@@ -984,30 +984,30 @@ const LandingPage = () => {
                           <button
                             type="button"
                             onClick={() => handleTermSelect('short')}
-                            className={`py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'short' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
+                            className={`landing-term-tab py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'short' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
                           >
                             <span className="block">{t('landing.shortTerm', { defaultValue: 'Short-term' })}</span>
-                            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
+                            <span className="term-hint block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
                               {t('landing.shortTermHint', { defaultValue: '< 1 month' })}
                             </span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleTermSelect('mid')}
-                            className={`py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'mid' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
+                            className={`landing-term-tab py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'mid' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
                           >
                             <span className="block">{t('landing.midTerm', { defaultValue: 'Mid-term' })}</span>
-                            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
+                            <span className="term-hint block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
                               {t('landing.midTermHint', { defaultValue: '1-12 months' })}
                             </span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleTermSelect('long')}
-                            className={`py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'long' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
+                            className={`landing-term-tab py-2 sm:py-2.5 rounded-full font-semibold leading-snug text-sm sm:text-base whitespace-nowrap transition-[color,transform] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${term === 'long' ? 'text-white' : 'text-slate-500 hover:text-slate-800 active:scale-[0.99]'}`}
                           >
                             <span className="block">{t('landing.longTerm', { defaultValue: 'Long-term' })}</span>
-                            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
+                            <span className="term-hint block text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
                               {t('landing.longTermHint', { defaultValue: '12+ months' })}
                             </span>
                           </button>
@@ -1028,10 +1028,10 @@ const LandingPage = () => {
                           isSearchCollapsed || isSearchOverlayOpen ? 'bg-white' : 'bg-white/70'
                         }`}
                       >
-                        <div className="flex flex-col md:flex-row md:items-center">
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-4">
-                            <div className="group flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
-                              <span className={`${T.micro} normal-case tracking-normal`}>
+                        <div className="landing-filter-row flex md:items-center">
+                          <div className="landing-filter-grid flex-1 grid">
+                            <div className="landing-filter-cell group flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                              <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
                                 {t('landing.where', { defaultValue: 'Where' })}
                               </span>
                               <Select
@@ -1046,8 +1046,8 @@ const LandingPage = () => {
                               />
                             </div>
 
-                            <div className="group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
-                              <span className={`${T.micro} normal-case tracking-normal`}>
+                            <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                              <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
                                 {t('landing.when', { defaultValue: 'When' })}
                               </span>
                               <div className="relative mt-1">
@@ -1165,8 +1165,8 @@ const LandingPage = () => {
                               )}
                             </div>
 
-                            <div className="group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
-                              <span className={`${T.micro} normal-case tracking-normal`}>
+                            <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                              <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
                                 {t('landing.who', { defaultValue: 'Who' })}
                               </span>
                               <div className="relative mt-1">
@@ -1338,8 +1338,8 @@ const LandingPage = () => {
                               )}
                             </div>
 
-                            <div className="group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
-                              <span className={`${T.micro} normal-case tracking-normal`}>
+                            <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                              <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
                                 {t('landing.which', { defaultValue: 'Which' })}
                               </span>
                               <div className="relative mt-1">
@@ -1423,15 +1423,18 @@ const LandingPage = () => {
                             </div>
                           </div>
 
-                          <div className="p-2 md:pr-2 md:pl-3 flex flex-col items-end gap-2">
+                          <div className="landing-filter-actions p-3 md:pr-2 md:pl-3 flex flex-col items-stretch md:items-end gap-2">
                             <div className="flex w-full md:w-auto items-center gap-2">
                               <button
                                 type="submit"
                                 aria-label={searchLoading ? t('landing.searching') : t('landing.showOffers', { defaultValue: 'Show offers' })}
-                                className={`inline-flex h-12 w-12 items-center justify-center rounded-full bg-propertree-green text-white transition-[transform,background-color,box-shadow] hover:bg-propertree-green-600 hover:shadow-[0_10px_20px_rgba(44,62,58,0.25)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 disabled:cursor-not-allowed`}
+                                className={`landing-search-submit inline-flex h-12 w-full md:w-12 items-center justify-center rounded-full bg-propertree-green px-4 md:px-0 text-white transition-[transform,background-color,box-shadow] hover:bg-propertree-green-600 hover:shadow-[0_10px_20px_rgba(44,62,58,0.25)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 disabled:cursor-not-allowed`}
                                 disabled={searchLoading}
                               >
                                 <Search className="w-5 h-5" />
+                                <span className="landing-search-label ml-2 text-sm font-semibold md:hidden">
+                                  {searchLoading ? t('landing.searching') : t('landing.showOffers', { defaultValue: 'Show offers' })}
+                                </span>
                                 <span className="sr-only">{searchLoading ? t('landing.searching') : t('landing.showOffers', { defaultValue: 'Show offers' })}</span>
                               </button>
                             </div>

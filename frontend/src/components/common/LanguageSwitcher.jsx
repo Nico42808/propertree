@@ -14,7 +14,13 @@ const languages = [
   { code: 'pt', name: 'Português' },
 ];
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher = ({
+  className = '',
+  align = 'right',
+  direction = 'down',
+  fullWidth = false,
+  showLabelOnMobile = false,
+}) => {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -42,19 +48,25 @@ const LanguageSwitcher = () => {
     };
   }, []);
 
+  const alignClass = align === 'left' ? 'left-0' : 'right-0';
+  const directionClass = direction === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
+  const dropdownWidthClass = fullWidth ? 'w-full' : 'w-48';
+  const buttonWidthClass = fullWidth ? 'w-full justify-between' : '';
+  const labelClass = showLabelOnMobile ? 'inline' : 'hidden md:inline';
+
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-base font-medium text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 transition-colors focus:outline-none"
+        className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-base font-medium text-propertree-dark hover:text-propertree-green hover:bg-propertree-cream-100 transition-colors focus:outline-none ${buttonWidthClass}`}
         aria-label={t('language.selectLanguage')}
       >
         <Globe className="w-5 h-5" />
-        <span className="hidden md:inline">{currentLanguage.name}</span>
+        <span className={labelClass}>{currentLanguage.name}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-card py-1 border border-propertree-cream-300 z-50">
+        <div className={`absolute ${alignClass} ${directionClass} ${dropdownWidthClass} bg-white rounded-xl shadow-card py-1 border border-propertree-cream-300 z-50`}>
           {languages.map((lang) => (
             <button
               key={lang.code}
