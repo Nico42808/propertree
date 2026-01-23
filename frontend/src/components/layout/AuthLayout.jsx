@@ -11,7 +11,7 @@ const AuthLayout = () => {
       <header className="bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link to="/" className="flex items-center space-x-3">
-            <img src="/logo.jpg" alt="Propertree" className="h-10 w-auto object-contain" />
+            <img src="/logo.png" alt="Propertree" className="h-8 w-auto object-contain" />
             <span className="text-2xl font-bold text-gray-900">Propertree</span>
           </Link>
         </div>
@@ -37,4 +37,3 @@ const AuthLayout = () => {
 };
 
 export default AuthLayout;
-

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container } from '../../components/layout';
 import { Card, Badge, Loading, EmptyState, Button } from '../../components/common';
-import { Calendar, MapPin, Home, Euro, User, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, MapPin, Home, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
 
@@ -196,7 +196,6 @@ const LandlordBookings = () => {
                       <div>
                         <div className="text-sm text-gray-600">Total Price</div>
                         <div className="font-semibold flex items-center gap-1 text-propertree-green">
-                          <Euro className="w-4 h-4" />
                           {formatCurrency(booking.total_price)}
                         </div>
                       </div>

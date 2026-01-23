@@ -37,20 +37,35 @@
   },
   "landing": {
     "title": "Find it. Book it. Live it.",
-    "subtitle": "From new branches to new beginnings, choose your next home.",
+    "subtitle": "From new branches to new beginnings, choose your next home!",
     "searchProperties": "Search Properties",
     "searching": "Searching...",
+    "shortTerm": "Short-term",
+    "shortTermHint": "< 1 month",
+    "midTerm": "Mid-term",
+    "midTermHint": "1-12 months",
+    "longTerm": "Long-term",
+    "longTermHint": "12+ months",
+    "addGuests": "Add guests",
+    "month": "month",
+    "months": "months",
+    "midTermRange": "1 to 12 months",
+    "longTermRange": "12 to 120 months",
+    "where": "Where",
+    "when": "When",
+    "who": "Who",
+    "which": "Which",
     "city": "City",
-    "allCities": "All Cities",
+    "allCities": "All cities",
     "propertyType": "Property Type",
-    "allTypes": "All Types",
+    "allTypes": "All types",
     "guests": "Guests",
     "sortBy": "Sort By",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "minPrice": "Min Price (€)",
     "maxPrice": "Max Price (€)",
-    "featuredProperties": "Featured Properties",
+    "featuredProperties": "Featured properties",
     "searchResults": "Search Results",
     "propertiesAvailable": "{{count}} properties found",
     "noPropertiesFound": "No properties found",
@@ -270,8 +285,3 @@
     "detailedInsights": "Detailed insights"
   }
 }
-
-
-
-
-

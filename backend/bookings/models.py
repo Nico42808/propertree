@@ -2,6 +2,7 @@
 Simplified Booking model for Propertree.
 """
 import uuid
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from properties.models import Property
@@ -87,4 +88,15 @@ class Booking(models.Model):
     def calculate_total_price(self):
         """Calculate total price based on duration and property price."""
         duration = self.get_duration()
-        return duration * self.property.price_per_night
+        nights = Decimal(duration)
+        nightly_rate = Decimal(self.property.price_per_night or 0)
+        monthly_rate = self.property.monthly_price
+
+        # If only monthly pricing is set or stay is long-term, prorate from monthly.
+        if monthly_rate is not None:
+            monthly_rate = Decimal(monthly_rate)
+            if nightly_rate <= 0 or duration >= 30:
+                daily_rate = (monthly_rate / Decimal(30))
+                return (daily_rate * nights).quantize(Decimal("0.01"))
+
+        return (nightly_rate * nights).quantize(Decimal("0.01"))

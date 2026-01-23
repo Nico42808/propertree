@@ -37,9 +37,9 @@ const Navbar = () => {
           <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
               <img
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="Propertree"
-                className={`${isAdminUser ? 'h-8 sm:h-9' : 'h-9 sm:h-11'} w-auto object-contain`}
+                className={`${isAdminUser ? 'h-6 sm:h-7' : 'h-7 sm:h-8'} w-auto object-contain`}
               />
               <span className={`${isAdminUser ? 'text-base sm:text-lg' : 'text-lg sm:text-xl lg:text-2xl'} font-bold text-propertree-dark whitespace-nowrap`}>
                 Propertree

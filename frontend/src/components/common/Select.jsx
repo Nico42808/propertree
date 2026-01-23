@@ -19,6 +19,7 @@ const Select = ({
   required = false,
   variant = 'default',
   showChevron = true,
+  ensureVisibleOnOpen = false,
   className = '',
   ...props
 }) => {
@@ -129,6 +130,27 @@ const Select = ({
       };
     }
   }, [isOpen, focusedIndex, options, handleOptionSelect]);
+
+  useEffect(() => {
+    if (!isOpen || !ensureVisibleOnOpen) return;
+    const scrollFrame = requestAnimationFrame(() => {
+      const target = dropdownRef.current || selectRef.current;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const margin = 16;
+      const bottomOverflow = rect.bottom - window.innerHeight + margin;
+      if (bottomOverflow > 0) {
+        window.scrollBy({ top: bottomOverflow, behavior: 'smooth' });
+        return;
+      }
+      const topOverflow = rect.top - margin;
+      if (topOverflow < 0) {
+        window.scrollBy({ top: topOverflow, behavior: 'smooth' });
+      }
+    });
+
+    return () => cancelAnimationFrame(scrollFrame);
+  }, [ensureVisibleOnOpen, isOpen]);
 
   const handleToggle = () => {
     if (!disabled) {
@@ -251,6 +273,7 @@ Select.propTypes = {
   required: PropTypes.bool,
   variant: PropTypes.oneOf(['default', 'minimal']),
   showChevron: PropTypes.bool,
+  ensureVisibleOnOpen: PropTypes.bool,
   className: PropTypes.string,
 };
 

@@ -17,6 +17,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     tenant_name = serializers.SerializerMethodField()
     tenant_email = serializers.CharField(source='tenant.email', read_only=True)
     duration_nights = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -36,6 +37,12 @@ class BookingListSerializer(serializers.ModelSerializer):
         """Get booking duration."""
         return obj.get_duration()
 
+    def get_total_price(self, obj):
+        """Return stored total_price or compute a fallback for older records."""
+        if obj.total_price and obj.total_price > 0:
+            return obj.total_price
+        return obj.calculate_total_price()
+
 
 class BookingDetailSerializer(serializers.ModelSerializer):
     """Serializer for booking detail view."""
@@ -44,6 +51,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     tenant_name = serializers.SerializerMethodField()
     tenant_email = serializers.CharField(source='tenant.email', read_only=True)
     duration_nights = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()
     
     class Meta:
         model = Booking
@@ -63,6 +71,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     def get_duration_nights(self, obj):
         """Get booking duration."""
         return obj.get_duration()
+
+    def get_total_price(self, obj):
+        """Return stored total_price or compute a fallback for older records."""
+        if obj.total_price and obj.total_price > 0:
+            return obj.total_price
+        return obj.calculate_total_price()
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):

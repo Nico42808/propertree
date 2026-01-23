@@ -17,7 +17,9 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
-              <img src="/logo.jpg" alt="Propertree" className="h-10 w-auto object-contain" />
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white">
+                <img src="/logo.png" alt="Propertree" className="h-6 w-auto object-contain" />
+              </span>
               <span className="text-xl font-bold text-white">Propertree</span>
             </div>
             <p className="text-sm leading-relaxed">
