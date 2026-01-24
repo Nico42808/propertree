@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Container } from '../components/layout';
-import { Select, Card, Loading } from '../components/common';
+import { Card, Loading } from '../components/common';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import {
@@ -27,6 +27,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../hooks';
 import { formatCurrency } from '../utils/formatters';
+import { parseLocalDate, startOfToday, toLocalDateString } from '../utils/date';
 import { useFavorite, useFavorites } from '../hooks/useProperties';
 
 const T = {
@@ -37,11 +38,6 @@ const T = {
   micro: 'text-[11px] font-semibold tracking-[0.12em] uppercase text-slate-500',
   subtleControl: 'text-sm font-medium leading-snug text-slate-600',
 };
-
-const selectValueToken = T.value
-  .split(' ')
-  .map((cls) => `[&>div>button]:${cls}`)
-  .join(' ');
 
 const LandingPage = () => {
   const { t, i18n } = useTranslation();
@@ -70,7 +66,7 @@ const LandingPage = () => {
     return map;
   }, [favoritesData]);
   
-  const todayString = new Date().toISOString().split('T')[0];
+  const todayString = toLocalDateString(startOfToday());
   const initialFilters = {
     city: '',
     property_type: '',
@@ -95,6 +91,9 @@ const LandingPage = () => {
     pets: 0,
   };
   const [guestCounts, setGuestCounts] = useState(() => ({ ...defaultGuestCounts }));
+  const [isCityOpen, setIsCityOpen] = useState(false);
+  const cityPanelRef = useRef(null);
+  const cityTriggerRef = useRef(null);
   const [isGuestOpen, setIsGuestOpen] = useState(false);
   const guestPanelRef = useRef(null);
   const guestTriggerRef = useRef(null);
@@ -237,6 +236,39 @@ const LandingPage = () => {
       setShowMoreFilters(false);
     }
   }, [term]);
+
+  useEffect(() => {
+    if (!isCityOpen) return;
+
+    const scrollFrame = requestAnimationFrame(() => {
+      ensureDropdownInView(cityPanelRef.current);
+    });
+
+    const handleClickOutside = (event) => {
+      if (cityPanelRef.current && cityPanelRef.current.contains(event.target)) {
+        return;
+      }
+      if (cityTriggerRef.current && cityTriggerRef.current.contains(event.target)) {
+        return;
+      }
+      setIsCityOpen(false);
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsCityOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      cancelAnimationFrame(scrollFrame);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [ensureDropdownInView, isCityOpen]);
 
   useEffect(() => {
     if (!isGuestOpen) return;
@@ -521,8 +553,10 @@ const LandingPage = () => {
       if (activeFilters.property_type) params.append('property_type', activeFilters.property_type);
 
       // Apply date range filters so backend can exclude already-booked properties
-      if (activeFilters.check_in) params.append('check_in', activeFilters.check_in);
-      if (activeFilters.check_out) params.append('check_out', activeFilters.check_out);
+      if (activeFilters.check_in && activeFilters.check_out) {
+        params.append('check_in', activeFilters.check_in);
+        params.append('check_out', activeFilters.check_out);
+      }
       
       // Handle sorting
       if (activeFilters.sort_by) {
@@ -572,27 +606,34 @@ const LandingPage = () => {
     // Prevent selecting past dates in the search filters
     if (name === 'check_in' || name === 'check_out') {
       if (value) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const selected = new Date(value);
-        selected.setHours(0, 0, 0, 0);
+        const today = startOfToday();
+        const selected = parseLocalDate(value);
 
-        if (selected < today) {
+        if (selected && selected < today) {
           toast.error(t('errors.cannotSearchWithPastDates'));
           return;
         }
       }
 
       // Ensure check-out is always after check-in
-      if (name === 'check_in' && filters.check_out && value && value >= filters.check_out) {
-        toast.error(t('errors.checkoutMustBeAfterCheckin'));
-        return;
+      if (name === 'check_in' && filters.check_out && value) {
+        const nextCheckIn = parseLocalDate(value);
+        const currentCheckOut = parseLocalDate(filters.check_out);
+        if (nextCheckIn && currentCheckOut && nextCheckIn >= currentCheckOut) {
+          toast.error(t('errors.checkoutMustBeAfterCheckin'));
+          return;
+        }
       }
 
-      if (name === 'check_out' && filters.check_in && value && value <= filters.check_in) {
-        toast.error(t('errors.checkoutMustBeAfterCheckin'));
-        return;
+      if (name === 'check_out' && filters.check_in && value) {
+        const nextCheckOut = parseLocalDate(value);
+        const currentCheckIn = parseLocalDate(filters.check_in);
+        if (nextCheckOut && currentCheckIn && nextCheckOut <= currentCheckIn) {
+          toast.error(t('errors.checkoutMustBeAfterCheckin'));
+          return;
+        }
       }
+
     }
 
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -606,6 +647,10 @@ const LandingPage = () => {
 
   const totalGuests = guestCounts.adults + guestCounts.children + guestCounts.infants;
   const canShowMoreFilters = term === 'mid' || term === 'long';
+  const selectedCityOption = cities.find((item) => item.value === filters.city);
+  const cityLabel =
+    selectedCityOption?.label || t('landing.searchDestinations', { defaultValue: 'Search destinations' });
+  const hasCitySelection = Boolean(selectedCityOption);
   const selectedPropertyType = propertyTypeItems.find(
     (item) => item.value === filters.property_type
   );
@@ -622,10 +667,11 @@ const LandingPage = () => {
     if (!filters.check_in && !filters.check_out) {
       return t('landing.addDates', { defaultValue: 'Add dates' });
     }
-    const formatDate = (dateStr) =>
-      new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
-        new Date(dateStr)
-      );
+    const formatDate = (dateStr) => {
+      const parsed = parseLocalDate(dateStr);
+      if (!parsed) return '';
+      return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(parsed);
+    };
     if (filters.check_in && filters.check_out) {
       return `${formatDate(filters.check_in)} - ${formatDate(filters.check_out)}`;
     }
@@ -690,7 +736,7 @@ const LandingPage = () => {
   const handleDateChange = (dates) => {
     if (term === 'mid' || term === 'long') {
       const start = Array.isArray(dates) ? dates[0] : dates;
-      const startString = start ? start.toISOString().split('T')[0] : '';
+      const startString = start ? toLocalDateString(start) : '';
       setFilters((prev) => ({
         ...prev,
         check_in: startString,
@@ -700,10 +746,12 @@ const LandingPage = () => {
     }
 
     const [start, end] = dates;
-    const startString = start ? start.toISOString().split('T')[0] : '';
-    const endString = end ? end.toISOString().split('T')[0] : '';
+    const startString = start ? toLocalDateString(start) : '';
+    const endString = end ? toLocalDateString(end) : '';
+    const startDate = startString ? parseLocalDate(startString) : null;
+    const endDate = endString ? parseLocalDate(endString) : null;
 
-    if (startString && endString && endString <= startString) {
+    if (startDate && endDate && endDate <= startDate) {
       setFilters((prev) => ({
         ...prev,
         check_in: startString,
@@ -758,22 +806,57 @@ const LandingPage = () => {
     ? properties.filter((property) => getRentalTerms(property).includes(termFilter))
     : properties;
 
+  const hasDateFilter = Boolean(filters.check_in && filters.check_out);
+  const isPropertyAvailableForRange = (property) => {
+    if (!hasDateFilter) return true;
+    const startDate = parseLocalDate(filters.check_in);
+    const endDate = parseLocalDate(filters.check_out);
+    if (!startDate || !endDate || endDate <= startDate) return true;
+
+    const bookedDates = Array.isArray(property?.booked_dates) ? property.booked_dates : [];
+    if (bookedDates.length === 0) return true;
+
+    return !bookedDates.some((booking) => {
+      const bookedStart = parseLocalDate(booking.check_in);
+      const bookedEnd = parseLocalDate(booking.check_out);
+      if (!bookedStart || !bookedEnd) return false;
+      return startDate < bookedEnd && endDate > bookedStart;
+    });
+  };
+
+  const availableProperties = hasDateFilter
+    ? visibleProperties.filter(isPropertyAvailableForRange)
+    : visibleProperties;
+
+  const buildPropertyLink = (propertyId) => {
+    const params = new URLSearchParams();
+    if (filters.check_in && filters.check_out) {
+      params.set('check_in', filters.check_in);
+      params.set('check_out', filters.check_out);
+    }
+    if (term) params.set('term', term);
+    const query = params.toString();
+    return query ? `/properties/${propertyId}?${query}` : `/properties/${propertyId}`;
+  };
+
   // Date helpers and term-based bounds
   const addDays = (dateStr, days) => {
-    const d = new Date(dateStr);
+    const d = parseLocalDate(dateStr);
+    if (!d) return '';
     d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
+    return toLocalDateString(d);
   };
 
   const addMonths = (dateStr, months) => {
-    const d = new Date(dateStr);
+    const d = parseLocalDate(dateStr);
+    if (!d) return '';
     const origDay = d.getDate();
     d.setMonth(d.getMonth() + months);
     // If the month roll-over changed the day (e.g., Feb 30 -> Mar 2), adjust to last day of month
     if (d.getDate() < origDay) {
       d.setDate(0); // last day of previous month
     }
-    return d.toISOString().split('T')[0];
+    return toLocalDateString(d);
   };
 
   const getMonthBounds = () => {
@@ -790,8 +873,11 @@ const LandingPage = () => {
     if (!start || !end) {
       return clampStayMonths(getMonthBounds().min);
     }
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    const startDate = parseLocalDate(start);
+    const endDate = parseLocalDate(end);
+    if (!startDate || !endDate) {
+      return clampStayMonths(getMonthBounds().min);
+    }
     let months =
       (endDate.getFullYear() - startDate.getFullYear()) * 12 +
       (endDate.getMonth() - startDate.getMonth());
@@ -841,8 +927,8 @@ const LandingPage = () => {
 
   // compute bounds for check_out based on selected term and check_in
   const coBounds = computeCheckOutBounds();
-  const checkInDate = filters.check_in ? new Date(filters.check_in) : null;
-  const checkOutDate = filters.check_out ? new Date(filters.check_out) : null;
+  const checkInDate = filters.check_in ? parseLocalDate(filters.check_in) : null;
+  const checkOutDate = filters.check_out ? parseLocalDate(filters.check_out) : null;
 
   const handleFavoriteClick = async (e, property) => {
     e.preventDefault();
@@ -1030,20 +1116,68 @@ const LandingPage = () => {
                       >
                         <div className="landing-filter-row flex md:items-center">
                           <div className="landing-filter-grid flex-1 grid">
-                            <div className="landing-filter-cell group flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
+                            <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
                               <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
                                 {t('landing.where', { defaultValue: 'Where' })}
                               </span>
-                              <Select
-                                name="city"
-                                value={filters.city}
-                                onChange={(e) => handleFilterChange('city', e.target.value)}
-                                options={cities}
-                                placeholder={t('landing.searchDestinations', { defaultValue: 'Search destinations' })}
-                                variant="minimal"
-                                ensureVisibleOnOpen
-                                className={`mt-1 ${selectValueToken}`}
-                              />
+                              <div className="relative mt-1">
+                                <button
+                                  type="button"
+                                  ref={cityTriggerRef}
+                                  onClick={() => setIsCityOpen((prev) => !prev)}
+                                  aria-expanded={isCityOpen}
+                                  aria-controls="city-menu"
+                                  className={`w-full bg-transparent px-0 py-1 pr-6 text-left text-sm font-semibold leading-snug transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-propertree-green/30 ${
+                                    hasCitySelection ? 'text-slate-900' : 'text-slate-400'
+                                  }`}
+                                >
+                                  <span className="block truncate">{cityLabel}</span>
+                                </button>
+                                <ChevronDown
+                                  className={`pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-transform duration-300 ${
+                                    isCityOpen ? 'rotate-180' : ''
+                                  }`}
+                                />
+                              </div>
+
+                              {isCityOpen && (
+                                <div
+                                  ref={cityPanelRef}
+                                  id="city-menu"
+                                  role="dialog"
+                                  aria-label={t('landing.where', { defaultValue: 'Where' })}
+                                  className="absolute left-0 top-full z-40 mt-3 w-fit max-w-[92vw] rounded-3xl border border-slate-200 bg-white p-4 sm:p-6"
+                                >
+                                  {cities.length === 0 ? (
+                                    <div className="px-3 py-2 text-sm text-slate-500">
+                                      {t('landing.noCities', { defaultValue: 'No cities available' })}
+                                    </div>
+                                  ) : (
+                                    <div className="max-h-72 space-y-1 overflow-auto pr-1">
+                                      {cities.map((city) => {
+                                        const isSelected = city.value === filters.city;
+                                        return (
+                                          <button
+                                            key={city.value || 'all'}
+                                            type="button"
+                                            onClick={() => {
+                                              handleFilterChange('city', city.value);
+                                              setIsCityOpen(false);
+                                            }}
+                                            className={`flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm font-semibold transition-[background-color,transform] duration-200 ${
+                                              isSelected
+                                                ? 'bg-propertree-green/10 text-propertree-green'
+                                                : 'text-slate-700 hover:bg-slate-50 active:scale-[0.99]'
+                                            }`}
+                                          >
+                                            <span className="truncate">{city.label}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
 
                             <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
@@ -1096,12 +1230,12 @@ const LandingPage = () => {
                                       selectsRange={term !== 'mid' && term !== 'long'}
                                       inline
                                       monthsShown={term === 'mid' || term === 'long' ? 1 : 2}
-                                      minDate={new Date()}
+                                      minDate={startOfToday()}
                                       maxDate={
                                         term === 'mid' || term === 'long'
                                           ? undefined
                                           : coBounds.max
-                                          ? new Date(coBounds.max)
+                                          ? parseLocalDate(coBounds.max)
                                           : undefined
                                       }
                                       calendarClassName="landing-date-picker"
@@ -1150,11 +1284,15 @@ const LandingPage = () => {
                                           <p className="mt-3 text-xs text-slate-500">
                                             {t('landing.midTermCheckout', { defaultValue: 'Checkout' })}:{' '}
                                             <span className="font-semibold text-slate-700">
-                                              {new Intl.DateTimeFormat('en-GB', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                                year: 'numeric',
-                                              }).format(new Date(addMonths(filters.check_in, stayMonths)))}
+                                              {(() => {
+                                                const previewDate = parseLocalDate(addMonths(filters.check_in, stayMonths));
+                                                if (!previewDate) return '';
+                                                return new Intl.DateTimeFormat('en-GB', {
+                                                  day: '2-digit',
+                                                  month: 'short',
+                                                  year: 'numeric',
+                                                }).format(previewDate);
+                                              })()}
                                             </span>
                                           </p>
                                         )}
@@ -1587,7 +1725,7 @@ const LandingPage = () => {
               {filters.city || filters.property_type || filters.guests ? t('landing.searchResults') : t('landing.featuredProperties')}
             </h2>
             <p className={T.label}>
-              {t('landing.propertiesAvailable', { count: visibleProperties.length })}
+              {t('landing.propertiesAvailable', { count: availableProperties.length })}
             </p>
           </div>
 
@@ -1595,7 +1733,7 @@ const LandingPage = () => {
             <div className="text-center py-12">
               <Loading />
             </div>
-          ) : visibleProperties.length === 0 ? (
+          ) : availableProperties.length === 0 ? (
             <div className="text-center py-12">
               <HomeIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('landing.noPropertiesFound')}</h3>
@@ -1603,7 +1741,7 @@ const LandingPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-              {visibleProperties.map((property) => {
+              {availableProperties.map((property) => {
                 const monthlyPrice = getMonthlyPrice(property);
                 const nightlyPrice = getNightlyPrice(property);
                 const terms = getRentalTerms(property);
@@ -1615,7 +1753,7 @@ const LandingPage = () => {
                 const normalizedSuffix = String(priceSuffix || '').replace(/^\/\s*/, '');
 
                 return (
-                  <Link key={property.id} to={`/properties/${property.id}`} className="group">
+                  <Link key={property.id} to={buildPropertyLink(property.id)} className="group">
                     <Card className="h-full !bg-transparent !border-none !shadow-none" padding={false}>
                       {/* Property Image */}
                       <div className="card-media h-auto aspect-[4/3] bg-gray-200 overflow-hidden rounded-2xl relative">

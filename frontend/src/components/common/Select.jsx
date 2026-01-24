@@ -20,6 +20,10 @@ const Select = ({
   variant = 'default',
   showChevron = true,
   ensureVisibleOnOpen = false,
+  buttonClassName = '',
+  chevronClassName = '',
+  menuClassName = '',
+  optionClassName = '',
   className = '',
   ...props
 }) => {
@@ -41,6 +45,7 @@ const Select = ({
       disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-200
       font-medium text-sm
       ${!selectedOption ? 'text-gray-400' : ''}
+      ${buttonClassName}
     `
     : `
       w-full rounded-lg sm:rounded-xl border-2 ${hasError ? 'border-red-500' : 'border-gray-200'}
@@ -52,6 +57,7 @@ const Select = ({
       font-medium text-sm
       ${!selectedOption ? 'text-gray-400' : ''}
       ${isOpen ? 'ring-2 ring-propertree-green/20 border-propertree-green shadow-md' : ''}
+      ${buttonClassName}
     `;
 
   const handleOptionSelect = useCallback((optionValue) => {
@@ -189,7 +195,7 @@ const Select = ({
             <ChevronDown 
               className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
                 disabled ? 'opacity-50' : ''
-              } ${isOpen ? 'transform rotate-180' : ''}`} 
+              } ${isOpen ? 'transform rotate-180' : ''} ${chevronClassName}`} 
             />
           </div>
         )}
@@ -198,7 +204,7 @@ const Select = ({
         {isOpen && !disabled && (
           <div
             ref={dropdownRef}
-            className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 max-h-60 overflow-auto"
+            className={`absolute z-50 w-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 max-h-60 overflow-auto ${menuClassName}`}
             role="listbox"
             style={{
               scrollbarWidth: 'thin',
@@ -236,6 +242,7 @@ const Select = ({
                       }
                       ${isFirst ? 'rounded-t-lg' : ''}
                       ${isLast ? 'rounded-b-lg' : ''}
+                      ${optionClassName}
                     `}
                   >
                     {option.label}
@@ -274,6 +281,10 @@ Select.propTypes = {
   variant: PropTypes.oneOf(['default', 'minimal']),
   showChevron: PropTypes.bool,
   ensureVisibleOnOpen: PropTypes.bool,
+  buttonClassName: PropTypes.string,
+  chevronClassName: PropTypes.string,
+  menuClassName: PropTypes.string,
+  optionClassName: PropTypes.string,
   className: PropTypes.string,
 };
 

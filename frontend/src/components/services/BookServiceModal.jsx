@@ -10,6 +10,7 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import TextArea from '../common/TextArea';
 import { createServiceBooking } from '../../services/serviceService';
+import { startOfToday, toLocalDateString } from '../../utils/date';
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -130,9 +131,9 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
 
   // Get tomorrow's date as minimum date
   const getTomorrowDate = () => {
-    const tomorrow = new Date();
+    const tomorrow = startOfToday();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return toLocalDateString(tomorrow);
   };
 
   return (

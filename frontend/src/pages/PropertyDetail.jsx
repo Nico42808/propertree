@@ -10,6 +10,7 @@ import { Card, Button, Badge, Loading, EmptyState } from '../components/common';
 import { MapPin, Users, Bed, Bath, Home, ChevronLeft, ChevronRight, Check, X, Wifi, Car, Utensils, Tv, Wind, Waves, Dumbbell, Coffee, Phone } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../utils/formatters';
+import { parseLocalDate, startOfToday, toLocalDateString } from '../utils/date';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -19,6 +20,7 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const searchParamsKey = searchParams.toString();
   const bookingTerm = searchParams.get('term') || sessionStorage.getItem('bookingTerm') || '';
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,19 +39,19 @@ const PropertyDetail = () => {
   }, [id]);
 
   const normalizeDate = (dateValue) => {
-    const d = new Date(dateValue);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    return parseLocalDate(dateValue);
   };
 
   const addDays = (dateValue, days) => {
-    const d = new Date(dateValue);
+    const d = normalizeDate(dateValue);
+    if (!d) return null;
     d.setDate(d.getDate() + days);
     return d;
   };
 
   const addMonths = (dateValue, months) => {
-    const d = new Date(dateValue);
+    const d = normalizeDate(dateValue);
+    if (!d) return null;
     const origDay = d.getDate();
     d.setMonth(d.getMonth() + months);
     if (d.getDate() < origDay) {
@@ -77,6 +79,7 @@ const PropertyDetail = () => {
   const getCheckoutBounds = (checkInValue, termOverride = '') => {
     if (!checkInValue) return { minDate: null, maxDate: null };
     const checkIn = normalizeDate(checkInValue);
+    if (!checkIn) return { minDate: null, maxDate: null };
     const activeTerm = getEffectiveBookingTerm(termOverride);
 
     if (activeTerm === 'short') {
@@ -97,6 +100,7 @@ const PropertyDetail = () => {
     if (!activeTerm || !checkInValue || !checkOutDate) return true;
     const { minDate, maxDate } = getCheckoutBounds(checkInValue, activeTerm);
     const checkout = normalizeDate(checkOutDate);
+    if (!checkout) return false;
     if (minDate && checkout < minDate) return false;
     if (maxDate && checkout > maxDate) return false;
     return true;
@@ -128,9 +132,12 @@ const PropertyDetail = () => {
       return true;
     }
 
-    const date = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const date = normalizeDate(dateString);
+    const today = startOfToday();
+
+    if (!date) {
+      return false;
+    }
 
     // Don't allow past dates
     if (date < today) {
@@ -139,8 +146,11 @@ const PropertyDetail = () => {
 
     // Check if date falls within any booked range
     for (const booking of property.booked_dates) {
-      const checkIn = new Date(booking.check_in);
-      const checkOut = new Date(booking.check_out);
+      const checkIn = normalizeDate(booking.check_in);
+      const checkOut = normalizeDate(booking.check_out);
+      if (!checkIn || !checkOut) {
+        continue;
+      }
       
       // Date is unavailable if it's >= check_in and < check_out
       if (date >= checkIn && date < checkOut) {
@@ -153,25 +163,25 @@ const PropertyDetail = () => {
 
   // Helper function to check if a date should be disabled in the date picker
   const isDateDisabled = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
+    const today = startOfToday();
+    const target = normalizeDate(date);
 
     // Disable past dates
-    if (date < today) {
+    if (!target || target < today) {
       return true;
     }
 
     // Disable dates that fall within booked ranges
     if (property?.booked_dates && property.booked_dates.length > 0) {
       for (const booking of property.booked_dates) {
-        const checkIn = new Date(booking.check_in);
-        const checkOut = new Date(booking.check_out);
-        checkIn.setHours(0, 0, 0, 0);
-        checkOut.setHours(0, 0, 0, 0);
+        const checkIn = normalizeDate(booking.check_in);
+        const checkOut = normalizeDate(booking.check_out);
+        if (!checkIn || !checkOut) {
+          continue;
+        }
         
         // Date is disabled if it's >= check_in and < check_out
-        if (date >= checkIn && date < checkOut) {
+        if (target >= checkIn && target < checkOut) {
           return true;
         }
       }
@@ -199,6 +209,21 @@ const PropertyDetail = () => {
     return false;
   };
 
+  const hasDateRangeConflict = (checkInDate, checkOutDate) => {
+    if (!property?.booked_dates || !checkInDate || !checkOutDate) {
+      return false;
+    }
+
+    return property.booked_dates.some((booking) => {
+      const bookedCheckIn = normalizeDate(booking.check_in);
+      const bookedCheckOut = normalizeDate(booking.check_out);
+      if (!bookedCheckIn || !bookedCheckOut) {
+        return false;
+      }
+      return checkInDate < bookedCheckOut && checkOutDate > bookedCheckIn;
+    });
+  };
+
   const fetchProperty = async () => {
     setLoading(true);
     try {
@@ -221,6 +246,60 @@ const PropertyDetail = () => {
     }
   };
 
+  useEffect(() => {
+    if (!property) return;
+    const requestedCheckIn = searchParams.get('check_in');
+    const requestedCheckOut = searchParams.get('check_out');
+    if (!requestedCheckIn && !requestedCheckOut) return;
+
+    setBookingData((prev) => {
+      if (prev.check_in || prev.check_out) {
+        return prev;
+      }
+
+      const today = startOfToday();
+      let checkInDate = normalizeDate(requestedCheckIn);
+      let checkOutDate = normalizeDate(requestedCheckOut);
+
+      if (!checkInDate || checkInDate < today) {
+        return prev;
+      }
+
+      if (checkOutDate && checkOutDate <= checkInDate) {
+        checkOutDate = null;
+      }
+
+      const activeTerm = getEffectiveBookingTerm();
+      if (checkOutDate && !isCheckoutWithinBounds(checkOutDate, toLocalDateString(checkInDate), activeTerm)) {
+        checkOutDate = null;
+      }
+
+      if (!isDateAvailable(toLocalDateString(checkInDate))) {
+        return prev;
+      }
+
+      if (checkOutDate && hasDateRangeConflict(checkInDate, checkOutDate)) {
+        checkOutDate = null;
+      }
+
+      if (!checkOutDate && (activeTerm === 'mid' || activeTerm === 'long')) {
+        const { minDate } = getCheckoutBounds(checkInDate, activeTerm);
+        if (minDate && !hasDateRangeConflict(checkInDate, minDate)) {
+          checkOutDate = minDate;
+        }
+      }
+
+      const nextCheckIn = checkInDate ? toLocalDateString(checkInDate) : '';
+      const nextCheckOut = checkOutDate ? toLocalDateString(checkOutDate) : '';
+
+      if (nextCheckIn === prev.check_in && nextCheckOut === prev.check_out) {
+        return prev;
+      }
+
+      return { ...prev, check_in: nextCheckIn, check_out: nextCheckOut };
+    });
+  }, [property, searchParamsKey]);
+
   const handleClose = () => {
     if (isAdmin()) {
       navigate('/admin/properties');
@@ -238,8 +317,13 @@ const PropertyDetail = () => {
       return;
     }
 
-    const checkIn = new Date(bookingData.check_in);
-    const checkOut = new Date(bookingData.check_out);
+    const checkIn = normalizeDate(bookingData.check_in);
+    const checkOut = normalizeDate(bookingData.check_out);
+
+    if (!checkIn || !checkOut) {
+      toast.error(t('propertyDetail.pleaseSelectDates'));
+      return;
+    }
     
     if (checkIn >= checkOut) {
       toast.error(t('propertyDetail.checkoutAfterCheckin'));
@@ -253,7 +337,8 @@ const PropertyDetail = () => {
       return;
     }
 
-    if (checkIn < new Date()) {
+    const today = startOfToday();
+    if (checkIn < today) {
       toast.error(t('propertyDetail.checkinNotPast'));
       return;
     }
@@ -267,7 +352,7 @@ const PropertyDetail = () => {
     // Check if any date in the range is unavailable
     const dateRange = [];
     for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
-      dateRange.push(new Date(d).toISOString().split('T')[0]);
+      dateRange.push(toLocalDateString(d));
     }
 
     const unavailableDates = dateRange.filter(date => !isDateAvailable(date));
@@ -665,15 +750,15 @@ const PropertyDetail = () => {
                   {t('propertyDetail.checkIn')}
                 </label>
                 <DatePicker
-                  selected={bookingData.check_in ? new Date(bookingData.check_in) : null}
+                  selected={bookingData.check_in ? normalizeDate(bookingData.check_in) : null}
                   onChange={(date) => {
                     if (date) {
-                      const dateString = date.toISOString().split('T')[0];
+                      const dateString = toLocalDateString(date);
                       const activeTerm = getEffectiveBookingTerm();
                       const nextData = { ...bookingData, check_in: dateString };
                       if (bookingData.check_out) {
                         const isValid = isCheckoutWithinBounds(
-                          new Date(bookingData.check_out),
+                          normalizeDate(bookingData.check_out),
                           dateString,
                           activeTerm
                         );
@@ -687,10 +772,10 @@ const PropertyDetail = () => {
                           const checkOutDate = minDate;
                           let hasConflict = false;
                           if (property?.booked_dates) {
-                            const checkInDate = new Date(dateString);
+                            const checkInDate = normalizeDate(dateString);
                             for (const booking of property.booked_dates) {
-                              const bookedCheckIn = new Date(booking.check_in);
-                              const bookedCheckOut = new Date(booking.check_out);
+                              const bookedCheckIn = normalizeDate(booking.check_in);
+                              const bookedCheckOut = normalizeDate(booking.check_out);
                               if (checkInDate < bookedCheckOut && checkOutDate > bookedCheckIn) {
                                 hasConflict = true;
                                 break;
@@ -698,7 +783,7 @@ const PropertyDetail = () => {
                             }
                           }
                           if (!hasConflict && isCheckoutWithinBounds(checkOutDate, dateString, activeTerm)) {
-                            nextData.check_out = checkOutDate.toISOString().split('T')[0];
+                            nextData.check_out = toLocalDateString(checkOutDate);
                           }
                         }
                       }
@@ -706,7 +791,7 @@ const PropertyDetail = () => {
                     }
                   }}
                   filterDate={(date) => !isDateDisabled(date)}
-                  minDate={new Date()}
+                  minDate={startOfToday()}
                   dateFormat="dd-MM-yyyy"
                   placeholderText={t('propertyDetail.selectCheckInDate')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-propertree-green"
@@ -725,12 +810,12 @@ const PropertyDetail = () => {
                   {t('propertyDetail.checkOut')}
                 </label>
                 <DatePicker
-                  selected={bookingData.check_out ? new Date(bookingData.check_out) : null}
+                  selected={bookingData.check_out ? normalizeDate(bookingData.check_out) : null}
                   onChange={(date) => {
                     if (date) {
-                      const dateString = date.toISOString().split('T')[0];
-                      const checkInDate = bookingData.check_in ? new Date(bookingData.check_in) : null;
-                      const checkOutDate = date;
+                      const dateString = toLocalDateString(date);
+                      const checkInDate = bookingData.check_in ? normalizeDate(bookingData.check_in) : null;
+                      const checkOutDate = normalizeDate(date);
                       
                       if (checkInDate && checkOutDate <= checkInDate) {
                         toast.error(t('propertyDetail.checkoutAfterCheckin'));
@@ -748,8 +833,8 @@ const PropertyDetail = () => {
                       let hasConflict = false;
                       if (checkInDate && property?.booked_dates) {
                         for (const booking of property.booked_dates) {
-                          const bookedCheckIn = new Date(booking.check_in);
-                          const bookedCheckOut = new Date(booking.check_out);
+                          const bookedCheckIn = normalizeDate(booking.check_in);
+                          const bookedCheckOut = normalizeDate(booking.check_out);
                           
                           // Check for overlap: new booking overlaps if check_in < booked_check_out AND check_out > booked_check_in
                           if (checkInDate < bookedCheckOut && checkOutDate > bookedCheckIn) {
@@ -769,8 +854,8 @@ const PropertyDetail = () => {
                   filterDate={(date) => !isCheckoutDateDisabled(date)}
                   minDate={
                     bookingData.check_in
-                      ? (getCheckoutBounds(bookingData.check_in, getEffectiveBookingTerm()).minDate || new Date(bookingData.check_in))
-                      : new Date()
+                      ? (getCheckoutBounds(bookingData.check_in, getEffectiveBookingTerm()).minDate || normalizeDate(bookingData.check_in))
+                      : startOfToday()
                   }
                   maxDate={getCheckoutBounds(bookingData.check_in, getEffectiveBookingTerm()).maxDate || null}
                   dateFormat="dd-MM-yyyy"
