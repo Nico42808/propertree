@@ -204,8 +204,8 @@ const AssetPerformance = () => {
   // KPI explanations
   const kpiExplanations = {
     total_revenue: {
-      title: 'Total Revenue',
-      content: 'Total Revenue represents the sum of all confirmed and completed bookings within the selected time period. This includes the total_price from all bookings with status "confirmed" or "completed" that were created during the period. The percentage change compares this period\'s revenue to the previous period of equal length.'
+      title: 'Pipeline Revenue',
+      content: 'Pipeline Revenue represents the sum of all confirmed and completed bookings within the selected time period. This includes the total_price from all bookings with status "confirmed" or "completed" that were created during the period. The percentage change compares this period\'s revenue to the previous period of equal length.'
     },
     occupancy_rate: {
       title: 'Occupancy Rate',
@@ -452,7 +452,7 @@ const AssetPerformance = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Revenue */}
+        {/* Pipeline Revenue */}
         <Card>
           <Card.Body>
             <div className="flex items-center justify-between mb-4">
@@ -480,7 +480,7 @@ const AssetPerformance = () => {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+            <p className="text-sm text-gray-600 mb-1">Pipeline Revenue</p>
             <p className="text-2xl font-bold text-gray-900">
               {formatCurrency(totalRevenue)}
             </p>

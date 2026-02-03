@@ -363,7 +363,7 @@ const Analytics = () => {
           <Card.Body>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                <p className="text-sm text-gray-600 mb-1">Pipeline Revenue</p>
                 <p className="text-2xl font-bold text-purple-600">
                   {formatCurrency(analytics?.summary?.total_revenue ?? 0)}
                 </p>
@@ -571,7 +571,7 @@ const Analytics = () => {
                   labelFormatter={(label) => `City: ${label}`}
                 />
                 <Legend />
-                <Bar dataKey="total_revenue" fill="#8b5cf6" name="Total Revenue" />
+                <Bar dataKey="total_revenue" fill="#8b5cf6" name="Pipeline Revenue" />
               </RechartsBarChart>
             </ResponsiveContainer>
           </Card.Body>
@@ -609,13 +609,13 @@ const Analytics = () => {
                 />
                 <Tooltip 
                   formatter={(value, name) => {
-                    if (name === 'Total Revenue') return formatCurrency(value);
+                    if (name === 'Pipeline Revenue') return formatCurrency(value);
                     if (name === 'Avg Price') return `${formatCurrency(value)}/night`;
                     return value;
                   }}
                 />
                 <Legend />
-                <Bar yAxisId="left" dataKey="total_revenue" fill="#10b981" name="Total Revenue" />
+                <Bar yAxisId="left" dataKey="total_revenue" fill="#10b981" name="Pipeline Revenue" />
                 <Line yAxisId="right" type="monotone" dataKey="avg_price" stroke="#3b82f6" strokeWidth={2} name="Avg Price/Night" />
               </ComposedChart>
             </ResponsiveContainer>

@@ -2,6 +2,7 @@
  * Services page - Landlord service booking interface
  */
 import React, { useState } from 'react';
+import { Container } from '../../components/layout';
 import { useQueryClient } from '@tanstack/react-query';
 import ServiceCatalog from '../../components/services/ServiceCatalog';
 import MyServiceBookings from '../../components/services/MyServiceBookings';
@@ -25,7 +26,8 @@ const Services = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <Container className="py-8">
+      <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-propertree-dark">Property Services</h1>
@@ -81,7 +83,8 @@ const Services = () => {
           onSuccess={handleBookingSuccess}
         />
       )}
-    </div>
+      </div>
+    </Container>
   );
 };
 

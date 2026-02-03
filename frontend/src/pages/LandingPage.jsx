@@ -1146,7 +1146,7 @@ const LandingPage = () => {
                                   id="city-menu"
                                   role="dialog"
                                   aria-label={t('landing.where', { defaultValue: 'Where' })}
-                                  className="absolute left-0 top-full z-40 mt-3 w-fit max-w-[92vw] rounded-3xl border border-slate-200 bg-white p-4 sm:p-6"
+                                  className="landing-filter-panel landing-city-panel absolute left-0 top-full z-40 mt-3 w-fit max-w-[92vw] rounded-3xl border border-slate-200 bg-white p-4 sm:p-6"
                                 >
                                   {cities.length === 0 ? (
                                     <div className="px-3 py-2 text-sm text-slate-500">
@@ -1216,7 +1216,7 @@ const LandingPage = () => {
                                   id="date-range-panel"
                                   role="dialog"
                                   aria-label={t('landing.when', { defaultValue: 'When' })}
-                                  className="absolute left-0 top-full z-40 mt-3 w-fit max-w-[92vw] rounded-3xl border border-slate-200 bg-white p-4 sm:p-6"
+                                  className="landing-filter-panel landing-date-panel absolute left-0 top-full z-40 mt-3 w-fit max-w-[92vw] rounded-3xl border border-slate-200 bg-white p-4 sm:p-6"
                                 >
                                   <div className="w-fit max-w-full">
                                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -1337,7 +1337,7 @@ const LandingPage = () => {
                                   id="guest-editor"
                                   role="dialog"
                                   aria-label={t('landing.guests', { defaultValue: 'Guests' })}
-                                  className="absolute right-0 top-full z-40 mt-3 w-[min(92vw,22rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:w-80"
+                                  className="landing-filter-panel landing-guest-panel absolute right-0 top-full z-40 mt-3 w-[min(92vw,22rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:w-80"
                                 >
                                   <div className="divide-y divide-slate-100">
                                     <div className="flex items-center justify-between py-3">
@@ -1478,7 +1478,7 @@ const LandingPage = () => {
 
                             <div className="landing-filter-cell group relative flex flex-col px-3 sm:px-4 py-3 sm:py-4 transition-colors hover:bg-white/80 focus-within:bg-white">
                               <span className={`landing-filter-label ${T.micro} normal-case tracking-normal`}>
-                                {t('landing.which', { defaultValue: 'Which' })}
+                                {t('landing.which', { defaultValue: 'Type of property' })}
                               </span>
                               <div className="relative mt-1">
                                 <button
@@ -1513,7 +1513,7 @@ const LandingPage = () => {
                                   id="property-type-menu"
                                   role="dialog"
                                   aria-label={t('landing.propertyType', { defaultValue: 'Property type' })}
-                                  className="absolute right-0 top-full z-40 mt-3 w-[min(92vw,24rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:w-96"
+                                  className="landing-filter-panel landing-type-panel absolute right-0 top-full z-40 mt-3 w-[min(92vw,24rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:w-96"
                                 >
                                   <div className="max-h-80 space-y-1 overflow-auto pr-1">
                                     <div className="px-1 pb-2 text-xs font-semibold text-slate-500">

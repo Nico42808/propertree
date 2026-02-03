@@ -901,19 +901,34 @@ const PropertyDetail = () => {
                       ? monthlyRate
                       : (nightlyRate ? nightlyRate * 30 : 0);
                     const dailyRate = useMonthly ? (baseMonthly ? baseMonthly / 30 : 0) : nightlyRate;
-                    const total = useMonthly ? baseMonthly * (nights / 30) : nightlyRate * nights;
-                    const rateLabel = useMonthly
-                      ? t('propertyDetail.perDay', { defaultValue: 'per day' })
-                      : t('propertyDetail.perNight');
-                    const durationLabel = useMonthly
-                      ? t('propertyDetail.days', { defaultValue: 'days' })
-                      : t('propertyDetail.nights');
+                    const months = nights / 30;
+                    const displayMonths = Math.max(1, Math.round(months));
+                    const total = useMonthly ? baseMonthly * months : nightlyRate * nights;
+                    const showMonthlyBreakdown = useMonthly && nights >= 30;
+                    const rateLabel = showMonthlyBreakdown
+                      ? t('propertyDetail.perMonth', { defaultValue: 'per month' })
+                      : useMonthly
+                        ? t('propertyDetail.perDay', { defaultValue: 'per day' })
+                        : t('propertyDetail.perNight');
+                    const durationLabel = showMonthlyBreakdown
+                      ? ''
+                      : useMonthly
+                        ? t('propertyDetail.days', { defaultValue: 'days' })
+                        : t('propertyDetail.nights');
 
                     return (
                       <>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">
-                            {formatCurrency(dailyRate)} {rateLabel} x {nights} {durationLabel}
+                            {showMonthlyBreakdown ? (
+                              <>
+                                {formatCurrency(baseMonthly)} {rateLabel} x {displayMonths}
+                              </>
+                            ) : (
+                              <>
+                                {formatCurrency(dailyRate)} {rateLabel} x {nights} {durationLabel}
+                              </>
+                            )}
                           </span>
                           <span className="font-semibold">
                             {formatCurrency(total)}

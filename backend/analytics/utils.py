@@ -336,7 +336,7 @@ class LandlordAnalytics:
 
     def get_noi(self, start_date=None, end_date=None):
         """
-        Calculate Net Operating Income: Total Revenue – Operating Expenses
+        Calculate Net Operating Income: Pipeline Revenue – Operating Expenses
         Includes rental income minus maintenance and property expenses.
         """
         revenue = self.get_rental_income(start_date, end_date)
