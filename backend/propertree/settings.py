@@ -217,6 +217,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@propertree.co
 
 # Security settings for production
 if not DEBUG:
+    # Render (and most PaaS proxies) terminate TLS and forward the request to the
+    # app over HTTP with this header set. Trust it, otherwise SECURE_SSL_REDIRECT
+    # below causes an infinite https -> https redirect loop.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
