@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import Booking
 from .serializers import (
@@ -13,6 +15,43 @@ from .serializers import (
     BookingDetailSerializer,
     BookingCreateSerializer
 )
+
+
+def notify_tenant_booking_status(booking, new_status):
+    """Email the tenant when their booking is confirmed or rejected."""
+    tenant = booking.tenant
+    if not tenant.email:
+        return
+
+    if new_status == 'confirmed':
+        subject = f"Booking confirmed – {booking.property.title}"
+        message = (
+            f"Hi {tenant.email},\n\n"
+            f"Good news — your booking has been confirmed.\n\n"
+            f"Property: {booking.property.title}\n"
+            f"Check-in: {booking.check_in}\n"
+            f"Check-out: {booking.check_out}\n"
+            f"Guests: {booking.guests_count}\n\n"
+            f"We look forward to hosting you."
+        )
+    else:
+        subject = f"Booking update – {booking.property.title}"
+        message = (
+            f"Hi {tenant.email},\n\n"
+            f"Unfortunately your booking request could not be confirmed.\n\n"
+            f"Property: {booking.property.title}\n"
+            f"Check-in: {booking.check_in}\n"
+            f"Check-out: {booking.check_out}\n\n"
+            f"Feel free to browse other available properties on Propertree."
+        )
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[tenant.email],
+        fail_silently=True,
+    )
 
 
 class TenantBookingListView(generics.ListAPIView):
@@ -48,6 +87,72 @@ class TenantBookingCreateView(generics.CreateAPIView):
     
     serializer_class = BookingCreateSerializer
     permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        booking = serializer.save(tenant=self.request.user)
+        self.notify_landlord(booking)
+        self.notify_tenant(booking)
+        self.notify_admin(booking)
+
+    def notify_landlord(self, booking):
+        landlord = booking.property.landlord
+        if not landlord.email:
+            return
+        send_mail(
+            subject=f"New booking request – {booking.property.title}",
+            message=(
+                f"You have a new booking request.\n\n"
+                f"Property: {booking.property.title}\n"
+                f"Tenant: {booking.tenant.email}\n"
+                f"Check-in: {booking.check_in}\n"
+                f"Check-out: {booking.check_out}\n"
+                f"Guests: {booking.guests_count}\n\n"
+                f"Log in to Propertree to confirm or reject this booking."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[landlord.email],
+            fail_silently=True,
+        )
+
+    def notify_tenant(self, booking):
+        tenant = booking.tenant
+        if not tenant.email:
+            return
+        send_mail(
+            subject=f"Booking request received – {booking.property.title}",
+            message=(
+                f"Hi {tenant.email},\n\n"
+                f"We received your booking request for:\n\n"
+                f"Property: {booking.property.title}\n"
+                f"Check-in: {booking.check_in}\n"
+                f"Check-out: {booking.check_out}\n"
+                f"Guests: {booking.guests_count}\n\n"
+                f"The landlord will confirm or reject it shortly. "
+                f"We'll email you again once there's an update."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[tenant.email],
+            fail_silently=True,
+        )
+
+    def notify_admin(self, booking):
+        if not settings.ADMIN_NOTIFICATION_EMAIL:
+            return
+        send_mail(
+            subject=f"[Admin] New booking – {booking.property.title}",
+            message=(
+                f"New booking created on Propertree.\n\n"
+                f"Property: {booking.property.title}\n"
+                f"Landlord: {booking.property.landlord.email}\n"
+                f"Tenant: {booking.tenant.email}\n"
+                f"Check-in: {booking.check_in}\n"
+                f"Check-out: {booking.check_out}\n"
+                f"Guests: {booking.guests_count}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_NOTIFICATION_EMAIL],
+            fail_silently=True,
+        )
 
 
 class TenantBookingCancelView(APIView):
@@ -151,6 +256,7 @@ class LandlordBookingConfirmView(APIView):
                 )
             
             booking.confirm()
+            notify_tenant_booking_status(booking, 'confirmed')
             
             return Response({
                 'message': 'Booking confirmed successfully',
@@ -194,6 +300,7 @@ class LandlordBookingRejectView(APIView):
                 )
             
             booking.cancel()
+            notify_tenant_booking_status(booking, 'cancelled')
             
             return Response({
                 'message': 'Booking rejected',
@@ -264,6 +371,9 @@ class BookingStatusUpdateView(APIView):
             else:
                 booking.status = new_status
                 booking.save()
+
+            if new_status in ('confirmed', 'cancelled'):
+                notify_tenant_booking_status(booking, new_status)
 
             return Response({
                 'message': f'Booking status updated to {new_status}',
@@ -362,6 +472,7 @@ class AdminBookingConfirmView(APIView):
                 )
 
             booking.confirm()
+            notify_tenant_booking_status(booking, 'confirmed')
 
             return Response({
                 'message': 'Booking confirmed successfully',
@@ -401,6 +512,7 @@ class AdminBookingRejectView(APIView):
                 )
 
             booking.cancel()
+            notify_tenant_booking_status(booking, 'cancelled')
 
             return Response({
                 'message': 'Booking rejected',
