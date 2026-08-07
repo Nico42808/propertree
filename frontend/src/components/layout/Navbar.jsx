@@ -71,38 +71,25 @@ const Navbar = () => {
                     </>
                   )}
 
-                  {isLandlord() && (
-                    <>
-                      <Link
-                        to="/landlord/dashboard"
-                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-                      >
-                        <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-                        {t('common.dashboard')}
-                      </Link>
-                      <Link
-                        to="/landlord/properties"
-                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-                      >
-                        <Building className="w-5 h-5 flex-shrink-0" />
-                        {t('navbar.myProperties')}
-                      </Link>
-                      <Link
-                        to="/landlord/bookings"
-                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-                      >
-                        <Calendar className="w-5 h-5 flex-shrink-0" />
-                        {t('navbar.bookings')}
-                      </Link>
-                      <Link
-                        to="/landlord/services"
-                        className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-                      >
-                        <Wrench className="w-5 h-5 flex-shrink-0" />
-                        {t('navbar.services')}
-                      </Link>
-                    </>
-                  )}
+                 {isLandlord() && (
+  <>
+    <Link
+      to="/landlord/properties"
+      className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+    >
+      <Building className="w-5 h-5 flex-shrink-0" />
+      Assets
+    </Link>
+
+    <Link
+      to="/landlord/services"
+      className="text-propertree-dark hover:text-propertree-green px-3 lg:px-4 py-2.5 rounded-lg text-base font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+    >
+      <Wrench className="w-5 h-5 flex-shrink-0" />
+      Services
+    </Link>
+  </>
+)}
 
                   {isAdmin() && (
                     <>
