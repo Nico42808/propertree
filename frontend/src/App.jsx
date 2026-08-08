@@ -92,12 +92,24 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/landlord/properties" replace />} />
+       <Route index element={<Navigate to="/landlord/properties" replace />} />
 
 <Route path="properties" element={<LandlordProperties />} />
-<Route path="properties/:id/edit" element={<EditProperty />} />
 
-<Route path="services" element={<LandlordServices />} />
+<Route
+  path="properties/new"
+  element={<HostOnboarding />}
+/>
+
+<Route
+  path="properties/:id/edit"
+  element={<EditProperty />}
+/>
+
+<Route
+  path="services"
+  element={<LandlordServices />}
+/>
       </Route>
 
       {/* Tenant Routes */}
