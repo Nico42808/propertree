@@ -1,6 +1,8 @@
 """
 Views for Maintenance app.
 """
+from django.core.mail import send_mail
+from django.conf import settings
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -35,9 +37,48 @@ class MaintenanceRequestListCreateView(generics.ListCreateAPIView):
         else:
             return MaintenanceRequest.objects.none()
 
-    def perform_create(self, serializer):
-        """Create maintenance request with current user."""
-        serializer.save(reported_by=self.request.user)
+   def perform_create(self, serializer):
+    booking = serializer.save(reported_by=self.request.user)
+
+    landlord = self.request.user
+    property_obj = booking.rental_property
+    service = booking.service_catalog
+
+    subject = f"New Propertree Service Request – {service.name}"
+
+    message = f"""
+A new service request has been submitted through Propertree.
+
+Owner:
+{landlord.email}
+
+Asset:
+{property_obj.title}
+
+Service:
+{service.name}
+
+Requested date:
+{booking.requested_date}
+
+Requested time:
+{booking.requested_time}
+
+Priority:
+{booking.priority}
+
+Description:
+{booking.description}
+
+Please review the request in the Propertree Admin Dashboard.
+"""
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [settings.SERVICE_REQUEST_EMAIL],
+        fail_silently=False,
 
 
 class MaintenanceRequestDetailView(generics.RetrieveUpdateAPIView):
