@@ -24,7 +24,7 @@ const Navbar = () => {
   };
 
   const getDashboardLink = () => {
-    if (isLandlord()) return '/landlord/dashboard';
+    if (isLandlord()) return '/landlord/properties';
     if (isTenant()) return '/tenant/bookings';
     return '/admin/dashboard';
   };
@@ -157,11 +157,15 @@ const Navbar = () => {
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                     className="flex items-center space-x-2 focus:outline-none"
                   >
-                    <Avatar 
-                      src={user?.profile_photo} 
-                      name={user?.first_name} 
-                      size={isAdminUser ? 'sm' : 'md'} 
-                    />
+                   <Avatar
+  src={user?.profile?.profile_photo || user?.profile_photo}
+  name={
+    user?.profile?.first_name ||
+    user?.first_name ||
+    user?.email
+  }
+  size={isAdminUser ? 'sm' : 'md'}
+/>
                   </button>
 
                   {profileMenuOpen && (
