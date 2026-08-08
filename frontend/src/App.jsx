@@ -7,6 +7,7 @@ import AuthLayout from './components/layout/AuthLayout'
 
 // Public Pages
 import LandingPage from './pages/LandingPage'
+import LegacyLandingPage from './pages/LegacyLandingPage'
 import PropertySearch from './pages/PropertySearch'
 import PropertyDetail from './pages/PropertyDetail'
 
@@ -68,10 +69,12 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/search" element={<PropertySearch />} />
-        <Route path="/properties/:id" element={<PropertyDetail />} />
-      </Route>
+  <Route path="/" element={<LandingPage />} />
+  <Route path="/legacy" element={<LegacyLandingPage />} />
+
+  <Route path="/search" element={<PropertySearch />} />
+  <Route path="/properties/:id" element={<PropertyDetail />} />
+</Route>
 
       {/* Auth Routes */}
       <Route element={<AuthLayout />}>
