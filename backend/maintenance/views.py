@@ -78,7 +78,7 @@ Please review the request in the Propertree Admin Dashboard.
         settings.DEFAULT_FROM_EMAIL,
         [settings.SERVICE_REQUEST_EMAIL],
         fail_silently=False,
-
+    )
 
 class MaintenanceRequestDetailView(generics.RetrieveUpdateAPIView):
     """API endpoint for maintenance request detail."""
