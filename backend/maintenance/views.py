@@ -17,7 +17,6 @@ from .serializers import (
     ServiceCatalogSerializer
 )
 
-
 class MaintenanceRequestListCreateView(generics.ListCreateAPIView):
     """API endpoint for listing and creating maintenance requests."""
 
