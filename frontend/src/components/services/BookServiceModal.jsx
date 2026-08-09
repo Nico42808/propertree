@@ -17,12 +17,11 @@ import { formatCurrency } from '../../utils/formatters';
 const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    rental_property: '',
-    requested_date: '',
-    requested_time: '',
-    priority: 'medium',
-    description: '',
-  });
+  rental_property: '',
+  requested_date: '',
+  priority: 'medium',
+  description: '',
+});
   const [errors, setErrors] = useState({});
 
   // Fetch landlord's properties
@@ -57,9 +56,6 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
     if (!formData.requested_date) {
       newErrors.requested_date = 'Date is required';
     }
-    if (!formData.requested_time) {
-      newErrors.requested_time = 'Time is required';
-    }
     if (!formData.description || formData.description.trim().length < 10) {
       newErrors.description = 'Please provide at least 10 characters describing what needs to be done';
     }
@@ -83,7 +79,6 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
         service_catalog_id: service.id,
         rental_property: formData.rental_property,
         requested_date: formData.requested_date,
-        requested_time: formData.requested_time,
         priority: formData.priority,
         description: formData.description,
         title: `${service.name} Service Request`,
@@ -99,7 +94,6 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
       setFormData({
         rental_property: '',
         requested_date: '',
-        requested_time: '',
         priority: 'medium',
         description: '',
       });
@@ -140,7 +134,7 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={`Book ${service?.name}`}
+     title={service?.name}
       size="lg"
       closeOnOverlayClick={!isSubmitting}
     >
@@ -201,7 +195,7 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
         </div>
 
         {/* Date and Time */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
           <Input
             type="date"
             label="Preferred Date"
@@ -211,17 +205,6 @@ const BookServiceModal = ({ service, isOpen, onClose, onSuccess }) => {
             error={errors.requested_date}
             touched={!!errors.requested_date}
             min={getTomorrowDate()}
-            required
-          />
-
-          <Input
-            type="time"
-            label="Preferred Time"
-            name="requested_time"
-            value={formData.requested_time}
-            onChange={handleChange}
-            error={errors.requested_time}
-            touched={!!errors.requested_time}
             required
           />
         </div>
