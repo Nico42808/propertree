@@ -18,7 +18,6 @@ import AddressStep from './onboarding/AddressStep';
 import PhotosStep from './onboarding/PhotosStep';
 import AmenitiesStep from './onboarding/AmenitiesStep';
 import RentalTermStep from './onboarding/RentalTermStep';
-import PricingStep from './onboarding/PricingStep';
 import BookingApprovalStep from './onboarding/BookingApprovalStep';
 import HouseRulesStep from './onboarding/HouseRulesStep';
 import ReviewStep from './onboarding/ReviewStep';
@@ -31,7 +30,6 @@ const BASE_STEPS = [
   { key: 'photos', title: 'Photos', component: PhotosStep },
   { key: 'amenities', title: 'Amenities', component: AmenitiesStep },
   { key: 'rentalTerm', title: 'Rental Term', component: RentalTermStep },
-  { key: 'pricing', title: 'Pricing', component: PricingStep },
   { key: 'bookingApproval', title: 'Booking Approval', component: BookingApprovalStep },
   { key: 'houseRules', title: 'House Rules', component: HouseRulesStep },
   { key: 'review', title: 'Review & Submit', component: ReviewStep },
@@ -79,13 +77,8 @@ const HostOnboarding = () => {
     short_term_check_in_time: '',
     short_term_check_out_time: '',
     // Step 8
-    base_price: '',
-    monthly_price: '',
-    service_fee_percent: 10,
-    currency: 'EUR',
-    // Step 9
     approval_type: isAdminUser ? 'admin' : 'landlord',
-    // Step 10
+    // Step 9
     title: '',
     description: '',
     house_rules: '',
@@ -154,8 +147,7 @@ const HostOnboarding = () => {
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseFloat(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 1,
-        price_per_night: parseFloat(formData.base_price) || 0,
-        monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
+        price_per_night: 0,
         approval_type: formData.approval_type || 'landlord',
         rental_terms: formData.rental_terms || [],
         amenities: formData.amenities || [],
@@ -193,8 +185,7 @@ const HostOnboarding = () => {
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseFloat(formData.bathrooms) || 1,
         max_guests: parseInt(formData.max_guests) || 1,
-        price_per_night: parseFloat(formData.base_price) || 0,
-        monthly_price: formData.monthly_price !== '' ? parseFloat(formData.monthly_price) || 0 : null,
+       price_per_night: 0,
         approval_type: formData.approval_type || 'landlord',
         rental_terms: formData.rental_terms || [],
         amenities: formData.amenities || [],
