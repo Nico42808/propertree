@@ -37,7 +37,7 @@ class MaintenanceRequestListCreateView(generics.ListCreateAPIView):
         else:
             return MaintenanceRequest.objects.none()
 
-    def perform_create(self, serializer):
+ def perform_create(self, serializer):
         booking = serializer.save(reported_by=self.request.user)
         landlord = self.request.user
         property_obj = booking.rental_property
