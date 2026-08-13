@@ -393,7 +393,6 @@ const PropertyDetail = () => {
         setBookingData({ check_in: '', check_out: '', guests_count: 1 });
         navigate('/tenant/bookings');
       } else {
-        } else {
         const errorData = await response.json();
         // DRF returns validation errors under 'non_field_errors' or per-field keys,
         // not under 'error'. Surface whatever message actually came back.
