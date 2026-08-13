@@ -410,7 +410,7 @@ const PropertyDetail = () => {
         console.error('Booking creation failed:', errorData);
         toast.error(backendMessage || t('propertyDetail.failedToCreateBooking'));
       }
-      }
+    
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error(t('propertyDetail.errorSubmittingBooking'));
