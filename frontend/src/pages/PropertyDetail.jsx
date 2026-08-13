@@ -393,8 +393,24 @@ const PropertyDetail = () => {
         setBookingData({ check_in: '', check_out: '', guests_count: 1 });
         navigate('/tenant/bookings');
       } else {
+        } else {
         const errorData = await response.json();
-        toast.error(errorData.error || t('propertyDetail.failedToCreateBooking'));
+        // DRF returns validation errors under 'non_field_errors' or per-field keys,
+        // not under 'error'. Surface whatever message actually came back.
+        let backendMessage =
+          errorData.error ||
+          (Array.isArray(errorData.non_field_errors) && errorData.non_field_errors[0]) ||
+          (Array.isArray(errorData.detail) && errorData.detail[0]) ||
+          errorData.detail;
+
+        if (!backendMessage) {
+          const firstFieldErrors = Object.values(errorData).find(v => Array.isArray(v) && v.length);
+          if (firstFieldErrors) backendMessage = firstFieldErrors[0];
+        }
+
+        console.error('Booking creation failed:', errorData);
+        toast.error(backendMessage || t('propertyDetail.failedToCreateBooking'));
+      }
       }
     } catch (error) {
       console.error('Error creating booking:', error);
