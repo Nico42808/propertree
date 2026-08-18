@@ -93,12 +93,13 @@ const authService = {
   },
 
   /**
-   * Reset password with token
+   * Reset password using the uid/token pair from the emailed reset link
    */
-  async resetPassword(token, newPassword) {
+  async resetPassword({ uid, token, password }) {
     const response = await api.post('/auth/password-reset/confirm/', {
+      uid,
       token,
-      password: newPassword,
+      password,
     });
     return response.data;
   },
