@@ -8,6 +8,11 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import Profile
 from .serializers import (
@@ -225,3 +230,103 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
         # Return the updated data using UserDetailSerializer
         return Response(UserDetailSerializer(instance, context={'request': request}).data)
+
+
+class PasswordResetRequestView(APIView):
+    """
+    Request a password reset email. Always returns 200 (even if the
+    email is unknown) so we never reveal which emails are registered.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response(
+                {'error': 'Email is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = None
+
+        if user is not None:
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            frontend_url = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+            reset_link = f"{frontend_url}/reset-password?uid={uidb64}&token={token}"
+
+            try:
+                send_mail(
+                    subject='Reset your Propertree password',
+                    message=(
+                        f"Hi,\n\nWe received a request to reset your Propertree "
+                        f"password. Click the link below to choose a new one:\n\n"
+                        f"{reset_link}\n\n"
+                        f"If you didn't request this, you can safely ignore this email."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                # Don't leak SMTP errors to the client; log for debugging instead.
+                import logging
+                logging.getLogger(__name__).exception(
+                    'Failed to send password reset email to %s', email
+                )
+
+        # Same response whether or not the user exists.
+        return Response(
+            {'message': 'If an account exists for that email, a reset link has been sent.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    Confirm a password reset using the uid/token pair emailed to the user,
+    and set the new password.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        uidb64 = request.data.get('uid') or request.data.get('uidb64')
+        token = request.data.get('token')
+        new_password = request.data.get('password') or request.data.get('new_password')
+
+        if not uidb64 or not token or not new_password:
+            return Response(
+                {'error': 'uid, token and password are all required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response(
+                {'error': 'This password reset link is invalid or has expired.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            from django.contrib.auth.password_validation import validate_password
+            validate_password(new_password, user=user)
+        except ValidationError as exc:
+            return Response({'error': exc.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response({'error': list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+
+        return Response(
+            {'message': 'Password has been reset successfully.'},
+            status=status.HTTP_200_OK
+        )
