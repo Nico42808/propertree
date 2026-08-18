@@ -255,7 +255,9 @@ class PasswordResetRequestView(APIView):
         if user is not None:
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            frontend_url = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+            # Fall back to the known production domain if FRONTEND_URL is
+            # unset OR set to an empty string on the hosting platform.
+            frontend_url = (getattr(settings, 'FRONTEND_URL', '') or 'https://propertree.site').rstrip('/')
             reset_link = f"{frontend_url}/reset-password?uid={uidb64}&token={token}"
 
             try:
