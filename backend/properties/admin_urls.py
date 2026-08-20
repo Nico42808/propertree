@@ -13,6 +13,9 @@ from .admin_views import (
     PropertyAnalyticsView,
     AssetPerformanceView
     ,AdminDeletePropertyView
+    ,AdminDeleteUserView
+    ,AdminToggleUserActiveView
+    ,AdminResetUserPasswordView
 )
 
 urlpatterns = [
@@ -31,6 +34,9 @@ urlpatterns = [
     
     # User management
     path('users/', AdminUsersListView.as_view(), name='admin_users_list'),
+    path('users/<uuid:pk>/delete/', AdminDeleteUserView.as_view(), name='admin_delete_user'),
+    path('users/<uuid:pk>/toggle-active/', AdminToggleUserActiveView.as_view(), name='admin_toggle_user_active'),
+    path('users/<uuid:pk>/reset-password/', AdminResetUserPasswordView.as_view(), name='admin_reset_user_password'),
 ]
 
 

@@ -366,6 +366,141 @@ class AdminDeletePropertyView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class AdminDeleteUserView(APIView):
+    """API endpoint for admin to permanently delete a user account."""
+
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, pk):
+        try:
+            user = CustomUser.objects.get(pk=pk)
+
+            if user.role == 'admin':
+                return Response(
+                    {'error': 'Admin accounts cannot be deleted from this screen.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if user.id == request.user.id:
+                return Response(
+                    {'error': 'You cannot delete your own account.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.delete()
+            return Response({'message': 'User deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminToggleUserActiveView(APIView):
+    """API endpoint for admin to block/unblock (activate or deactivate) a user."""
+
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            user = CustomUser.objects.get(pk=pk)
+
+            if user.role == 'admin':
+                return Response(
+                    {'error': 'Admin accounts cannot be blocked from this screen.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if user.id == request.user.id:
+                return Response(
+                    {'error': 'You cannot block your own account.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.is_active = not user.is_active
+            user.save(update_fields=['is_active'])
+
+            status_label = 'activated' if user.is_active else 'blocked'
+            return Response({
+                'message': f'User {status_label} successfully.',
+                'is_active': user.is_active,
+            })
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminResetUserPasswordView(APIView):
+    """API endpoint for admin to reset a user's password.
+
+    Generates a new random temporary password, sets it on the account,
+    and emails it to the user. The user should be encouraged to change
+    it after logging in.
+    """
+
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        import secrets
+        import string
+        from django.core.mail import send_mail
+
+        try:
+            user = CustomUser.objects.get(pk=pk)
+
+            if user.role == 'admin':
+                return Response(
+                    {'error': "Admin accounts' passwords cannot be reset from this screen."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Generate a random temporary password
+            alphabet = string.ascii_letters + string.digits
+            temp_password = ''.join(secrets.choice(alphabet) for _ in range(12))
+
+            user.set_password(temp_password)
+            user.save(update_fields=['password'])
+
+            # Try to email the temporary password to the user. Don't let a
+            # broken mail server turn this into a 500 — the password has
+            # already been reset either way.
+            email_sent = True
+            try:
+                send_mail(
+                    'Your Propertree password has been reset',
+                    f"""
+Hi,
+
+An administrator has reset your Propertree password.
+
+Your temporary password is:
+{temp_password}
+
+Please log in and change your password as soon as possible.
+
+— Propertree
+""",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                email_sent = False
+
+            return Response({
+                'message': 'Password reset successfully.' if email_sent else
+                           'Password reset, but the notification email could not be sent.',
+                'email_sent': email_sent,
+                # Only included so the admin can hand it over manually if the
+                # email failed to send — remove if you don't want this exposed.
+                'temporary_password': temp_password,
+            })
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class PropertyAnalyticsView(APIView):
     """API endpoint for comprehensive property analytics."""
     
