@@ -210,14 +210,14 @@ class ServiceBookingViewSet(viewsets.ModelViewSet):
         service = booking.service_catalog
 
         # ----------------------------------------------------
-        # Email notification
+        # Email notification – to admin AND to the landlord
         # ----------------------------------------------------
 
-        subject = (
+        admin_subject = (
             f"New Propertree Service Request – {service.name}"
         )
 
-        message = f"""
+        admin_message = f"""
 A new service request has been submitted through Propertree.
 
 Owner:
@@ -241,18 +241,61 @@ Description:
 Please review the request in the Propertree Admin Dashboard.
 """
 
-        service_request_email = getattr(
+        # NOTE: the setting is called ADMIN_NOTIFICATION_EMAIL in
+        # propertree/settings.py — using the wrong name here meant
+        # this was always None and no email was ever sent.
+        admin_notification_email = getattr(
             settings,
-            "SERVICE_REQUEST_EMAIL",
+            "ADMIN_NOTIFICATION_EMAIL",
             None,
         )
 
-        if service_request_email:
+        if admin_notification_email:
             send_mail(
-                subject,
-                message,
+                admin_subject,
+                admin_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [service_request_email],
+                [admin_notification_email],
+                fail_silently=False,
+            )
+
+        # Confirmation email to the landlord who submitted the request
+        landlord_subject = (
+            f"Your Propertree service request has been received – {service.name}"
+        )
+
+        landlord_message = f"""
+Hi {landlord.first_name or landlord.email},
+
+We've received your service request and it's now being reviewed by our admin team.
+
+Asset:
+{property_obj.title}
+
+Service:
+{service.name}
+
+Requested date:
+{booking.requested_date}
+
+Priority:
+{booking.priority}
+
+Description:
+{booking.description}
+
+You'll get another notification as soon as it's confirmed and a service
+provider has been assigned.
+
+— Propertree
+"""
+
+        if landlord.email:
+            send_mail(
+                landlord_subject,
+                landlord_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [landlord.email],
                 fail_silently=False,
             )
 
