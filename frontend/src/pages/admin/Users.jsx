@@ -2,17 +2,22 @@
  * Admin Users - View and manage all users
  */
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, Search, Mail, Home, Calendar } from 'lucide-react';
+import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound } from 'lucide-react';
 import { Container } from '../../components/layout';
-import { Card, Button, Input, Badge, Avatar, Loading, EmptyState } from '../../components/common';
+import { Card, Button, Input, Badge, Avatar, Loading, EmptyState, Modal } from '../../components/common';
 import { toast } from 'react-hot-toast';
 import api from '../../services/api';
+import userService from '../../services/userService';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+
+  // Confirmation modal state (used for delete + block/unblock)
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete' | 'toggle', user }
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -35,6 +40,53 @@ const Users = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    setActionLoading(true);
+    try {
+      await userService.adminDeleteUser(user.id);
+      toast.success(`${user.full_name || user.email} was deleted.`);
+      setConfirmAction(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete user.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (user) => {
+    setActionLoading(true);
+    try {
+      const result = await userService.adminToggleUserActive(user.id);
+      toast.success(result.message);
+      setConfirmAction(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update user status.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (user) => {
+    setActionLoading(true);
+    try {
+      const result = await userService.adminResetUserPassword(user.id);
+      if (result.email_sent) {
+        toast.success(`A new temporary password was emailed to ${user.email}.`);
+      } else {
+        toast.success(
+          `Password reset. Email could not be sent — temporary password: ${result.temporary_password}`,
+          { duration: 10000 }
+        );
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to reset password.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -188,6 +240,9 @@ const Users = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Joined
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -248,6 +303,37 @@ const Users = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            title="Reset password"
+                            onClick={() => handleResetPassword(user)}
+                            disabled={actionLoading}
+                            className="p-2 rounded-lg text-gray-500 hover:text-propertree-green hover:bg-propertree-green-50 transition-colors disabled:opacity-50"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            title={user.is_active ? 'Block user' : 'Unblock user'}
+                            onClick={() => setConfirmAction({ type: 'toggle', user })}
+                            disabled={actionLoading}
+                            className="p-2 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                          >
+                            {user.is_active ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            title="Delete user"
+                            onClick={() => setConfirmAction({ type: 'delete', user })}
+                            disabled={actionLoading}
+                            className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -256,6 +342,71 @@ const Users = () => {
           </Card.Body>
         </Card>
       )}
+
+      {/* Confirmation Modal: Delete or Block/Unblock */}
+      <Modal
+        isOpen={!!confirmAction}
+        onClose={() => !actionLoading && setConfirmAction(null)}
+        title={
+          confirmAction?.type === 'delete'
+            ? 'Delete user'
+            : confirmAction?.user?.is_active
+            ? 'Block user'
+            : 'Unblock user'
+        }
+        size="sm"
+        closeOnOverlayClick={!actionLoading}
+      >
+        <div className="space-y-5">
+          <p className="text-sm text-gray-700">
+            {confirmAction?.type === 'delete' ? (
+              <>
+                Are you sure you want to permanently delete{' '}
+                <strong>{confirmAction?.user?.full_name || confirmAction?.user?.email}</strong>?
+                This action cannot be undone.
+              </>
+            ) : confirmAction?.user?.is_active ? (
+              <>
+                Are you sure you want to block{' '}
+                <strong>{confirmAction?.user?.full_name || confirmAction?.user?.email}</strong>?
+                They won't be able to log in until you unblock them.
+              </>
+            ) : (
+              <>
+                Unblock <strong>{confirmAction?.user?.full_name || confirmAction?.user?.email}</strong> and
+                allow them to log in again?
+              </>
+            )}
+          </p>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmAction(null)}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={confirmAction?.type === 'delete' ? 'danger' : 'primary'}
+              loading={actionLoading}
+              onClick={() =>
+                confirmAction?.type === 'delete'
+                  ? handleDeleteUser(confirmAction.user)
+                  : handleToggleActive(confirmAction.user)
+              }
+            >
+              {confirmAction?.type === 'delete'
+                ? 'Delete'
+                : confirmAction?.user?.is_active
+                ? 'Block'
+                : 'Unblock'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Container>
   );
 };
