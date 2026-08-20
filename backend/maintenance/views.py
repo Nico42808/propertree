@@ -2,6 +2,8 @@
 Views for Maintenance app.
 """
 
+import logging
+
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
@@ -9,6 +11,8 @@ from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
+logger = logging.getLogger(__name__)
 
 from .models import (
     MaintenanceRequest,
@@ -251,13 +255,22 @@ Please review the request in the Propertree Admin Dashboard.
         )
 
         if admin_notification_email:
-            send_mail(
-                admin_subject,
-                admin_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [admin_notification_email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    admin_subject,
+                    admin_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [admin_notification_email],
+                    fail_silently=False,
+                )
+            except Exception:
+                # Don't let a broken/misconfigured mail server fail the
+                # booking itself — the request is already saved. Log it
+                # so it's visible in Render's logs for debugging.
+                logger.exception(
+                    "Failed to send admin notification email for booking %s",
+                    booking.id,
+                )
 
         # Confirmation email to the landlord who submitted the request
         landlord_subject = (
@@ -291,13 +304,19 @@ provider has been assigned.
 """
 
         if landlord.email:
-            send_mail(
-                landlord_subject,
-                landlord_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [landlord.email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    landlord_subject,
+                    landlord_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [landlord.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to send landlord confirmation email for booking %s",
+                    booking.id,
+                )
 
     # --------------------------------------------------------
     # Pending bookings
