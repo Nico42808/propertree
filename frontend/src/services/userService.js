@@ -64,6 +64,30 @@ const userService = {
     const response = await api.post('/users/become-host/');
     return response.data;
   },
+
+  /**
+   * [Admin] Permanently delete a user account
+   */
+  async adminDeleteUser(userId) {
+    const response = await api.delete(`/admin/users/${userId}/delete/`);
+    return response.data;
+  },
+
+  /**
+   * [Admin] Toggle a user's active status (block/unblock)
+   */
+  async adminToggleUserActive(userId) {
+    const response = await api.post(`/admin/users/${userId}/toggle-active/`);
+    return response.data;
+  },
+
+  /**
+   * [Admin] Reset a user's password to a new temporary one
+   */
+  async adminResetUserPassword(userId) {
+    const response = await api.post(`/admin/users/${userId}/reset-password/`);
+    return response.data;
+  },
 };
 
 export default userService;
