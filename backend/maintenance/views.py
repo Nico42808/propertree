@@ -277,8 +277,13 @@ Please review the request in the Propertree Admin Dashboard.
             f"Your Propertree service request has been received – {service.name}"
         )
 
+        landlord_display_name = landlord.email
+        landlord_profile = getattr(landlord, "profile", None)
+        if landlord_profile and getattr(landlord_profile, "first_name", None):
+            landlord_display_name = landlord_profile.first_name
+
         landlord_message = f"""
-Hi {landlord.first_name or landlord.email},
+Hi {landlord_display_name},
 
 We've received your service request and it's now being reviewed by our admin team.
 
