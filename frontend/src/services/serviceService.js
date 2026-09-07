@@ -126,6 +126,64 @@ export const rejectServiceBooking = async (bookingId, reason) => {
   return response.data;
 };
 
+/**
+ * Get all service bookings, any status (admin only)
+ * @returns {Promise} List of all bookings
+ */
+export const getAllServiceBookings = async () => {
+  const response = await api.get(SERVICE_ENDPOINTS.BOOKINGS);
+  return response.data.results || response.data;
+};
+
+/**
+ * Mark a confirmed booking as in progress (admin only)
+ * @param {string} bookingId - Booking UUID
+ * @param {string} note - Optional progress note
+ * @returns {Promise} Updated booking
+ */
+export const startServiceProgress = async (bookingId, note = '') => {
+  const response = await api.post(`${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/start_progress/`, { note });
+  return response.data;
+};
+
+/**
+ * Mark a booking as completed, optionally with photos (admin only)
+ * @param {string} bookingId - Booking UUID
+ * @param {string} note - Completion note
+ * @param {File[]} photos - Optional completed-work photos
+ * @returns {Promise} Updated booking
+ */
+export const completeServiceBooking = async (bookingId, note = '', photos = []) => {
+  const formData = new FormData();
+  formData.append('note', note);
+  photos.forEach((file) => formData.append('photos', file));
+  const response = await api.post(
+    `${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/complete/`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+};
+
+/**
+ * Upload additional photos to a booking, any status (admin only)
+ * @param {string} bookingId - Booking UUID
+ * @param {File[]} photos - Photos to upload
+ * @param {string} caption - Optional caption
+ * @returns {Promise} Updated booking
+ */
+export const uploadServiceBookingPhotos = async (bookingId, photos = [], caption = '') => {
+  const formData = new FormData();
+  photos.forEach((file) => formData.append('photos', file));
+  if (caption) formData.append('caption', caption);
+  const response = await api.post(
+    `${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/upload_photos/`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+};
+
 export default {
   getServiceCatalog,
   getServiceById,
@@ -138,4 +196,8 @@ export default {
   getPendingServiceBookings,
   confirmServiceBooking,
   rejectServiceBooking,
+  getAllServiceBookings,
+  startServiceProgress,
+  completeServiceBooking,
+  uploadServiceBookingPhotos,
 };
