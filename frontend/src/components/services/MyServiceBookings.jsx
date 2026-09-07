@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, AlertCircle, Camera } from 'lucide-react';
 import { getServiceBookings } from '../../services/serviceService';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
   assigned: { variant: 'info', label: 'Confirmed' },
   in_progress: { variant: 'primary', label: 'In Progress' },
   resolved: { variant: 'success', label: 'Completed' },
-  cancelled: { variant: 'error', label: 'Cancelled' },
+  cancelled: { variant: 'danger', label: 'Cancelled' },
 };
 
 const PRIORITY_CONFIG = {
@@ -127,6 +127,36 @@ const MyServiceBookings = () => {
                         Phone: {booking.assigned_to.phone}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Status update / completion notes from the admin */}
+                {booking.resolution_notes && (
+                  <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-lg p-3 mt-3">
+                    <p className="text-sm font-medium text-blue-800">
+                      {booking.status === 'resolved' ? 'Completion notes' : 'Status update'}
+                    </p>
+                    <p className="text-sm text-blue-700 mt-1">{booking.resolution_notes}</p>
+                  </div>
+                )}
+
+                {/* Photos of completed work */}
+                {booking.images && booking.images.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Camera className="w-4 h-4" /> Photos
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      {booking.images.map((img) => (
+                        <a key={img.id} href={img.image} target="_blank" rel="noreferrer">
+                          <img
+                            src={img.image}
+                            alt={img.caption || 'Service photo'}
+                            className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                          />
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
 
