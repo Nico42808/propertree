@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Container } from '../../components/layout';
 import { KPICard, DonutChart, BarChart, LineChart } from '../../components/dashboard';
-import { Button, Loading } from '../../components/common';
+import { Button, Loading, Badge } from '../../components/common';
 import { 
   Home, 
   Euro, 
@@ -27,6 +27,7 @@ import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../../utils/formatters';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services';
+import { getServiceBookings } from '../../services/serviceService';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -34,10 +35,27 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [dateRange, setDateRange] = useState('30'); // Default: last 30 days
+  const [recentServiceBookings, setRecentServiceBookings] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchRecentServiceBookings();
   }, [dateRange]);
+
+  const fetchRecentServiceBookings = async () => {
+    try {
+      const bookings = await getServiceBookings();
+      const list = Array.isArray(bookings) ? bookings : [];
+      // Most recently updated first, show a handful on the dashboard
+      const sorted = [...list].sort(
+        (a, b) => new Date(b.updated_at || b.reported_at) - new Date(a.updated_at || a.reported_at)
+      );
+      setRecentServiceBookings(sorted.slice(0, 4));
+    } catch (error) {
+      // Non-critical widget — fail quietly, the full list is still on the Services page
+      console.error('Failed to load recent service bookings', error);
+    }
+  };
 
   const fetchDashboardData = async (retryCount = 0) => {
     setLoading(true);
@@ -464,6 +482,55 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Recent Service Requests - status tracker */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Service Requests</h3>
+          <Button
+            onClick={() => navigate('/landlord/services')}
+            variant="ghost"
+            className="text-sm"
+          >
+            View all
+          </Button>
+        </div>
+
+        {recentServiceBookings.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">
+            No service requests yet — book one from the Services tab.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {recentServiceBookings.map((booking) => {
+              const statusMap = {
+                open: { variant: 'warning', label: 'Submitted' },
+                assigned: { variant: 'info', label: 'Confirmed' },
+                in_progress: { variant: 'primary', label: 'In Progress' },
+                resolved: { variant: 'success', label: 'Done' },
+                cancelled: { variant: 'danger', label: 'Cancelled' },
+              };
+              const cfg = statusMap[booking.status] || statusMap.open;
+
+              return (
+                <button
+                  key={booking.id}
+                  onClick={() => navigate('/landlord/services')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{booking.title}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {booking.rental_property?.title || 'Property'}
+                    </p>
+                  </div>
+                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Property Performance Table - Enhanced */}
