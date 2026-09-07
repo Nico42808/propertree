@@ -11,6 +11,7 @@ from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ from .models import (
     ServiceProvider,
     MaintenanceSchedule,
     ServiceCatalog,
+    MaintenanceImage,
 )
 
 from .serializers import (
@@ -26,6 +28,7 @@ from .serializers import (
     ServiceProviderSerializer,
     MaintenanceScheduleSerializer,
     ServiceCatalogSerializer,
+    MaintenanceImageSerializer,
 )
 
 
@@ -493,6 +496,201 @@ provider has been assigned.
         return Response(
             {
                 "message": "Service booking rejected",
+                "booking": serializer.data,
+            }
+        )
+
+    # --------------------------------------------------------
+    # Progress: move a confirmed booking to "in progress"
+    # --------------------------------------------------------
+
+    @action(detail=True, methods=["post"])
+    def start_progress(self, request, pk=None):
+        """Admin marks a confirmed booking as in progress."""
+
+        if (
+            not hasattr(request.user, "role")
+            or request.user.role != "admin"
+        ):
+            return Response(
+                {"error": "Admin access required"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        booking = self.get_object()
+
+        if booking.status != "assigned":
+            return Response(
+                {
+                    "error": (
+                        "Only confirmed bookings can be moved to in progress."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+
+        booking.status = "in_progress"
+        if note:
+            booking.resolution_notes = note
+        booking.save()
+
+        serializer = self.get_serializer(booking)
+
+        return Response(
+            {
+                "message": "Booking marked as in progress",
+                "booking": serializer.data,
+            }
+        )
+
+    # --------------------------------------------------------
+    # Complete: mark booking as done and notify the landlord
+    # --------------------------------------------------------
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request, pk=None):
+        """Admin marks a booking as completed (resolved).
+
+        Accepts an optional multipart payload with completion photos
+        (field name "photos", one or more files) and a completion
+        note, then emails the landlord that the work is done.
+        """
+
+        if (
+            not hasattr(request.user, "role")
+            or request.user.role != "admin"
+        ):
+            return Response(
+                {"error": "Admin access required"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        booking = self.get_object()
+
+        if booking.status not in ("assigned", "in_progress"):
+            return Response(
+                {
+                    "error": (
+                        "Only confirmed or in-progress bookings can be "
+                        "marked as completed."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+
+        booking.status = "resolved"
+        booking.resolved_at = timezone.now()
+        if note:
+            booking.resolution_notes = note
+        booking.save()
+
+        # Save any completion photos uploaded alongside the request
+        photos = request.FILES.getlist("photos")
+        for photo in photos:
+            MaintenanceImage.objects.create(
+                maintenance_request=booking,
+                image=photo,
+                caption="Completed work",
+            )
+
+        # --------------------------------------------------
+        # Notify the landlord that their service is complete
+        # --------------------------------------------------
+        landlord = booking.reported_by
+        if landlord and landlord.email:
+            subject = f"Your service request is complete – {booking.title}"
+            message = f"""
+Hi,
+
+Good news — your service request has been completed.
+
+Asset:
+{booking.rental_property.title}
+
+Service:
+{booking.title}
+
+Completion notes:
+{booking.resolution_notes or 'N/A'}
+
+You can view the details and any photos of the completed work in
+your Propertree dashboard under Services > My Bookings.
+
+— Propertree
+"""
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [landlord.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to send completion email for booking %s",
+                    booking.id,
+                )
+
+        serializer = self.get_serializer(booking)
+
+        return Response(
+            {
+                "message": "Booking marked as completed",
+                "booking": serializer.data,
+            }
+        )
+
+    # --------------------------------------------------------
+    # Upload additional photos to a booking (any status)
+    # --------------------------------------------------------
+
+    @action(
+        detail=True,
+        methods=["post"],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_photos(self, request, pk=None):
+        """Admin uploads one or more photos to a booking."""
+
+        if (
+            not hasattr(request.user, "role")
+            or request.user.role != "admin"
+        ):
+            return Response(
+                {"error": "Admin access required"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        booking = self.get_object()
+        photos = request.FILES.getlist("photos")
+
+        if not photos:
+            return Response(
+                {"error": "No photos were provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        caption = request.data.get("caption", "")
+
+        created = []
+        for photo in photos:
+            img = MaintenanceImage.objects.create(
+                maintenance_request=booking,
+                image=photo,
+                caption=caption,
+            )
+            created.append(img)
+
+        serializer = self.get_serializer(booking)
+
+        return Response(
+            {
+                "message": f"{len(created)} photo(s) uploaded.",
                 "booking": serializer.data,
             }
         )
