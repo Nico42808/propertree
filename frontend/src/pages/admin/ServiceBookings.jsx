@@ -3,7 +3,7 @@
  */
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, Calendar, Clock, MapPin, User, Wrench, PlayCircle, ImagePlus, Camera } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, Clock, MapPin, User, Wrench, PlayCircle, ImagePlus, FileText, Download, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   getAllServiceBookings,
@@ -11,6 +11,7 @@ import {
   rejectServiceBooking,
   startServiceProgress,
   completeServiceBooking,
+  downloadServiceBookingFile,
 } from '../../services/serviceService';
 import { Container } from '../../components/layout';
 import { Card, Button, Badge, Loading, EmptyState, Modal, TextArea } from '../../components/common';
@@ -43,6 +44,7 @@ const PRIORITY_COLORS = {
 const ServiceBookings = () => {
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
 
   // Complete-booking modal state
@@ -124,6 +126,17 @@ const ServiceBookings = () => {
 
   const handleStartProgress = (bookingId) => {
     startProgressMutation.mutate({ bookingId });
+  };
+
+  const handleDownload = async (file) => {
+    setDownloadingId(file.id);
+    try {
+      await downloadServiceBookingFile(file.id, file.filename);
+    } catch (err) {
+      toast.error('Failed to download the file.');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const openCompleteModal = (booking) => {
@@ -369,21 +382,28 @@ const ServiceBookings = () => {
                         </div>
                       )}
 
-                      {/* Completion photos */}
+                      {/* Invoice / completion files - simple download, no preview */}
                       {booking.images && booking.images.length > 0 && (
                         <div className="pt-2 border-t border-gray-100">
                           <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                            <Camera className="w-4 h-4" /> Photos
+                            <FileText className="w-4 h-4" /> Invoice
                           </p>
-                          <div className="flex flex-wrap gap-3">
-                            {booking.images.map((img) => (
-                              <a key={img.id} href={img.image} target="_blank" rel="noreferrer">
-                                <img
-                                  src={img.image}
-                                  alt={img.caption || 'Service photo'}
-                                  className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                                />
-                              </a>
+                          <div className="flex flex-col gap-2">
+                            {booking.images.map((file) => (
+                              <button
+                                key={file.id}
+                                type="button"
+                                onClick={() => handleDownload(file)}
+                                disabled={downloadingId === file.id}
+                                className="inline-flex items-center gap-2 w-fit px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                              >
+                                {downloadingId === file.id ? (
+                                  <Loader2 className="w-4 h-4 text-propertree-green animate-spin" />
+                                ) : (
+                                  <Download className="w-4 h-4 text-propertree-green" />
+                                )}
+                                {file.filename || 'Download invoice'}
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -491,17 +511,17 @@ const ServiceBookings = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Photos of completed work
+              Invoice (PDF or image)
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.pdf,application/pdf"
               multiple
               onChange={(e) => setCompletePhotos(Array.from(e.target.files || []))}
               className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-propertree-green-50 file:text-propertree-green hover:file:bg-propertree-green-100"
             />
             {completePhotos.length > 0 && (
-              <p className="text-xs text-gray-500 mt-1">{completePhotos.length} photo(s) selected</p>
+              <p className="text-xs text-gray-500 mt-1">{completePhotos.length} file(s) selected</p>
             )}
           </div>
 
