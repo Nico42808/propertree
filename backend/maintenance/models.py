@@ -211,6 +211,23 @@ class MaintenanceRequest(models.Model):
     admin_confirmed_at = models.DateTimeField(null=True, blank=True)
     admin_rejection_reason = models.TextField(blank=True, help_text="Reason if booking was rejected by admin")
 
+    # Cost proposal / quote negotiation (admin proposes a price, landlord
+    # approves, rejects, or asks for a revised quote)
+    QUOTE_STATUS_CHOICES = [
+        ('none', 'No Quote Yet'),
+        ('pending', 'Pending Landlord Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('revision_requested', 'Revision Requested'),
+    ]
+    quote_status = models.CharField(max_length=25, choices=QUOTE_STATUS_CHOICES, default='none')
+    quoted_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    quote_note = models.TextField(blank=True, help_text="Admin's message to the landlord about the quote")
+    quote_document = models.FileField(upload_to='quote_documents/', null=True, blank=True, help_text="Optional PDF/file with the cost proposal")
+    quoted_at = models.DateTimeField(null=True, blank=True)
+    landlord_quote_response_note = models.TextField(blank=True, help_text="Landlord's comment when approving/rejecting/requesting revision")
+    quote_responded_at = models.DateTimeField(null=True, blank=True)
+
     # Metadata
     reported_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
