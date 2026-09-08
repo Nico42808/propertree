@@ -3,7 +3,7 @@
  */
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, Calendar, Clock, MapPin, User, Wrench, PlayCircle, ImagePlus, FileText, Download, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, Clock, MapPin, User, Wrench, PlayCircle, ImagePlus, FileText, Download, Loader2, Euro, ThumbsUp, ThumbsDown, MessageSquareWarning } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   getAllServiceBookings,
@@ -12,9 +12,11 @@ import {
   startServiceProgress,
   completeServiceBooking,
   downloadServiceBookingFile,
+  sendServiceQuote,
+  downloadServiceQuoteDocument,
 } from '../../services/serviceService';
 import { Container } from '../../components/layout';
-import { Card, Button, Badge, Loading, EmptyState, Modal, TextArea } from '../../components/common';
+import { Card, Button, Badge, Loading, EmptyState, Modal, TextArea, Input } from '../../components/common';
 
 const STATUS_CONFIG = {
   open: { variant: 'warning', label: 'Pending Confirmation' },
@@ -46,6 +48,12 @@ const ServiceBookings = () => {
   const [processingId, setProcessingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('active');
+
+  // Send Quote modal state
+  const [quotingBooking, setQuotingBooking] = useState(null);
+  const [quoteCost, setQuoteCost] = useState('');
+  const [quoteNote, setQuoteNote] = useState('');
+  const [quoteDocument, setQuoteDocument] = useState(null);
 
   // Complete-booking modal state
   const [completingBooking, setCompletingBooking] = useState(null);
@@ -111,6 +119,21 @@ const ServiceBookings = () => {
     },
   });
 
+  const sendQuoteMutation = useMutation({
+    mutationFn: ({ bookingId, cost, note, document }) => sendServiceQuote(bookingId, cost, note, document),
+    onSuccess: () => {
+      toast.success('Cost proposal sent to the landlord.');
+      queryClient.invalidateQueries(['admin-service-bookings']);
+      setQuotingBooking(null);
+      setQuoteCost('');
+      setQuoteNote('');
+      setQuoteDocument(null);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to send the quote');
+    },
+  });
+
   const handleConfirm = (bookingId) => {
     confirmMutation.mutate({ bookingId });
   };
@@ -134,6 +157,38 @@ const ServiceBookings = () => {
       await downloadServiceBookingFile(file.id, file.filename);
     } catch (err) {
       toast.error('Failed to download the file.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const openQuoteModal = (booking) => {
+    setQuotingBooking(booking);
+    setQuoteCost(booking.quoted_cost || '');
+    setQuoteNote('');
+    setQuoteDocument(null);
+  };
+
+  const handleSendQuote = () => {
+    if (!quotingBooking) return;
+    if (!quoteCost || Number(quoteCost) <= 0) {
+      toast.error('Please enter a valid cost.');
+      return;
+    }
+    sendQuoteMutation.mutate({
+      bookingId: quotingBooking.id,
+      cost: quoteCost,
+      note: quoteNote,
+      document: quoteDocument,
+    });
+  };
+
+  const handleDownloadQuoteDocument = async (booking) => {
+    setDownloadingId(`quote-${booking.id}`);
+    try {
+      await downloadServiceQuoteDocument(booking.id, booking.quote_document_filename || 'quote.pdf');
+    } catch (err) {
+      toast.error('Failed to download the quote document.');
     } finally {
       setDownloadingId(null);
     }
@@ -382,6 +437,74 @@ const ServiceBookings = () => {
                         </div>
                       )}
 
+                      {/* Cost proposal / quote status */}
+                      {booking.quote_status !== 'none' && (
+                        <div
+                          className={`pt-2 border-t border-gray-100 ${
+                            booking.quote_status === 'rejected' ? '' : ''
+                          }`}
+                        >
+                          <div
+                            className={`rounded-lg p-3 border-l-4 ${
+                              booking.quote_status === 'pending'
+                                ? 'bg-yellow-50 border-yellow-400'
+                                : booking.quote_status === 'approved'
+                                ? 'bg-green-50 border-green-400'
+                                : booking.quote_status === 'rejected'
+                                ? 'bg-red-50 border-red-400'
+                                : 'bg-orange-50 border-orange-400'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                <Euro className="w-4 h-4" />
+                                Cost proposal: EUR {Number(booking.quoted_cost).toFixed(2)}
+                              </p>
+                              <Badge
+                                variant={
+                                  booking.quote_status === 'pending'
+                                    ? 'warning'
+                                    : booking.quote_status === 'approved'
+                                    ? 'success'
+                                    : booking.quote_status === 'rejected'
+                                    ? 'danger'
+                                    : 'info'
+                                }
+                              >
+                                {booking.quote_status === 'pending' && 'Awaiting landlord'}
+                                {booking.quote_status === 'approved' && 'Approved'}
+                                {booking.quote_status === 'rejected' && 'Rejected'}
+                                {booking.quote_status === 'revision_requested' && 'Revision requested'}
+                              </Badge>
+                            </div>
+                            {booking.quote_note && (
+                              <p className="text-sm text-gray-600 mt-2">{booking.quote_note}</p>
+                            )}
+                            {booking.quote_document_download_url && (
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadQuoteDocument(booking)}
+                                disabled={downloadingId === `quote-${booking.id}`}
+                                className="inline-flex items-center gap-2 mt-2 text-xs text-propertree-green hover:underline disabled:opacity-60"
+                              >
+                                {downloadingId === `quote-${booking.id}` ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Download className="w-3 h-3" />
+                                )}
+                                {booking.quote_document_filename || 'Download quote document'}
+                              </button>
+                            )}
+                            {booking.landlord_quote_response_note && (
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <p className="text-xs font-medium text-gray-500">Landlord's comment:</p>
+                                <p className="text-sm text-gray-700">{booking.landlord_quote_response_note}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Invoice / completion files - simple download, no preview */}
                       {booking.images && booking.images.length > 0 && (
                         <div className="pt-2 border-t border-gray-100">
@@ -413,6 +536,19 @@ const ServiceBookings = () => {
                     {/* Action Buttons */}
                     <div className="lg:flex-shrink-0">
                       <div className="flex flex-col gap-3 lg:min-w-[160px]">
+                        {['none', 'rejected', 'revision_requested'].includes(booking.quote_status) &&
+                          !['resolved', 'closed', 'cancelled'].includes(booking.status) && (
+                            <Button
+                              size="md"
+                              variant="outline"
+                              onClick={() => openQuoteModal(booking)}
+                              leftIcon={<Euro className="w-4 h-4" />}
+                              className="w-full lg:w-auto"
+                            >
+                              {booking.quote_status === 'none' ? 'Send Quote' : 'Send New Quote'}
+                            </Button>
+                          )}
+
                         {booking.status === 'open' && !booking.admin_confirmed_at && (
                           <>
                             <Button
@@ -541,6 +677,80 @@ const ServiceBookings = () => {
               onClick={handleCompleteSubmit}
             >
               Mark Complete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Send Quote Modal */}
+      <Modal
+        isOpen={!!quotingBooking}
+        onClose={() => !sendQuoteMutation.isLoading && setQuotingBooking(null)}
+        title="Send cost proposal"
+        size="md"
+        closeOnOverlayClick={!sendQuoteMutation.isLoading}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Send a cost proposal for <strong>{quotingBooking?.title}</strong> to the landlord. They
+            can approve it, reject it, or ask for a revised quote.
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cost (EUR)</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={quoteCost}
+              onChange={(e) => setQuoteCost(e.target.value)}
+              placeholder="e.g. 200"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Message to the landlord
+            </label>
+            <TextArea
+              value={quoteNote}
+              onChange={(e) => setQuoteNote(e.target.value)}
+              placeholder="e.g. Hallo, deine Cleaning-Anfrage kostet 200 Euro."
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cost breakdown (PDF, optional)
+            </label>
+            <input
+              type="file"
+              accept=".pdf,application/pdf,image/*"
+              onChange={(e) => setQuoteDocument((e.target.files || [])[0] || null)}
+              className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-propertree-green-50 file:text-propertree-green hover:file:bg-propertree-green-100"
+            />
+            {quoteDocument && (
+              <p className="text-xs text-gray-500 mt-1">{quoteDocument.name}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setQuotingBooking(null)}
+              disabled={sendQuoteMutation.isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="success"
+              loading={sendQuoteMutation.isLoading}
+              onClick={handleSendQuote}
+            >
+              Send Quote
             </Button>
           </div>
         </div>
