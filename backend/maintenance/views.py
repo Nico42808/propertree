@@ -699,6 +699,303 @@ your Propertree dashboard under Services > My Bookings.
         )
 
     # --------------------------------------------------------
+    # Cost proposal / quote negotiation
+    # --------------------------------------------------------
+
+    @action(
+        detail=True,
+        methods=["post"],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def send_quote(self, request, pk=None):
+        """Admin sends (or re-sends) a cost proposal to the landlord.
+
+        Accepts multipart form data:
+          - cost (required): proposed price
+          - note (optional): message to the landlord
+          - document (optional): PDF/file with the cost breakdown
+        """
+
+        if getattr(request.user, "role", None) != "admin":
+            return Response(
+                {"error": "Admin access required"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        booking = self.get_object()
+
+        if booking.status in ("resolved", "closed", "cancelled"):
+            return Response(
+                {"error": "Cannot send a quote for a closed booking."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cost = request.data.get("cost")
+        if not cost:
+            return Response(
+                {"error": "A cost amount is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            cost = float(cost)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Cost must be a number."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+        document = request.FILES.get("document")
+
+        booking.quoted_cost = cost
+        booking.quote_note = note
+        booking.quote_status = "pending"
+        booking.quoted_at = timezone.now()
+        # Clear any previous landlord response — this is a fresh quote
+        booking.landlord_quote_response_note = ""
+        booking.quote_responded_at = None
+        if document:
+            booking.quote_document = document
+        booking.save()
+
+        # Notify the landlord that a cost proposal is waiting for them
+        landlord = booking.reported_by
+        if landlord and landlord.email:
+            subject = f"Cost proposal for your service request – {booking.title}"
+            message = f"""
+Hi,
+
+You've received a cost proposal for your service request.
+
+Service:
+{booking.title}
+
+Proposed cost:
+EUR {cost:,.2f}
+
+Message from admin:
+{note or 'N/A'}
+
+Please review and respond (approve, reject, or request a revised
+quote) in your Propertree dashboard under Services > My Bookings.
+
+— Propertree
+"""
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [landlord.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to send quote notification email for booking %s",
+                    booking.id,
+                )
+
+        serializer = self.get_serializer(booking)
+
+        return Response(
+            {
+                "message": "Cost proposal sent to the landlord.",
+                "booking": serializer.data,
+            }
+        )
+
+    def _notify_admin_of_quote_response(self, booking, action_label):
+        """Shared helper: email the admin when a landlord responds to a quote."""
+
+        admin_notification_email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None)
+        if not admin_notification_email:
+            return
+
+        subject = f"Landlord {action_label} the cost proposal – {booking.title}"
+        message = f"""
+Hi,
+
+The landlord has responded to the cost proposal for a service request.
+
+Service:
+{booking.title}
+
+Proposed cost:
+EUR {booking.quoted_cost:,.2f}
+
+Response:
+{action_label.upper()}
+
+Landlord's comment:
+{booking.landlord_quote_response_note or 'N/A'}
+
+Please review it in the Propertree Admin Dashboard.
+"""
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [admin_notification_email],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to send quote-response notification for booking %s",
+                booking.id,
+            )
+
+    @action(detail=True, methods=["post"])
+    def approve_quote(self, request, pk=None):
+        """Landlord approves the current cost proposal."""
+
+        booking = self.get_object()
+
+        if booking.reported_by_id != request.user.id:
+            return Response(
+                {"error": "Only the landlord who booked this service can respond to the quote."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if booking.quote_status != "pending":
+            return Response(
+                {"error": "There is no pending quote to approve."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+
+        booking.quote_status = "approved"
+        booking.cost = booking.quoted_cost
+        booking.landlord_quote_response_note = note
+        booking.quote_responded_at = timezone.now()
+
+        # Approving the quote also confirms the booking, if it wasn't
+        # already, so the admin can proceed with the work.
+        if booking.status == "open":
+            booking.status = "assigned"
+            booking.admin_confirmed_at = timezone.now()
+
+        booking.save()
+
+        self._notify_admin_of_quote_response(booking, "approved")
+
+        serializer = self.get_serializer(booking)
+        return Response(
+            {
+                "message": "Quote approved. The admin has been notified.",
+                "booking": serializer.data,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def reject_quote(self, request, pk=None):
+        """Landlord rejects the current cost proposal."""
+
+        booking = self.get_object()
+
+        if booking.reported_by_id != request.user.id:
+            return Response(
+                {"error": "Only the landlord who booked this service can respond to the quote."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if booking.quote_status != "pending":
+            return Response(
+                {"error": "There is no pending quote to reject."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+        if not note:
+            return Response(
+                {"error": "Please add a comment explaining why you're rejecting the quote."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking.quote_status = "rejected"
+        booking.landlord_quote_response_note = note
+        booking.quote_responded_at = timezone.now()
+        booking.save()
+
+        self._notify_admin_of_quote_response(booking, "rejected")
+
+        serializer = self.get_serializer(booking)
+        return Response(
+            {
+                "message": "Quote rejected. The admin has been notified.",
+                "booking": serializer.data,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def request_quote_revision(self, request, pk=None):
+        """Landlord asks the admin for a revised (e.g. cheaper) quote."""
+
+        booking = self.get_object()
+
+        if booking.reported_by_id != request.user.id:
+            return Response(
+                {"error": "Only the landlord who booked this service can respond to the quote."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if booking.quote_status != "pending":
+            return Response(
+                {"error": "There is no pending quote to request changes to."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        note = request.data.get("note", "")
+        if not note:
+            return Response(
+                {"error": "Please add a comment describing what you'd like changed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking.quote_status = "revision_requested"
+        booking.landlord_quote_response_note = note
+        booking.quote_responded_at = timezone.now()
+        booking.save()
+
+        self._notify_admin_of_quote_response(booking, "requested a revision of")
+
+        serializer = self.get_serializer(booking)
+        return Response(
+            {
+                "message": "Revision request sent. The admin has been notified.",
+                "booking": serializer.data,
+            }
+        )
+
+    @action(detail=True, methods=["get"], url_path="quote-document")
+    def quote_document_action(self, request, pk=None):
+        """Download the admin-uploaded cost proposal document."""
+
+        booking = self.get_object()
+
+        is_admin = getattr(request.user, "role", None) == "admin"
+        is_owner = booking.reported_by_id == request.user.id
+
+        if not (is_admin or is_owner):
+            return Response(
+                {"error": "You do not have permission to download this file."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not booking.quote_document or not booking.quote_document.storage.exists(booking.quote_document.name):
+            raise Http404("No quote document uploaded for this booking.")
+
+        filename = os.path.basename(booking.quote_document.name)
+
+        return FileResponse(
+            booking.quote_document.open("rb"),
+            as_attachment=True,
+            filename=filename,
+        )
+
+    # --------------------------------------------------------
     # Statistics
     # --------------------------------------------------------
 
