@@ -9,7 +9,8 @@ from .views import (
     ServiceProviderListView,
     MaintenanceScheduleListCreateView,
     ServiceCatalogViewSet,
-    ServiceBookingViewSet
+    ServiceBookingViewSet,
+    MaintenanceImageDownloadView,
 )
 
 # Create router for ViewSets
@@ -23,6 +24,7 @@ urlpatterns = [
     path('<uuid:pk>/', MaintenanceRequestDetailView.as_view(), name='maintenance_detail'),
     path('providers/', ServiceProviderListView.as_view(), name='service_provider_list'),
     path('schedules/', MaintenanceScheduleListCreateView.as_view(), name='maintenance_schedule_list'),
+    path('images/<uuid:pk>/download/', MaintenanceImageDownloadView.as_view(), name='maintenance_image_download'),
 
     # Service booking endpoints (router)
     path('', include(router.urls)),
