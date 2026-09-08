@@ -3,15 +3,18 @@ Views for Maintenance app.
 """
 
 import logging
+import os
 
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from django.http import FileResponse, Http404
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
@@ -777,3 +780,50 @@ your Propertree dashboard under Services > My Bookings.
                 "monthly_cost": float(monthly_cost),
             }
         )
+
+
+# ============================================================
+# Secure file download for uploaded invoices / completion files
+# ============================================================
+
+class MaintenanceImageDownloadView(APIView):
+    """Forces a real download (not an inline preview) of an uploaded
+    invoice/completion file.
+
+    Only the admin or the landlord who owns the booking this file is
+    attached to may download it.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            image = MaintenanceImage.objects.select_related(
+                "maintenance_request", "maintenance_request__reported_by"
+            ).get(pk=pk)
+        except MaintenanceImage.DoesNotExist:
+            raise Http404("File not found")
+
+        booking = image.maintenance_request
+        user = request.user
+
+        is_admin = getattr(user, "role", None) == "admin"
+        is_owner = booking.reported_by_id == user.id
+
+        if not (is_admin or is_owner):
+            return Response(
+                {"error": "You do not have permission to download this file."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not image.image or not image.image.storage.exists(image.image.name):
+            raise Http404("File not found")
+
+        filename = os.path.basename(image.image.name)
+
+        response = FileResponse(
+            image.image.open("rb"),
+            as_attachment=True,
+            filename=filename,
+        )
+        return response
