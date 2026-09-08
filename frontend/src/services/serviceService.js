@@ -184,6 +184,28 @@ export const uploadServiceBookingPhotos = async (bookingId, photos = [], caption
   return response.data;
 };
 
+/**
+ * Download an uploaded invoice/completion file for a service booking.
+ * Fetches the file with the user's auth token, then triggers a real
+ * browser "Save File" — no preview, no new tab.
+ * @param {string} fileId - MaintenanceImage UUID
+ * @param {string} filename - Filename to save as
+ */
+export const downloadServiceBookingFile = async (fileId, filename = 'invoice') => {
+  const response = await api.get(`/maintenance/images/${fileId}/download/`, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data]);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 export default {
   getServiceCatalog,
   getServiceById,
@@ -200,4 +222,5 @@ export default {
   startServiceProgress,
   completeServiceBooking,
   uploadServiceBookingPhotos,
+  downloadServiceBookingFile,
 };
