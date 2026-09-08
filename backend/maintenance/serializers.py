@@ -57,7 +57,23 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
     rental_property = serializers.SerializerMethodField()
     reported_by = UserSerializer(read_only=True)
     admin_confirmed_by_email = serializers.EmailField(source='admin_confirmed_by.email', read_only=True)
-    
+    quote_document_filename = serializers.SerializerMethodField()
+    quote_document_download_url = serializers.SerializerMethodField()
+
+    def get_quote_document_filename(self, obj):
+        if not obj.quote_document:
+            return None
+        return obj.quote_document.name.rsplit('/', 1)[-1]
+
+    def get_quote_document_download_url(self, obj):
+        if not obj.quote_document:
+            return None
+        request = self.context.get('request')
+        path = f"/api/maintenance/service-bookings/{obj.id}/quote-document/"
+        if request:
+            return request.build_absolute_uri(path)
+        return path
+
     def get_rental_property(self, obj):
         """Return rental_property as nested object for read operations."""
         if obj.rental_property:
@@ -77,8 +93,17 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             'id', 'reported_by', 'reported_at', 'updated_at',
-            'assigned_at', 'resolved_at', 'admin_confirmed_by', 'admin_confirmed_at'
+            'assigned_at', 'resolved_at', 'admin_confirmed_by', 'admin_confirmed_at',
+            'quote_status', 'quoted_cost', 'quote_note', 'quote_document',
+            'quoted_at', 'landlord_quote_response_note', 'quote_responded_at',
         ]
+
+    def to_representation(self, instance):
+        """Hide the raw quote_document path — only the authenticated
+        quote_document_download_url endpoint should be used to fetch it."""
+        data = super().to_representation(instance)
+        data.pop('quote_document', None)
+        return data
 
 
     def validate(self, attrs):
