@@ -1,10 +1,11 @@
 /**
  * MyServiceBookings component - Display user's service bookings
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, MapPin, AlertCircle, Camera } from 'lucide-react';
-import { getServiceBookings } from '../../services/serviceService';
+import { Calendar, Clock, MapPin, AlertCircle, FileText, Download, Loader2 } from 'lucide-react';
+import { getServiceBookings, downloadServiceBookingFile } from '../../services/serviceService';
+import { toast } from 'react-hot-toast';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import { formatCurrency } from '../../utils/formatters';
@@ -29,6 +30,19 @@ const MyServiceBookings = () => {
     queryKey: ['my-service-bookings'],
     queryFn: getServiceBookings,
   });
+
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const handleDownload = async (file) => {
+    setDownloadingId(file.id);
+    try {
+      await downloadServiceBookingFile(file.id, file.filename);
+    } catch (err) {
+      toast.error('Failed to download the file. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -140,21 +154,28 @@ const MyServiceBookings = () => {
                   </div>
                 )}
 
-                {/* Photos of completed work */}
+                {/* Invoice / completion files - simple download, no preview */}
                 {booking.images && booking.images.length > 0 && (
                   <div className="mt-3">
                     <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <Camera className="w-4 h-4" /> Photos
+                      <FileText className="w-4 h-4" /> Invoice
                     </p>
-                    <div className="flex flex-wrap gap-3">
-                      {booking.images.map((img) => (
-                        <a key={img.id} href={img.image} target="_blank" rel="noreferrer">
-                          <img
-                            src={img.image}
-                            alt={img.caption || 'Service photo'}
-                            className="w-24 h-24 object-cover rounded-lg border border-gray-200"
-                          />
-                        </a>
+                    <div className="flex flex-col gap-2">
+                      {booking.images.map((file) => (
+                        <button
+                          key={file.id}
+                          type="button"
+                          onClick={() => handleDownload(file)}
+                          disabled={downloadingId === file.id}
+                          className="inline-flex items-center gap-2 w-fit px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                        >
+                          {downloadingId === file.id ? (
+                            <Loader2 className="w-4 h-4 text-propertree-green animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4 text-propertree-green" />
+                          )}
+                          {file.filename || 'Download invoice'}
+                        </button>
                       ))}
                     </div>
                   </div>
