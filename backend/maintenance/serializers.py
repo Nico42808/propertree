@@ -26,11 +26,26 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
 
 
 class MaintenanceImageSerializer(serializers.ModelSerializer):
-    """Serializer for maintenance images."""
+    """Serializer for maintenance images / uploaded invoice files."""
+
+    filename = serializers.SerializerMethodField()
+    download_url = serializers.SerializerMethodField()
 
     class Meta:
         model = MaintenanceImage
-        fields = ['id', 'image', 'caption', 'created_at']
+        fields = ['id', 'filename', 'caption', 'created_at', 'download_url']
+
+    def get_filename(self, obj):
+        if not obj.image:
+            return ''
+        return obj.image.name.rsplit('/', 1)[-1]
+
+    def get_download_url(self, obj):
+        request = self.context.get('request')
+        path = f"/api/maintenance/images/{obj.id}/download/"
+        if request:
+            return request.build_absolute_uri(path)
+        return path
 
 
 class MaintenanceRequestSerializer(serializers.ModelSerializer):
