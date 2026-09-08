@@ -261,7 +261,7 @@ class MaintenanceImage(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     maintenance_request = models.ForeignKey(MaintenanceRequest, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='maintenance_images/')
+    image = models.FileField(upload_to='maintenance_images/')
     caption = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
