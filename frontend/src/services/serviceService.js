@@ -206,6 +206,70 @@ export const downloadServiceBookingFile = async (fileId, filename = 'invoice') =
   window.URL.revokeObjectURL(url);
 };
 
+/**
+ * [Admin] Send (or re-send) a cost proposal to the landlord.
+ * @param {string} bookingId - Booking UUID
+ * @param {number|string} cost - Proposed cost
+ * @param {string} note - Message to the landlord
+ * @param {File|null} document - Optional PDF/file with the cost breakdown
+ */
+export const sendServiceQuote = async (bookingId, cost, note = '', document = null) => {
+  const formData = new FormData();
+  formData.append('cost', cost);
+  formData.append('note', note);
+  if (document) formData.append('document', document);
+  const response = await api.post(
+    `${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/send_quote/`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+};
+
+/**
+ * [Landlord] Approve the current pending quote.
+ */
+export const approveServiceQuote = async (bookingId, note = '') => {
+  const response = await api.post(`${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/approve_quote/`, { note });
+  return response.data;
+};
+
+/**
+ * [Landlord] Reject the current pending quote, with a required comment.
+ */
+export const rejectServiceQuote = async (bookingId, note) => {
+  const response = await api.post(`${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/reject_quote/`, { note });
+  return response.data;
+};
+
+/**
+ * [Landlord] Ask the admin for a revised quote, with a required comment.
+ */
+export const requestServiceQuoteRevision = async (bookingId, note) => {
+  const response = await api.post(`${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/request_quote_revision/`, { note });
+  return response.data;
+};
+
+/**
+ * Download the admin-uploaded cost proposal PDF/document for a booking.
+ * @param {string} bookingId - Booking UUID
+ * @param {string} filename - Filename to save as
+ */
+export const downloadServiceQuoteDocument = async (bookingId, filename = 'quote') => {
+  const response = await api.get(`${SERVICE_ENDPOINTS.BOOKINGS}${bookingId}/quote-document/`, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data]);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 export default {
   getServiceCatalog,
   getServiceById,
@@ -223,4 +287,9 @@ export default {
   completeServiceBooking,
   uploadServiceBookingPhotos,
   downloadServiceBookingFile,
+  sendServiceQuote,
+  approveServiceQuote,
+  rejectServiceQuote,
+  requestServiceQuoteRevision,
+  downloadServiceQuoteDocument,
 };
