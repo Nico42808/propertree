@@ -153,8 +153,11 @@ class MaintenanceRequest(models.Model):
         ('structural', 'Structural'),
         ('cleaning', 'Cleaning'),
         ('painting', 'Painting'),
+        ('carpentry', 'Carpentry'),
         ('locksmith', 'Locksmith'),
+        ('gardening', 'Gardening'),
         ('pest_control', 'Pest Control'),
+        ('general_maintenance', 'General Maintenance'),
         ('other', 'Other'),
     ]
 
