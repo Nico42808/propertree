@@ -17,26 +17,26 @@ const Button = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-subtle hover:shadow-card';
-  
+  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+
   const variants = {
-    primary: 'bg-propertree-green text-white hover:bg-propertree-green-600 focus:ring-propertree-green-500',
-    secondary: 'bg-propertree-blue text-white hover:bg-propertree-blue-600 focus:ring-propertree-blue-500',
-    outline: 'border-2 border-propertree-green text-propertree-green hover:bg-propertree-green-50 focus:ring-propertree-green-500',
-    ghost: 'text-propertree-dark hover:bg-propertree-cream-200 focus:ring-propertree-green-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    success: 'bg-propertree-green text-white hover:bg-propertree-green-700 focus:ring-propertree-green-500',
+    primary: 'bg-propertree-dark text-white hover:bg-propertree-dark-600 focus:ring-propertree-dark/30 shadow-subtle hover:shadow-card',
+    secondary: 'bg-propertree-green text-white hover:bg-propertree-green-600 focus:ring-propertree-green/30 shadow-subtle hover:shadow-card',
+    outline: 'border border-gray-300 bg-white text-propertree-dark hover:border-propertree-green hover:text-propertree-green focus:ring-propertree-green/20',
+    ghost: 'text-propertree-dark hover:bg-propertree-green-50 hover:text-propertree-green-700 focus:ring-propertree-green/20',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500/30',
+    success: 'bg-propertree-green text-white hover:bg-propertree-green-700 focus:ring-propertree-green/30',
   };
-  
+
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs sm:text-sm',
-    md: 'px-3.5 py-2 text-sm sm:px-4 sm:py-2 sm:text-base',
-    lg: 'px-4 py-2.5 text-base sm:px-6 sm:py-3 sm:text-lg',
-    xl: 'px-5 py-3 text-lg sm:px-8 sm:py-4 sm:text-xl',
+    sm: 'px-3.5 py-2 text-xs sm:text-sm',
+    md: 'px-4 py-2.5 text-sm sm:px-5 sm:py-3 sm:text-base',
+    lg: 'px-5 py-3 text-base sm:px-7 sm:py-3.5 sm:text-lg',
+    xl: 'px-6 py-3.5 text-lg sm:px-8 sm:py-4 sm:text-xl',
   };
-  
+
   const widthClass = fullWidth ? 'w-full' : '';
-  
+
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthClass} ${className}`}
