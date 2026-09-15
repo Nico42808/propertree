@@ -22,16 +22,16 @@ const TextArea = ({
 }) => {
   const hasError = touched && error;
   const charCount = value?.length || 0;
-  
+
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label htmlFor={name} className="block text-xs sm:text-sm font-medium text-propertree-dark mb-1.5">
+        <label htmlFor={name} className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-propertree-dark/70 sm:text-sm sm:normal-case sm:tracking-normal">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
-      
+
       <textarea
         id={name}
         name={name}
@@ -42,28 +42,13 @@ const TextArea = ({
         disabled={disabled}
         rows={rows}
         maxLength={maxLength}
-          className={`
-          block w-full rounded-lg sm:rounded-xl border ${hasError ? 'border-red-500' : 'border-propertree-cream-300'}
-          px-3 sm:px-4 py-2.5 text-propertree-dark placeholder-propertree-dark/40 shadow-subtle
-          focus:outline-none focus:ring-2 ${hasError ? 'focus:ring-red-500' : 'focus:ring-propertree-green-500'} focus:border-transparent
-          disabled:bg-propertree-cream-200 disabled:cursor-not-allowed
-          resize-vertical transition-all duration-200 text-sm sm:text-base
-        `}
+        className={`block w-full resize-vertical rounded-2xl border ${hasError ? 'border-red-400' : 'border-gray-200'} bg-white px-4 py-3 text-sm text-propertree-dark placeholder:text-gray-400 shadow-subtle transition focus:border-propertree-green focus:outline-none focus:ring-4 focus:ring-propertree-green/10 disabled:cursor-not-allowed disabled:bg-propertree-cream-100 sm:py-3.5 sm:text-base`}
         {...props}
       />
-      
-      <div className="flex justify-between mt-1.5">
-        {hasError ? (
-          <p className="text-xs sm:text-sm text-red-600">{error}</p>
-        ) : (
-          <span />
-        )}
-        
-        {maxLength && (
-          <p className="text-xs sm:text-sm text-propertree-dark/60">
-            {charCount}/{maxLength}
-          </p>
-        )}
+
+      <div className="mt-1.5 flex justify-between">
+        {hasError ? <p className="text-xs text-red-600 sm:text-sm">{error}</p> : <span />}
+        {maxLength && <p className="text-xs text-propertree-dark/50 sm:text-sm">{charCount}/{maxLength}</p>}
       </div>
     </div>
   );
