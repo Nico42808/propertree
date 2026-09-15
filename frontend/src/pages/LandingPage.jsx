@@ -332,9 +332,10 @@ const LandingPage = () => {
 
             {/* MacBook-style static preview. This is intentionally visual only. */}
             <div className="relative flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[760px]">
-                <div className="rounded-[1.25rem] bg-[#171b1a] p-[7px] shadow-[0_28px_70px_rgba(28,45,38,0.18)]">
-                  <div className="overflow-hidden rounded-[0.9rem] bg-white">
+              <div className="relative w-full max-w-[780px] pb-10 pt-2">
+                <div className="relative mx-auto w-[92%] rounded-t-[1.25rem] rounded-b-[0.7rem] bg-[#171a19] p-[9px] shadow-[0_34px_75px_rgba(28,45,38,0.20)]">
+                  <div className="absolute left-1/2 top-[3px] z-10 h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-[#4a4f4d] ring-1 ring-black/40" />
+                  <div className="overflow-hidden rounded-[0.65rem] bg-white ring-1 ring-white/10">
                     <div className="border-b border-gray-100 bg-white px-4 py-3">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -388,8 +389,11 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                <div className="mx-auto h-3 w-[88%] rounded-b-[60%] bg-gradient-to-b from-gray-300 to-gray-400 shadow-[0_10px_20px_rgba(0,0,0,0.12)]" />
-                <div className="mx-auto h-[4px] w-[18%] -translate-y-3 rounded-b-xl bg-gray-400/70" />
+                <div className="relative mx-auto -mt-[1px] h-7 w-full max-w-[820px] overflow-hidden rounded-b-[1.4rem] bg-gradient-to-b from-[#d8dadd] via-[#bec1c5] to-[#9fa3a8] shadow-[0_16px_24px_rgba(0,0,0,0.14)]" style={{ clipPath: 'polygon(3.5% 0, 96.5% 0, 100% 100%, 0 100%)' }}>
+                  <div className="absolute left-1/2 top-0 h-2.5 w-[18%] -translate-x-1/2 rounded-b-xl bg-[#9ea2a7] shadow-inner" />
+                  <div className="absolute bottom-[3px] left-1/2 h-[2px] w-[82%] -translate-x-1/2 rounded-full bg-white/30" />
+                </div>
+                <div className="mx-auto h-[3px] w-[93%] rounded-b-full bg-[#858a90] opacity-80" />
               </div>
             </div>
           </div>
