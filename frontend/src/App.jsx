@@ -10,6 +10,13 @@ import LandingPage from './pages/LandingPage'
 import LegacyLandingPage from './pages/LegacyLandingPage'
 import PropertySearch from './pages/PropertySearch'
 import PropertyDetail from './pages/PropertyDetail'
+import AboutUs from './pages/public/AboutUs'
+import Careers from './pages/public/Careers'
+import Blog from './pages/public/Blog'
+import HelpCenter from './pages/public/HelpCenter'
+import Contact from './pages/public/Contact'
+import TermsOfUse from './pages/public/TermsOfUse'
+import Privacy from './pages/public/Privacy'
 
 // Auth Pages
 import Login from './pages/auth/Login'
@@ -42,25 +49,19 @@ import AdminServiceBookings from './pages/admin/ServiceBookings'
 import AdminAnalytics from './pages/admin/Analytics'
 import AdminAssetPerformance from './pages/admin/AssetPerformance'
 
-// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth()
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500" />
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/" replace />
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (allowedRoles && !allowedRoles.includes(user?.role)) return <Navigate to="/" replace />
 
   return children
 }
@@ -70,12 +71,19 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route element={<MainLayout />}>
-  <Route path="/" element={<LandingPage />} />
-  <Route path="/legacy" element={<LegacyLandingPage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/legacy" element={<LegacyLandingPage />} />
+        <Route path="/search" element={<PropertySearch />} />
+        <Route path="/properties/:id" element={<PropertyDetail />} />
 
-  <Route path="/search" element={<PropertySearch />} />
-  <Route path="/properties/:id" element={<PropertyDetail />} />
-</Route>
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/privacy" element={<Privacy />} />
+      </Route>
 
       {/* Auth Routes */}
       <Route element={<AuthLayout />}>
@@ -94,24 +102,11 @@ function App() {
           </ProtectedRoute>
         }
       >
-       <Route index element={<Navigate to="/landlord/properties" replace />} />
-
-<Route path="properties" element={<LandlordProperties />} />
-
-<Route
-  path="properties/new"
-  element={<HostOnboarding />}
-/>
-
-<Route
-  path="properties/:id/edit"
-  element={<EditProperty />}
-/>
-
-<Route
-  path="services"
-  element={<LandlordServices />}
-/>
+        <Route index element={<Navigate to="/landlord/properties" replace />} />
+        <Route path="properties" element={<LandlordProperties />} />
+        <Route path="properties/new" element={<HostOnboarding />} />
+        <Route path="properties/:id/edit" element={<EditProperty />} />
+        <Route path="services" element={<LandlordServices />} />
       </Route>
 
       {/* Tenant Routes */}
@@ -149,7 +144,7 @@ function App() {
         <Route path="performance" element={<AdminAssetPerformance />} />
       </Route>
 
-      {/* Profile Route - Accessible to all authenticated users */}
+      {/* Profile Route */}
       <Route
         path="/profile"
         element={
@@ -161,7 +156,6 @@ function App() {
         <Route index element={<Profile />} />
       </Route>
 
-      {/* 404 Route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
