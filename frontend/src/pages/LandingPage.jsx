@@ -90,20 +90,17 @@ const LandingPage = () => {
             <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-propertree-green-100/70 blur-3xl" />
 
             <div className="relative w-[300px] sm:w-[330px]">
-              <div className="rounded-[3rem] border-[10px] border-propertree-dark bg-propertree-dark p-1 shadow-[0_32px_90px_rgba(20,40,32,0.24)]">
-                <div className="relative overflow-hidden rounded-[2.35rem] bg-white">
+              <div className="rounded-[2.8rem] border-[6px] border-propertree-dark bg-propertree-dark p-[2px] shadow-[0_32px_90px_rgba(20,40,32,0.24)]">
+                <div className="relative overflow-hidden rounded-[2.45rem] bg-white">
                   <div className="absolute left-1/2 top-2 h-6 w-24 -translate-x-1/2 rounded-full bg-propertree-dark" />
 
                   <div className="px-5 pb-6 pt-11">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-propertree-green text-white">
-                          <Building2 className="h-4.5 w-4.5" />
-                        </div>
-                        <span className="text-[15px] font-semibold tracking-tight text-propertree-dark">
-                          Propertree
-                        </span>
-                      </div>
+                      <img
+                        src="/logo-full.svg"
+                        alt="Propertree"
+                        className="h-7 w-auto max-w-[135px] object-contain"
+                      />
 
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-propertree-green-50">
                         <Building2 className="h-4 w-4 text-propertree-green" />
