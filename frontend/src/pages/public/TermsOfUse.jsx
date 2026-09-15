@@ -14,7 +14,7 @@ const TermsOfUse = () => (
     intro="These terms set out the general rules for using the Propertree website and platform."
   >
     <div className="rounded-2xl bg-propertree-green-50 p-5 text-sm leading-6 text-gray-600">
-      Last updated: September 2026. These terms are intended as a clear operational draft and should be reviewed against the final company, service and jurisdictional setup before being relied on as final legal terms.
+      Last updated: September 2026.
     </div>
 
     <Section title="1. Using Propertree">
