@@ -4,13 +4,15 @@ URL configuration for Maintenance app.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    MaintenanceRequestListCreateView,
-    MaintenanceRequestDetailView,
     ServiceProviderListView,
-    MaintenanceScheduleListCreateView,
     ServiceCatalogViewSet,
     ServiceBookingViewSet,
     MaintenanceImageDownloadView,
+)
+from .views_fixed import (
+    MaintenanceRequestListCreateView,
+    MaintenanceRequestDetailView,
+    MaintenanceScheduleListCreateView,
 )
 
 # Create router for ViewSets
