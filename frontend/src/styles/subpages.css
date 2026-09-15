@@ -1,0 +1,69 @@
+.propertree-subpage {
+  background: #fdfcfa;
+  color: #2c3e3a;
+}
+
+.propertree-subpage > * {
+  position: relative;
+}
+
+.propertree-subpage::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(209, 235, 217, 0.45), transparent 28rem),
+    radial-gradient(circle at 6% 92%, rgba(240, 244, 247, 0.65), transparent 30rem);
+  z-index: 0;
+}
+
+.propertree-subpage h1 {
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: #2c3e3a;
+}
+
+.propertree-subpage h2,
+.propertree-subpage h3 {
+  letter-spacing: -0.02em;
+  color: #2c3e3a;
+}
+
+.propertree-subpage table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.propertree-subpage thead {
+  background: #fdfcfa;
+}
+
+.propertree-subpage th {
+  color: #6b7280;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.propertree-subpage tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.propertree-subpage tbody tr:hover {
+  background: rgba(232, 245, 237, 0.45);
+}
+
+.propertree-subpage input,
+.propertree-subpage select,
+.propertree-subpage textarea {
+  accent-color: #6b8e6f;
+}
+
+.propertree-auth-surface {
+  background:
+    radial-gradient(circle at 90% 8%, rgba(209, 235, 217, 0.6), transparent 28rem),
+    radial-gradient(circle at 8% 92%, rgba(240, 244, 247, 0.8), transparent 30rem),
+    #fdfcfa;
+}
