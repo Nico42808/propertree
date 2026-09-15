@@ -11,10 +11,10 @@ const Privacy = () => (
   <PublicInfoLayout
     eyebrow="Legal"
     title="Privacy"
-    intro="A plain-language overview of how privacy is intended to be handled across Propertree."
+    intro="A plain-language overview of how privacy is handled across Propertree."
   >
     <div className="rounded-2xl bg-propertree-green-50 p-5 text-sm leading-6 text-gray-600">
-      Last updated: September 2026. This page is a practical privacy-policy draft and should be reviewed against the final hosting, analytics, data-processing and company setup before being treated as the final legal policy.
+      Last updated: September 2026.
     </div>
 
     <Section title="1. Information you provide">
@@ -30,19 +30,19 @@ const Privacy = () => (
     </Section>
 
     <Section title="4. Service providers">
-      <p>Technical hosting, software infrastructure or property-service workflows may involve external providers. The final production setup should document which providers process personal information and for what purpose.</p>
+      <p>Technical hosting, software infrastructure or property-service workflows may involve external providers that support the operation of Propertree.</p>
     </Section>
 
     <Section title="5. Security">
-      <p>Reasonable technical and organizational measures should be used to protect account and property information. No internet-based system can guarantee absolute security.</p>
+      <p>Reasonable technical and organizational measures are used to protect account and property information. No internet-based system can guarantee absolute security.</p>
     </Section>
 
     <Section title="6. Retention and deletion">
-      <p>Information should be retained only for as long as needed for the relevant account, legal, contractual or property-management purpose. Final retention periods will depend on the production and legal setup.</p>
+      <p>Information is retained only for as long as needed for the relevant account, legal, contractual or property-management purpose.</p>
     </Section>
 
     <Section title="7. Your privacy rights">
-      <p>Depending on where you live, privacy law may give you rights to access, correct, delete or restrict the use of your personal information. The final privacy policy should include the appropriate contact details and procedures for exercising those rights.</p>
+      <p>Depending on where you live, privacy law may give you rights to access, correct, delete or restrict the use of your personal information. Requests relating to these rights can be directed through the Propertree contact channels.</p>
     </Section>
   </PublicInfoLayout>
 )
