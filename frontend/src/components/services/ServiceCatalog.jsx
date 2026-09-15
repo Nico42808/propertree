@@ -1,33 +1,36 @@
 /**
  * ServiceCatalog component - Display all available services
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
-import { getServiceCatalog, getServiceCategories } from '../../services/serviceService';
+import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
 
-const ServiceCatalog = ({ onBookService }) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+const SERVICE_SHORTCUTS = [
+  'Property Management Abo',
+  'Arrival Preparation',
+  'Fridge Refill',
+  '24/7 emergency service',
+  'Housekeeping',
+  'Handyman service',
+];
 
-  // Fetch service catalog
+const ServiceCatalog = ({ onBookService }) => {
+  const [selectedShortcut, setSelectedShortcut] = useState('all');
+
+  // Always load the complete service catalog. The buttons below are only
+  // shortcuts and do not change IDs, categories or booking behaviour.
   const {
     data: services = [],
     isLoading: servicesLoading,
     error: servicesError,
-    refetch: refetchServices
+    refetch: refetchServices,
   } = useQuery({
-    queryKey: ['service-catalog', selectedCategory],
-    queryFn: () => getServiceCatalog(selectedCategory === 'all' ? null : selectedCategory),
+    queryKey: ['service-catalog', 'all'],
+    queryFn: () => getServiceCatalog(),
     retry: 2,
-    staleTime: 30000, // 30 seconds
-  });
-
-  // Fetch categories
-  const { data: categories = [], error: categoriesError } = useQuery({
-    queryKey: ['service-categories'],
-    queryFn: getServiceCategories,
-    retry: 2,
+    staleTime: 30000,
   });
 
   if (servicesLoading) {
@@ -48,19 +51,6 @@ const ServiceCatalog = ({ onBookService }) => {
         <p className="text-red-600 text-sm mt-2">
           {servicesError.response?.data?.detail || servicesError.message || 'Unknown error occurred'}
         </p>
-        {servicesError.response?.status === 401 && (
-          <p className="text-sm text-gray-600 mt-2">
-            Your session may have expired. Please try logging out and logging back in.
-          </p>
-        )}
-        {servicesError.response?.status === 403 && (
-          <p className="text-sm text-gray-600 mt-2">
-            You don't have permission to view services. Make sure you're logged in as a landlord.
-          </p>
-        )}
-        <p className="text-sm text-gray-600 mt-2">
-          Make sure the backend is running and you've populated the service catalog.
-        </p>
         <button
           onClick={() => refetchServices()}
           className="mt-4 px-4 py-2 bg-propertree-green text-white rounded-lg hover:bg-green-600 transition-colors"
@@ -71,60 +61,63 @@ const ServiceCatalog = ({ onBookService }) => {
     );
   }
 
-  // Ensure services is an array
   const servicesList = Array.isArray(services) ? services : [];
+
+  const filteredServices = useMemo(() => {
+    if (selectedShortcut === 'all') return servicesList;
+
+    return servicesList.filter(
+      (service) => service.name?.toLowerCase() === selectedShortcut.toLowerCase()
+    );
+  }, [servicesList, selectedShortcut]);
 
   return (
     <div className="space-y-6">
-      {/* Category Filter */}
-      {Array.isArray(categories) && categories.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+      {/* Priority service shortcuts */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setSelectedShortcut('all')}
+          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+            selectedShortcut === 'all'
+              ? 'bg-propertree-green text-white shadow-card'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          All Services
+        </button>
+
+        {SERVICE_SHORTCUTS.map((serviceName) => (
           <button
-            onClick={() => setSelectedCategory('all')}
+            key={serviceName}
+            onClick={() => setSelectedShortcut(serviceName)}
             className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-              selectedCategory === 'all'
+              selectedShortcut === serviceName
                 ? 'bg-propertree-green text-white shadow-card'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            All Services
+            {serviceName === '24/7 emergency service' ? '24/7 Emergency Service' : serviceName}
           </button>
-          {categories.map((category) => (
-            <button
-              key={category.value}
-              onClick={() => setSelectedCategory(category.value)}
-              className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                selectedCategory === category.value
-                  ? 'bg-propertree-green text-white shadow-card'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* Services Grid */}
-      {servicesList.length === 0 ? (
+      {filteredServices.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center">
           <p className="text-gray-600 text-lg mb-2">No services available</p>
-          <p className="text-gray-500 text-sm">
-            Please run the populate script to add sample services:
-            <code className="block mt-2 bg-gray-800 text-white p-2 rounded">
-              cd backend && python populate_service_catalog.py
-            </code>
-          </p>
           <button
-            onClick={() => refetchServices()}
+            onClick={() => {
+              setSelectedShortcut('all');
+              refetchServices();
+            }}
             className="mt-4 px-4 py-2 bg-propertree-green text-white rounded-lg hover:bg-green-600 transition-colors"
           >
-            Refresh Services
+            Show All Services
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {servicesList.map((service) => (
+          {filteredServices.map((service) => (
             <ServiceCard key={service.id} service={service} onBook={onBookService} />
           ))}
         </div>
