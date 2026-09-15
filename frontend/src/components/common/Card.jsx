@@ -5,11 +5,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const Card = ({ children, className = '', hover = false, padding = true }) => {
-  const hoverClass = hover ? 'hover:shadow-card-hover transition-all duration-300 cursor-pointer hover:-translate-y-1' : '';
-  const paddingClass = padding ? 'p-4 sm:p-6' : '';
-  
+  const hoverClass = hover
+    ? 'hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300 cursor-pointer'
+    : '';
+  const paddingClass = padding ? 'p-5 sm:p-6 lg:p-7' : '';
+
   return (
-    <div className={`bg-white rounded-2xl shadow-card border border-propertree-cream-300 ${paddingClass} ${hoverClass} ${className}`}>
+    <div className={`bg-white rounded-3xl border border-gray-100 shadow-subtle ${paddingClass} ${hoverClass} ${className}`}>
       {children}
     </div>
   );
@@ -22,36 +24,36 @@ Card.propTypes = {
   padding: PropTypes.bool,
 };
 
-const CardHeader = ({ children, className = '' }) => {
-  return <div className={`mb-3 sm:mb-4 ${className}`}>{children}</div>;
-};
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`mb-4 sm:mb-5 ${className}`}>{children}</div>
+);
 
 CardHeader.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
-const CardTitle = ({ children, className = '' }) => {
-  return <h3 className={`text-lg sm:text-xl font-semibold text-gray-900 ${className}`}>{children}</h3>;
-};
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`text-lg sm:text-xl font-semibold tracking-tight text-propertree-dark ${className}`}>
+    {children}
+  </h3>
+);
 
 CardTitle.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
-const CardBody = ({ children, className = '' }) => {
-  return <div className={className}>{children}</div>;
-};
+const CardBody = ({ children, className = '' }) => <div className={className}>{children}</div>;
 
 CardBody.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
-const CardFooter = ({ children, className = '' }) => {
-  return <div className={`mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-gray-200 ${className}`}>{children}</div>;
-};
+const CardFooter = ({ children, className = '' }) => (
+  <div className={`mt-5 border-t border-gray-100 pt-5 ${className}`}>{children}</div>
+);
 
 CardFooter.propTypes = {
   children: PropTypes.node.isRequired,
