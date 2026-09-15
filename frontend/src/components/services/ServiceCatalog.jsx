@@ -1,16 +1,16 @@
 /**
  * ServiceCatalog component - Display all available services
  */
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
 import {
   BellRing,
-  Broom,
   CalendarCheck,
   Hammer,
   ShieldCheck,
   ShoppingBasket,
+  Sparkles,
 } from 'lucide-react';
 import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
@@ -20,7 +20,7 @@ const SERVICE_SHORTCUTS = [
   { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: CalendarCheck },
   { name: 'Fridge Refill', label: 'Fridge Refill', icon: ShoppingBasket },
   { name: '24/7 emergency service', label: '24/7 Emergency Service', icon: BellRing },
-  { name: 'Housekeeping', label: 'Housekeeping', icon: Broom },
+  { name: 'Housekeeping', label: 'Housekeeping', icon: Sparkles },
   { name: 'Handyman service', label: 'Handyman Service', icon: Hammer },
 ];
 
@@ -70,14 +70,12 @@ const ServiceCatalog = ({ onBookService }) => {
   }
 
   const servicesList = Array.isArray(services) ? services : [];
-
-  const filteredServices = useMemo(() => {
-    if (selectedShortcut === 'all') return servicesList;
-
-    return servicesList.filter(
-      (service) => service.name?.toLowerCase() === selectedShortcut.toLowerCase()
-    );
-  }, [servicesList, selectedShortcut]);
+  const filteredServices =
+    selectedShortcut === 'all'
+      ? servicesList
+      : servicesList.filter(
+          (service) => service.name?.toLowerCase() === selectedShortcut.toLowerCase()
+        );
 
   return (
     <div className="space-y-6">
