@@ -4,7 +4,6 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
-import Button from './Button';
 
 const Modal = ({
   isOpen,
@@ -15,26 +14,16 @@ const Modal = ({
   size = 'md',
   closeOnOverlayClick = true,
 }) => {
-  // Close on ESC key
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key === 'Escape' && isOpen) onClose();
     };
-    
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -51,34 +40,30 @@ const Modal = ({
   };
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget && closeOnOverlayClick) {
-      onClose();
-    }
+    if (e.target === e.currentTarget && closeOnOverlayClick) onClose();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-propertree-dark bg-opacity-60 p-4 overflow-y-auto backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-propertree-dark/55 p-4 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
-      <div className={`bg-white rounded-2xl shadow-card-hover w-full ${sizes[size]} my-6 sm:my-8 animate-in fade-in duration-200`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-propertree-cream-300">
-          <h2 className="text-lg sm:text-2xl font-semibold text-propertree-dark">{title}</h2>
+      <div className={`my-6 w-full ${sizes[size]} overflow-hidden rounded-3xl border border-white/60 bg-white shadow-card-hover sm:my-8`}>
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-5 sm:px-7 sm:py-6">
+          <h2 className="text-xl font-semibold tracking-tight text-propertree-dark sm:text-2xl">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-propertree-dark/40 hover:text-propertree-dark hover:bg-propertree-cream-100 transition-colors"
+            className="rounded-full p-2 text-propertree-dark/40 transition hover:bg-propertree-green-50 hover:text-propertree-dark"
+            aria-label="Close modal"
           >
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-4 sm:p-6">{children}</div>
+        <div className="px-5 py-5 sm:px-7 sm:py-6">{children}</div>
 
-        {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-4 sm:p-6 border-t border-propertree-cream-300 bg-propertree-cream rounded-b-2xl">
+          <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-propertree-cream-100 px-5 py-4 sm:px-7 sm:py-5">
             {footer}
           </div>
         )}
