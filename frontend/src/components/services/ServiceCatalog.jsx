@@ -5,30 +5,28 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BellRing,
-  CalendarCheck,
-  Hammer,
-  ShieldCheck,
-  ShoppingBasket,
+  Settings,
   Sparkles,
+  Home,
+  Zap,
+  Leaf,
+  Wrench,
 } from 'lucide-react';
 import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
 
 const SERVICE_SHORTCUTS = [
-  { name: 'Property Management Abo', label: 'Property Management Abo', icon: ShieldCheck },
-  { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: CalendarCheck },
-  { name: 'Fridge Refill', label: 'Fridge Refill', icon: ShoppingBasket },
-  { name: '24/7 emergency service', label: '24/7 Emergency Service', icon: BellRing },
-  { name: 'Housekeeping', label: 'Housekeeping', icon: Sparkles },
-  { name: 'Handyman service', label: 'Handyman Service', icon: Hammer },
+  { name: 'Property Management Abo', label: 'Property Management Abo', icon: Settings },
+  { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: Sparkles },
+  { name: 'Fridge Refill', label: 'Fridge Refill', icon: Home },
+  { name: '24/7 emergency service', label: '24/7 Emergency Service', icon: Zap },
+  { name: 'Housekeeping', label: 'Housekeeping', icon: Leaf },
+  { name: 'Handyman service', label: 'Handyman Service', icon: Wrench },
 ];
 
 const ServiceCatalog = ({ onBookService }) => {
   const [selectedShortcut, setSelectedShortcut] = useState('all');
 
-  // Always load the complete service catalog. The buttons below are only
-  // shortcuts and do not change IDs, categories or booking behaviour.
   const {
     data: services = [],
     isLoading: servicesLoading,
@@ -79,7 +77,6 @@ const ServiceCatalog = ({ onBookService }) => {
 
   return (
     <div className="space-y-6">
-      {/* Priority service shortcuts */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedShortcut('all')}
@@ -108,7 +105,6 @@ const ServiceCatalog = ({ onBookService }) => {
         ))}
       </div>
 
-      {/* Services Grid */}
       {filteredServices.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center">
           <p className="text-gray-600 text-lg mb-2">No services available</p>
