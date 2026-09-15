@@ -67,3 +67,39 @@
     radial-gradient(circle at 8% 92%, rgba(240, 244, 247, 0.8), transparent 30rem),
     #fdfcfa;
 }
+
+/* Header brand: make the Propertree identity more prominent. */
+nav a[href="/"] > img {
+  height: 2.25rem !important;
+  width: auto !important;
+}
+
+nav a[href="/"] > span {
+  font-size: 1.6rem !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+}
+
+/* Landlord primary navigation should read as clear top-level actions. */
+nav a[href="/landlord/properties"],
+nav a[href="/landlord/services"] {
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+  gap: 0.625rem !important;
+}
+
+nav a[href="/landlord/properties"] svg,
+nav a[href="/landlord/services"] svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+@media (min-width: 640px) {
+  nav a[href="/"] > img {
+    height: 2.5rem !important;
+  }
+
+  nav a[href="/"] > span {
+    font-size: 1.75rem !important;
+  }
+}
