@@ -4,16 +4,24 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useQuery } from '@tanstack/react-query';
+import {
+  BellRing,
+  Broom,
+  CalendarCheck,
+  Hammer,
+  ShieldCheck,
+  ShoppingBasket,
+} from 'lucide-react';
 import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
 
 const SERVICE_SHORTCUTS = [
-  'Property Management Abo',
-  'Arrival Preparation',
-  'Fridge Refill',
-  '24/7 emergency service',
-  'Housekeeping',
-  'Handyman service',
+  { name: 'Property Management Abo', label: 'Property Management Abo', icon: ShieldCheck },
+  { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: CalendarCheck },
+  { name: 'Fridge Refill', label: 'Fridge Refill', icon: ShoppingBasket },
+  { name: '24/7 emergency service', label: '24/7 Emergency Service', icon: BellRing },
+  { name: 'Housekeeping', label: 'Housekeeping', icon: Broom },
+  { name: 'Handyman service', label: 'Handyman Service', icon: Hammer },
 ];
 
 const ServiceCatalog = ({ onBookService }) => {
@@ -77,7 +85,7 @@ const ServiceCatalog = ({ onBookService }) => {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedShortcut('all')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
             selectedShortcut === 'all'
               ? 'bg-propertree-green text-white shadow-card'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -86,17 +94,18 @@ const ServiceCatalog = ({ onBookService }) => {
           All Services
         </button>
 
-        {SERVICE_SHORTCUTS.map((serviceName) => (
+        {SERVICE_SHORTCUTS.map(({ name, label, icon: Icon }) => (
           <button
-            key={serviceName}
-            onClick={() => setSelectedShortcut(serviceName)}
-            className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-              selectedShortcut === serviceName
+            key={name}
+            onClick={() => setSelectedShortcut(name)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+              selectedShortcut === name
                 ? 'bg-propertree-green text-white shadow-card'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {serviceName === '24/7 emergency service' ? '24/7 Emergency Service' : serviceName}
+            <Icon className="w-4 h-4" />
+            {label}
           </button>
         ))}
       </div>
