@@ -10,6 +10,33 @@ const SERVICE_ENDPOINTS = {
   STATS: '/maintenance/service-bookings/stats/',
 };
 
+// Display-only copy overrides. IDs, categories, API payloads and booking logic stay unchanged.
+const SERVICE_COPY_OVERRIDES = {
+  'Appliance repair': {
+    name: 'Property Management Abo',
+    description: 'Ongoing property management support for regular checks, coordination and day-to-day assistance.',
+  },
+  'Turnover cleaning': {
+    name: 'Arrival Preparation',
+    description: 'We prepare your property before your arrival so everything is ready when you get there.',
+  },
+  'Contractor management': {
+    name: 'Fridge Refill',
+    description: 'Have your fridge stocked with essentials before you arrive at your property.',
+  },
+};
+
+const applyServiceCopy = (service) => {
+  if (!service || typeof service !== 'object') return service;
+  const override = SERVICE_COPY_OVERRIDES[service.name];
+  return override ? { ...service, ...override } : service;
+};
+
+const applyServiceCopyToList = (data) => {
+  if (!Array.isArray(data)) return data;
+  return data.map(applyServiceCopy);
+};
+
 /**
  * Get all available services from catalog
  * @param {string} category - Optional category filter
@@ -19,7 +46,8 @@ export const getServiceCatalog = async (category = null) => {
   const params = category ? { category } : {};
   const response = await api.get(SERVICE_ENDPOINTS.CATALOG, { params });
   // Handle paginated response - extract results array
-  return response.data.results || response.data;
+  const services = response.data.results || response.data;
+  return applyServiceCopyToList(services);
 };
 
 /**
@@ -29,7 +57,7 @@ export const getServiceCatalog = async (category = null) => {
  */
 export const getServiceById = async (serviceId) => {
   const response = await api.get(`${SERVICE_ENDPOINTS.CATALOG}/${serviceId}`);
-  return response.data;
+  return applyServiceCopy(response.data);
 };
 
 /**
@@ -38,7 +66,15 @@ export const getServiceById = async (serviceId) => {
  */
 export const getServiceCategories = async () => {
   const response = await api.get(SERVICE_ENDPOINTS.CATEGORIES);
-  return response.data;
+  const categories = response.data;
+  if (!Array.isArray(categories)) return categories;
+
+  return categories.map((category) => {
+    if (category?.label === 'Appliance Repair') {
+      return { ...category, label: 'Property Management Abo' };
+    }
+    return category;
+  });
 };
 
 /**
@@ -63,7 +99,7 @@ export const getServiceBookings = async () => {
 
 /**
  * Get a specific service booking
- * @param {string} bookingId - Booking UUID
+ * @param {string} bookingId - Service booking UUID
  * @returns {Promise} Booking details
  */
 export const getServiceBookingById = async (bookingId) => {
@@ -73,7 +109,7 @@ export const getServiceBookingById = async (bookingId) => {
 
 /**
  * Update a service booking
- * @param {string} bookingId - Booking UUID
+ * @param {string} bookingId - Service booking UUID
  * @param {Object} updateData - Data to update
  * @returns {Promise} Updated booking
  */
