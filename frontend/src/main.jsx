@@ -7,6 +7,7 @@ import App from './App'
 import { AuthProvider } from './contexts/AuthContext'
 import './i18n/config' // Initialize i18n
 import './styles/index.css'
+import './styles/subpages.css'
 
 const __originalToLocaleString = Number.prototype.toLocaleString
 Number.prototype.toLocaleString = function (locales, options) {
@@ -36,8 +37,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#363636',
+                background: '#2C3E3A',
                 color: '#fff',
+                borderRadius: '16px',
+                boxShadow: '0 12px 32px rgba(44, 62, 58, 0.16)',
               },
               success: {
                 duration: 3000,
