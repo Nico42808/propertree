@@ -330,13 +330,13 @@ const LandingPage = () => {
               </Link>
             </div>
 
-            {/* MacBook-style static preview. This is intentionally visual only. */}
+            {/* MacBook-style static preview. Visual only. */}
             <div className="relative flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[800px] pb-14 pt-2">
-                {/* Screen */}
-                <div className="relative mx-auto w-[90%] rounded-t-[1.25rem] rounded-b-[0.55rem] bg-[#171a19] p-[8px] shadow-[0_30px_70px_rgba(28,45,38,0.18)]">
-                  <div className="absolute left-1/2 top-[3px] z-10 h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-[#4a4f4d] ring-1 ring-black/40" />
-                  <div className="overflow-hidden rounded-[0.6rem] bg-white ring-1 ring-white/10">
+              <div className="relative w-full max-w-[860px] pb-8 pt-4">
+                <div className="relative mx-auto w-[86%] rounded-t-[1.45rem] bg-[#111314] px-[10px] pt-[10px] shadow-[0_28px_70px_rgba(25,35,31,0.22)]">
+                  <div className="absolute left-1/2 top-[5px] z-20 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-[#303536] ring-1 ring-black/60" />
+
+                  <div className="overflow-hidden rounded-t-[0.9rem] bg-white">
                     <div className="border-b border-gray-100 bg-white px-4 py-3">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -388,34 +388,17 @@ const LandingPage = () => {
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Keyboard deck */}
-                <div
-                  className="relative mx-auto -mt-[1px] h-[118px] w-full overflow-hidden rounded-b-[1.7rem] bg-gradient-to-b from-[#dfe1e4] via-[#c4c7cb] to-[#a8acb1] shadow-[0_18px_28px_rgba(0,0,0,0.16)]"
-                  style={{ clipPath: 'polygon(7% 0, 93% 0, 100% 100%, 0 100%)' }}
-                >
-                  <div className="mx-auto mt-3 w-[73%] space-y-1.5">
-                    {[12, 12, 11, 10].map((count, rowIndex) => (
-                      <div
-                        key={rowIndex}
-                        className="grid gap-1.5"
-                        style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}
-                      >
-                        {Array.from({ length: count }).map((_, keyIndex) => (
-                          <div
-                            key={keyIndex}
-                            className="h-[11px] rounded-[2px] border border-black/20 bg-[#2f3335] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_1px_rgba(0,0,0,0.25)]"
-                          />
-                        ))}
-                      </div>
-                    ))}
+                  <div className="relative flex h-7 items-center justify-center bg-[#111314] text-[9px] font-medium tracking-wide text-gray-300">
+                    MacBook Pro
                   </div>
-
-                  <div className="absolute bottom-3 left-1/2 h-[34px] w-[32%] -translate-x-1/2 rounded-[7px] border border-black/10 bg-[#c9ccd0] shadow-[inset_0_1px_2px_rgba(255,255,255,0.7)]" />
-                  <div className="absolute bottom-[2px] left-1/2 h-[2px] w-[88%] -translate-x-1/2 rounded-full bg-white/35" />
                 </div>
-                <div className="mx-auto h-[4px] w-[95%] rounded-b-full bg-[#858a90] opacity-80" />
+
+                <div className="relative mx-auto -mt-[1px] h-5 w-full max-w-[900px] overflow-hidden rounded-b-[1.2rem] bg-gradient-to-b from-[#dadde0] via-[#bcc1c5] to-[#8f9499] shadow-[0_14px_22px_rgba(0,0,0,0.15)]" style={{ clipPath: 'polygon(5% 0, 95% 0, 100% 100%, 0 100%)' }}>
+                  <div className="absolute left-1/2 top-0 h-2.5 w-[17%] -translate-x-1/2 rounded-b-xl bg-[#9fa4a9] shadow-inner" />
+                  <div className="absolute bottom-[2px] left-1/2 h-[2px] w-[86%] -translate-x-1/2 rounded-full bg-white/35" />
+                </div>
+                <div className="mx-auto h-[3px] w-[96%] rounded-b-full bg-[#74797e] opacity-85" />
               </div>
             </div>
           </div>
