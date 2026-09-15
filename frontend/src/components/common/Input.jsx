@@ -22,23 +22,23 @@ const Input = ({
   ...props
 }) => {
   const hasError = touched && error;
-  
+
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label htmlFor={name} className="block text-xs sm:text-sm font-medium text-propertree-dark mb-1.5">
+        <label htmlFor={name} className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-propertree-dark/70 sm:text-sm sm:normal-case sm:tracking-normal">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
-      
+
       <div className="relative">
         {leftIcon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-propertree-dark/40">
             {leftIcon}
           </div>
         )}
-        
+
         <input
           type={type}
           id={name}
@@ -48,28 +48,18 @@ const Input = ({
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
-          className={`
-            block w-full rounded-lg sm:rounded-xl border-2 ${hasError ? 'border-red-500' : 'border-gray-200'}
-            ${leftIcon ? 'pl-10' : 'pl-3 sm:pl-4'} ${rightIcon ? 'pr-10' : 'pr-3 sm:pr-4'} py-2.5 sm:py-3
-            text-gray-900 placeholder-gray-400 bg-white
-            shadow-sm hover:shadow-md hover:border-gray-300 hover:bg-gray-50
-            focus:outline-none focus:ring-2 focus:ring-propertree-green/20 focus:border-propertree-green focus:shadow-md focus:bg-white
-            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 disabled:shadow-none
-            transition-all duration-300 ease-in-out font-medium text-sm sm:text-base
-          `}
+          className={`block w-full rounded-2xl border ${hasError ? 'border-red-400' : 'border-gray-200'} bg-white ${leftIcon ? 'pl-11' : 'pl-4'} ${rightIcon ? 'pr-11' : 'pr-4'} py-3 text-sm font-medium text-propertree-dark placeholder:text-gray-400 shadow-subtle transition focus:border-propertree-green focus:outline-none focus:ring-4 focus:ring-propertree-green/10 disabled:cursor-not-allowed disabled:bg-propertree-cream-100 disabled:text-gray-400 sm:py-3.5 sm:text-base`}
           {...props}
         />
-        
+
         {rightIcon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-propertree-dark/40">
             {rightIcon}
           </div>
         )}
       </div>
-      
-      {hasError && (
-        <p className="mt-1.5 text-sm text-red-600">{error}</p>
-      )}
+
+      {hasError && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
     </div>
   );
 };
