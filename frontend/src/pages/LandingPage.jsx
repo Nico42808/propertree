@@ -389,9 +389,7 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <div className="relative flex h-7 items-center justify-center bg-[#111314] text-[9px] font-medium tracking-wide text-gray-300">
-                    MacBook Pro
-                  </div>
+                  <div className="h-7 bg-[#111314]" />
                 </div>
 
                 <div className="relative mx-auto -mt-[1px] h-5 w-full max-w-[900px] overflow-hidden rounded-b-[1.2rem] bg-gradient-to-b from-[#dadde0] via-[#bcc1c5] to-[#8f9499] shadow-[0_14px_22px_rgba(0,0,0,0.15)]" style={{ clipPath: 'polygon(5% 0, 95% 0, 100% 100%, 0 100%)' }}>
