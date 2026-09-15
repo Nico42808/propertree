@@ -96,11 +96,16 @@ const LandingPage = () => {
 
                   <div className="px-5 pb-6 pt-11">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                      <img
-                        src="/logo-full.svg"
-                        alt="Propertree"
-                        className="h-7 w-auto max-w-[135px] object-contain"
-                      />
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src="/logo.png"
+                          alt="Propertree"
+                          className="h-8 w-8 object-contain"
+                        />
+                        <span className="text-[17px] font-bold tracking-tight text-propertree-dark">
+                          Propertree
+                        </span>
+                      </div>
 
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-propertree-green-50">
                         <Building2 className="h-4 w-4 text-propertree-green" />
