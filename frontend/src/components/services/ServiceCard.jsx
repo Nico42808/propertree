@@ -15,13 +15,50 @@ import {
   Sparkles,
   Home,
   Settings,
+  ShoppingBasket,
+  CalendarCheck,
+  ShieldCheck,
+  BellRing,
+  ClipboardCheck,
+  Broom,
+  KeyRound,
+  Snowflake,
+  Flame,
+  Hammer,
 } from 'lucide-react';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { formatCurrency } from '../../utils/formatters';
 
-// Map service categories to icons
-const ICON_MAP = {
+const SERVICE_ICON_MAP = {
+  'property management abo': ShieldCheck,
+  'arrival preparation': CalendarCheck,
+  'fridge refill': ShoppingBasket,
+  '24/7 emergency service': BellRing,
+  housekeeping: Broom,
+  'handyman service': Hammer,
+  'property inspection': ClipboardCheck,
+  'safety inspection': ShieldCheck,
+  'fire safety check': Flame,
+  'smoke detector check': BellRing,
+  'garden maintenance': Leaf,
+  'snow removal': Snowflake,
+  'key exchange': KeyRound,
+  'key handover': KeyRound,
+  'smart lock installation': Lock,
+  'smart lock management': Lock,
+  'plumbing repair': Droplets,
+  'electrical repair': Zap,
+  'hvac service': Wind,
+  'interior painting': Paintbrush,
+  'touch-up painting': Paintbrush,
+  'deep cleaning': Sparkles,
+  'mid-stay cleaning': Sparkles,
+  cleaning: Sparkles,
+  maintenance: Wrench,
+};
+
+const CATEGORY_ICON_MAP = {
   plumbing: Droplets,
   electrical: Zap,
   hvac: Wind,
@@ -36,25 +73,9 @@ const ICON_MAP = {
   other: Wrench,
 };
 
-// Map service categories to colors
-const COLOR_MAP = {
-  plumbing: 'bg-blue-100 text-blue-600',
-  electrical: 'bg-yellow-100 text-yellow-600',
-  hvac: 'bg-cyan-100 text-cyan-600',
-  appliance: 'bg-gray-100 text-gray-600',
-  cleaning: 'bg-pink-100 text-pink-600',
-  painting: 'bg-purple-100 text-purple-600',
-  carpentry: 'bg-orange-100 text-orange-600',
-  locksmith: 'bg-gray-100 text-gray-700',
-  gardening: 'bg-green-100 text-green-600',
-  pest_control: 'bg-red-100 text-red-600',
-  general_maintenance: 'bg-teal-100 text-teal-600',
-  other: 'bg-gray-100 text-gray-600',
-};
-
 const ServiceCard = ({ service, onBook }) => {
-  const Icon = ICON_MAP[service.category] || ICON_MAP.other;
-  const colorClass = COLOR_MAP[service.category] || COLOR_MAP.other;
+  const serviceName = service.name?.toLowerCase() || '';
+  const Icon = SERVICE_ICON_MAP[serviceName] || CATEGORY_ICON_MAP[service.category] || CATEGORY_ICON_MAP.other;
 
   const formatDuration = (minutes) => {
     if (!minutes) return null;
@@ -77,7 +98,7 @@ const ServiceCard = ({ service, onBook }) => {
       <div className="flex items-start space-x-4">
         {/* Icon */}
         <div className="flex-shrink-0">
-          <div className={`w-14 h-14 ${colorClass} rounded-xl flex items-center justify-center`}>
+          <div className="w-14 h-14 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center">
             <Icon className="w-7 h-7" />
           </div>
         </div>
