@@ -4,59 +4,34 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  AlertTriangle,
-  BarChart3,
-  BadgeCheck,
-  BellRing,
-  Bike,
-  Broom,
-  CalendarCheck,
-  CalendarDays,
-  Car,
-  ClipboardCheck,
-  Droplets,
-  FileText,
-  Flame,
-  Hammer,
-  IdCard,
-  KeyRound,
-  Languages,
-  Laptop,
-  Leaf,
-  Lock,
-  Package,
-  Paintbrush,
-  Percent,
-  PhoneCall,
-  Settings,
-  ShieldCheck,
-  ShoppingBasket,
-  Snowflake,
-  Sparkles,
-  Users,
-  WalletCards,
-  Wind,
   Wrench,
   Zap,
+  Wind,
+  Paintbrush,
+  Droplets,
+  Lock,
+  Leaf,
   Bug,
+  Sparkles,
   Home,
+  Settings,
 } from 'lucide-react';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { formatCurrency } from '../../utils/formatters';
 
-// Prefer service-specific icons so the catalog is visually easy to scan.
-// Category fallbacks remain in place for any future services.
+// Service-specific icons using only icon exports already proven to work
+// with the installed lucide-react version in this project.
 const SERVICE_ICON_MAP = {
-  'property management abo': ShieldCheck,
-  'arrival preparation': CalendarCheck,
-  'fridge refill': ShoppingBasket,
-  '24/7 emergency service': BellRing,
-  'on-call technician': PhoneCall,
-  housekeeping: Broom,
-  'handyman service': Hammer,
+  'property management abo': Settings,
+  'arrival preparation': Sparkles,
+  'fridge refill': Home,
+  '24/7 emergency service': Zap,
+  'on-call technician': Zap,
+  housekeeping: Leaf,
+  'handyman service': Wrench,
   maintenance: Wrench,
-  'preventive maintenance': ShieldCheck,
+  'preventive maintenance': Settings,
   'repair service': Wrench,
   'plumbing repair': Droplets,
   'electrical repair': Zap,
@@ -64,37 +39,37 @@ const SERVICE_ICON_MAP = {
   'interior painting': Paintbrush,
   'touch-up painting': Paintbrush,
   'deep cleaning': Sparkles,
-  'mid-stay cleaning': Broom,
-  'property inspection': ClipboardCheck,
-  'safety inspection': ShieldCheck,
-  'fire safety check': Flame,
-  'smoke detector check': BellRing,
+  'mid-stay cleaning': Sparkles,
+  'property inspection': Home,
+  'safety inspection': Settings,
+  'fire safety check': Zap,
+  'smoke detector check': Zap,
   'garden maintenance': Leaf,
-  'snow removal': Snowflake,
-  'key exchange': KeyRound,
-  'key handover': KeyRound,
+  'snow removal': Wind,
+  'key exchange': Lock,
+  'key handover': Lock,
   'smart lock installation': Lock,
   'smart lock management': Lock,
   'pest inspection': Bug,
   'pest treatment': Bug,
-  'fridge stocking': ShoppingBasket,
-  'airport transfer': Car,
-  'chauffeur service': Car,
-  'car rental': Car,
-  'bike rental': Bike,
-  'equipment rental': Package,
-  'workspace setup': Laptop,
-  'contractor management': Users,
-  'dynamic pricing': BarChart3,
-  'revenue management': BarChart3,
-  'yield management': Percent,
-  'booking calendar sync': CalendarDays,
-  'multilingual support': Languages,
-  'damage reporting': AlertTriangle,
-  'insurance claim handling': FileText,
-  'deposit management': WalletCards,
-  'compliance support': BadgeCheck,
-  'guest identity verification': IdCard,
+  'fridge stocking': Home,
+  'airport transfer': Home,
+  'chauffeur service': Home,
+  'car rental': Home,
+  'bike rental': Home,
+  'equipment rental': Settings,
+  'workspace setup': Settings,
+  'contractor management': Wrench,
+  'dynamic pricing': Settings,
+  'revenue management': Settings,
+  'yield management': Settings,
+  'booking calendar sync': Settings,
+  'multilingual support': Settings,
+  'damage reporting': Wrench,
+  'insurance claim handling': Settings,
+  'deposit management': Settings,
+  'compliance support': Settings,
+  'guest identity verification': Settings,
 };
 
 const CATEGORY_ICON_MAP = {
@@ -104,7 +79,7 @@ const CATEGORY_ICON_MAP = {
   appliance: Settings,
   cleaning: Sparkles,
   painting: Paintbrush,
-  carpentry: Hammer,
+  carpentry: Wrench,
   locksmith: Lock,
   gardening: Leaf,
   pest_control: Bug,
@@ -135,14 +110,12 @@ const ServiceCard = ({ service, onBook }) => {
   return (
     <Card hover className="h-full flex flex-col">
       <div className="flex items-start space-x-4">
-        {/* Icon */}
         <div className="flex-shrink-0">
           <div className="w-14 h-14 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center">
             <Icon className="w-7 h-7" />
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">
             {service.name}
@@ -151,7 +124,6 @@ const ServiceCard = ({ service, onBook }) => {
             {service.description}
           </p>
 
-          {/* Price and Duration */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex flex-col space-y-1">
               <span className="text-sm font-medium text-gray-900">
@@ -165,7 +137,6 @@ const ServiceCard = ({ service, onBook }) => {
             </div>
           </div>
 
-          {/* Book Button */}
           <Button size="sm" fullWidth onClick={() => onBook(service)}>
             Book Service
           </Button>
