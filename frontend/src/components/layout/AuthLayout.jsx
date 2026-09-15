@@ -6,29 +6,26 @@ import { Outlet, Link } from 'react-router-dom';
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex flex-col">
-      {/* Simple Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link to="/" className="flex items-center space-x-3">
+    <div className="propertree-auth-surface flex min-h-screen flex-col text-propertree-dark">
+      <header className="border-b border-gray-100 bg-white/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center px-6 py-4 lg:px-8">
+          <Link to="/" className="flex items-center gap-3">
             <img src="/logo.png" alt="Propertree" className="h-8 w-auto object-contain" />
-            <span className="text-2xl font-bold text-gray-900">Propertree</span>
+            <span className="text-xl font-semibold tracking-tight text-propertree-dark sm:text-2xl">Propertree</span>
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex flex-grow items-center justify-center px-6 py-14 lg:px-8 lg:py-20">
         <div className="w-full max-w-md">
           <Outlet />
         </div>
       </main>
 
-      {/* Simple Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <footer className="border-t border-gray-100 bg-white/75 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-6 py-5 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            &copy; 2025 Propertree. All rights reserved.
+            &copy; 2026 Propertree. Property management, simplified.
           </p>
         </div>
       </footer>
