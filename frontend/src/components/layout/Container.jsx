@@ -13,7 +13,7 @@ const Container = ({ children, size = 'default', className = '' }) => {
   };
 
   return (
-    <div className={`${sizes[size]} mx-auto px-3 sm:px-6 lg:px-8 ${className}`}>
+    <div className={`${sizes[size]} relative z-10 mx-auto px-6 lg:px-8 ${className}`}>
       {children}
     </div>
   );
@@ -26,4 +26,3 @@ Container.propTypes = {
 };
 
 export default Container;
-
