@@ -85,74 +85,119 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* HERO DASHBOARD PREVIEW */}
-          <div className="relative">
-            <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-card lg:p-7">
-              <div className="mb-7 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Your portfolio</p>
-                  <h3 className="mt-1 text-xl font-semibold">
-                    My Assets
-                  </h3>
-                </div>
+          {/* HERO MOBILE APP PREVIEW */}
+          <div className="relative flex justify-center lg:justify-end">
+            <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-propertree-green-100/70 blur-3xl" />
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-propertree-green-50">
-                  <Building2 className="h-5 w-5 text-propertree-green" />
-                </div>
-              </div>
+            <div className="relative w-[300px] sm:w-[330px]">
+              <div className="rounded-[3rem] border-[10px] border-propertree-dark bg-propertree-dark p-1 shadow-[0_32px_90px_rgba(20,40,32,0.24)]">
+                <div className="relative overflow-hidden rounded-[2.35rem] bg-white">
+                  <div className="absolute left-1/2 top-2 h-6 w-24 -translate-x-1/2 rounded-full bg-propertree-dark" />
 
-              <div className="rounded-2xl bg-propertree-cream-100 p-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                      Property
-                    </p>
-                    <p className="mt-2 text-lg font-semibold">
-                      Lake House
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Nova Scotia, Canada
-                    </p>
+                  <div className="px-5 pb-6 pt-11">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-propertree-green text-white">
+                          <Building2 className="h-4.5 w-4.5" />
+                        </div>
+                        <span className="text-[15px] font-semibold tracking-tight text-propertree-dark">
+                          Propertree
+                        </span>
+                      </div>
+
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-propertree-green-50">
+                        <Building2 className="h-4 w-4 text-propertree-green" />
+                      </div>
+                    </div>
+
+                    <div className="pt-5">
+                      <p className="text-[11px] font-medium text-gray-400">Your portfolio</p>
+                      <h3 className="mt-1 text-2xl font-semibold tracking-tight text-propertree-dark">
+                        My Assets
+                      </h3>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-2xl bg-propertree-cream-100 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                              Property
+                            </p>
+                            <p className="mt-1.5 text-[15px] font-semibold text-propertree-dark">
+                              Lake House
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-gray-500">
+                              Nova Scotia, Canada
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-medium text-propertree-green-700">
+                            Active
+                          </span>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-xl bg-white p-3">
+                            <FileText className="mb-2 h-4 w-4 text-propertree-blue" />
+                            <p className="text-[11px] font-medium">Documents</p>
+                            <p className="mt-0.5 text-[9px] text-gray-400">12 files</p>
+                          </div>
+                          <div className="rounded-xl bg-white p-3">
+                            <Wrench className="mb-2 h-4 w-4 text-propertree-green" />
+                            <p className="text-[11px] font-medium">Services</p>
+                            <p className="mt-0.5 text-[9px] text-gray-400">2 active</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                              Property
+                            </p>
+                            <p className="mt-1.5 text-[15px] font-semibold text-propertree-dark">
+                              Ocean Beach House
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-gray-500">
+                              Nova Scotia, Canada
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-propertree-green-50 px-2.5 py-1 text-[9px] font-medium text-propertree-green-700">
+                            Active
+                          </span>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-xl bg-propertree-cream-100 p-3">
+                            <FileText className="mb-2 h-4 w-4 text-propertree-blue" />
+                            <p className="text-[11px] font-medium">Documents</p>
+                            <p className="mt-0.5 text-[9px] text-gray-400">6 files</p>
+                          </div>
+                          <div className="rounded-xl bg-propertree-cream-100 p-3">
+                            <Wrench className="mb-2 h-4 w-4 text-propertree-green" />
+                            <p className="text-[11px] font-medium">Services</p>
+                            <p className="mt-0.5 text-[9px] text-gray-400">1 active</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      <div className="rounded-xl border border-gray-100 p-3">
+                        <p className="text-[9px] text-gray-400">Tasks</p>
+                        <p className="mt-1 text-lg font-semibold leading-none">4</p>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 p-3">
+                        <p className="text-[9px] text-gray-400">Documents</p>
+                        <p className="mt-1 text-lg font-semibold leading-none">18</p>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 p-3">
+                        <p className="text-[9px] text-gray-400">Services</p>
+                        <p className="mt-1 text-lg font-semibold leading-none">3</p>
+                      </div>
+                    </div>
                   </div>
-
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-propertree-green-700">
-                    Active
-                  </span>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-white p-4">
-                    <FileText className="mb-3 h-5 w-5 text-propertree-blue" />
-                    <p className="text-sm font-medium">Documents</p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      Everything organized
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl bg-white p-4">
-                    <Wrench className="mb-3 h-5 w-5 text-propertree-green" />
-                    <p className="text-sm font-medium">Services</p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      2 active requests
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-gray-100 p-4">
-                  <p className="text-xs text-gray-400">Tasks</p>
-                  <p className="mt-1 text-xl font-semibold">4</p>
-                </div>
-
-                <div className="rounded-xl border border-gray-100 p-4">
-                  <p className="text-xs text-gray-400">Documents</p>
-                  <p className="mt-1 text-xl font-semibold">18</p>
-                </div>
-
-                <div className="rounded-xl border border-gray-100 p-4">
-                  <p className="text-xs text-gray-400">Services</p>
-                  <p className="mt-1 text-xl font-semibold">2</p>
                 </div>
               </div>
             </div>
