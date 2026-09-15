@@ -6,12 +6,21 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
+const marketingPaths = new Set([
+  '/',
+  '/about',
+  '/careers',
+  '/blog',
+  '/help',
+  '/contact',
+  '/terms',
+  '/privacy',
+]);
+
 const MainLayout = () => {
   const location = useLocation();
-  const isLanding = location.pathname === '/';
+  const isMarketingPage = marketingPaths.has(location.pathname);
 
-  // Footer links open real subpages. Always start a newly opened route at the top
-  // instead of keeping the scroll position from the bottom of the previous page.
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname]);
@@ -19,7 +28,7 @@ const MainLayout = () => {
   return (
     <div className="flex min-h-screen flex-col bg-white text-propertree-dark">
       <Navbar />
-      <main className={`flex-grow ${isLanding ? '' : 'propertree-subpage'}`}>
+      <main className={`flex-grow ${isMarketingPage ? '' : 'propertree-subpage'}`}>
         <Outlet />
       </main>
       <Footer />
