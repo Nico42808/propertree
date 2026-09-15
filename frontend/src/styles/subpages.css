@@ -94,6 +94,11 @@ nav a[href="/landlord/services"] svg {
   height: 1.5rem !important;
 }
 
+/* Keep the realistic laptop bezel, but remove the visible product-name caption. */
+#services .tracking-wide.text-gray-300 {
+  font-size: 0 !important;
+}
+
 @media (min-width: 640px) {
   nav a[href="/"] > img {
     height: 2.5rem !important;
