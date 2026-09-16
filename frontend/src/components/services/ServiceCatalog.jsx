@@ -11,6 +11,7 @@ import {
   Zap,
   Leaf,
   Wrench,
+  Camera,
 } from 'lucide-react';
 import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
@@ -19,9 +20,10 @@ const SERVICE_SHORTCUTS = [
   { name: 'Property Management Abo', label: 'Property Management Abo', icon: Settings },
   { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: Sparkles },
   { name: 'Fridge Refill', label: 'Fridge Refill', icon: Home },
-  { name: '24/7 emergency service', label: '24/7 Emergency Service', icon: Zap },
+  { name: '24/7 Emergency Service', label: '24/7 Emergency Service', icon: Zap },
   { name: 'Housekeeping', label: 'Housekeeping', icon: Leaf },
-  { name: 'Handyman service', label: 'Handyman Service', icon: Wrench },
+  { name: 'Handyman Service', label: 'Handyman Service', icon: Wrench },
+  { name: 'Property Photography & Drone Shots', label: 'Property Photography & Drone Shots', icon: Camera },
 ];
 
 const ServiceCatalog = ({ onBookService }) => {
@@ -44,7 +46,7 @@ const ServiceCatalog = ({ onBookService }) => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-propertree-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading services...</p>
+          <p className="text-gray-600">Loading Services...</p>
         </div>
       </div>
     );
@@ -53,7 +55,7 @@ const ServiceCatalog = ({ onBookService }) => {
   if (servicesError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <p className="text-red-800 font-medium">Failed to load services</p>
+        <p className="text-red-800 font-medium">Failed To Load Services</p>
         <p className="text-red-600 text-sm mt-2">
           {servicesError.response?.data?.detail || servicesError.message || 'Unknown error occurred'}
         </p>
@@ -107,7 +109,7 @@ const ServiceCatalog = ({ onBookService }) => {
 
       {filteredServices.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center">
-          <p className="text-gray-600 text-lg mb-2">No services available</p>
+          <p className="text-gray-600 text-lg mb-2">No Services Available</p>
           <button
             onClick={() => {
               setSelectedShortcut('all');
