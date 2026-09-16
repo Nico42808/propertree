@@ -7,9 +7,6 @@ import AuthLayout from './components/layout/AuthLayout'
 
 // Public Pages
 import LandingPage from './pages/LandingPage'
-import LegacyLandingPage from './pages/LegacyLandingPage'
-import PropertySearch from './pages/PropertySearch'
-import PropertyDetail from './pages/PropertyDetail'
 import AboutUs from './pages/public/AboutUs'
 import Careers from './pages/public/Careers'
 import Blog from './pages/public/Blog'
@@ -24,27 +21,20 @@ import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 
-// Profile Page (accessible to all authenticated users)
+// Profile Page
 import Profile from './pages/Profile'
 
 // Landlord Pages
-import LandlordDashboard from './pages/landlord/Dashboard'
 import LandlordProperties from './pages/landlord/Properties'
-import LandlordBookings from './pages/landlord/Bookings'
+import PropertyHub from './pages/landlord/PropertyHub'
 import LandlordServices from './pages/landlord/Services'
-import LandlordExpenses from './pages/landlord/Expenses'
 import HostOnboarding from './pages/landlord/HostOnboarding'
 import EditProperty from './pages/landlord/EditProperty'
-
-// Tenant Pages
-import MyBookings from './pages/tenant/MyBookings'
-import TenantFavorites from './pages/tenant/Favorites'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminUsers from './pages/admin/Users'
 import AdminProperties from './pages/admin/Properties'
-import AdminBookings from './pages/admin/Bookings'
 import AdminServiceBookings from './pages/admin/ServiceBookings'
 import AdminAnalytics from './pages/admin/Analytics'
 import AdminAssetPerformance from './pages/admin/AssetPerformance'
@@ -69,13 +59,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/legacy" element={<LegacyLandingPage />} />
-        <Route path="/search" element={<PropertySearch />} />
-        <Route path="/properties/:id" element={<PropertyDetail />} />
-
         <Route path="/about" element={<AboutUs />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/blog" element={<Blog />} />
@@ -83,9 +68,13 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<TermsOfUse />} />
         <Route path="/privacy" element={<Privacy />} />
+
+        {/* Legacy rental routes are intentionally retired. */}
+        <Route path="/legacy" element={<Navigate to="/" replace />} />
+        <Route path="/search" element={<Navigate to="/" replace />} />
+        <Route path="/properties/:id" element={<Navigate to="/" replace />} />
       </Route>
 
-      {/* Auth Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -93,7 +82,6 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
-      {/* Landlord Routes */}
       <Route
         path="/landlord/*"
         element={
@@ -105,25 +93,16 @@ function App() {
         <Route index element={<Navigate to="/landlord/properties" replace />} />
         <Route path="properties" element={<LandlordProperties />} />
         <Route path="properties/new" element={<HostOnboarding />} />
+        <Route path="properties/:id" element={<PropertyHub />} />
         <Route path="properties/:id/edit" element={<EditProperty />} />
         <Route path="services" element={<LandlordServices />} />
+        <Route path="bookings" element={<Navigate to="/landlord/services" replace />} />
+        <Route path="dashboard" element={<Navigate to="/landlord/properties" replace />} />
       </Route>
 
-      {/* Tenant Routes */}
-      <Route
-        path="/tenant/*"
-        element={
-          <ProtectedRoute allowedRoles={['tenant', 'admin']}>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="/tenant/bookings" replace />} />
-        <Route path="bookings" element={<MyBookings />} />
-        <Route path="favorites" element={<TenantFavorites />} />
-      </Route>
+      {/* Tenant/rental functionality is no longer part of the active product. */}
+      <Route path="/tenant/*" element={<Navigate to="/" replace />} />
 
-      {/* Admin Routes */}
       <Route
         path="/admin/*"
         element={
@@ -138,13 +117,12 @@ function App() {
         <Route path="properties" element={<AdminProperties />} />
         <Route path="properties/new" element={<HostOnboarding />} />
         <Route path="properties/:id/edit" element={<Navigate to="/admin/properties" replace />} />
-        <Route path="bookings" element={<AdminBookings />} />
         <Route path="service-bookings" element={<AdminServiceBookings />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="performance" element={<AdminAssetPerformance />} />
+        <Route path="bookings" element={<Navigate to="/admin/service-bookings" replace />} />
       </Route>
 
-      {/* Profile Route */}
       <Route
         path="/profile"
         element={
