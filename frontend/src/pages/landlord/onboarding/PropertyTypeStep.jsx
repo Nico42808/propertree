@@ -24,7 +24,7 @@ const PropertyTypeStep = ({ formData, updateFormData }) => {
   return (
     <div>
       <p className="text-gray-600 mb-6">
-        Select the type of property you want to list
+        Select the type of property you want Propertree to take care of.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -59,9 +59,9 @@ const PropertyTypeStep = ({ formData, updateFormData }) => {
       {formData.property_type && (
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-green-800 text-sm">
-            ✓ Selected type:{' '}
+            ✓ Selected Type:{' '}
             <span className="font-medium">
-              {PROPERTY_TYPES.find(t => t.value === formData.property_type)?.label}
+              {PROPERTY_TYPES.find((type) => type.value === formData.property_type)?.label}
             </span>
           </p>
         </div>
