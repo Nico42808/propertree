@@ -24,12 +24,33 @@ const SERVICE_COPY_OVERRIDES = {
     name: 'Fridge Refill',
     description: 'Have your fridge stocked with essentials before you arrive at your property.',
   },
+  'Mid-stay cleaning': {
+    name: 'Property Photography & Drone Shots',
+    category: 'other',
+    description: 'Professional interior, exterior and aerial drone photography for sales listings, marketing campaigns and property documentation, subject to weather and local flight rules.',
+    estimated_duration_minutes: 120,
+    icon: 'camera',
+  },
+  'Mid-Stay Cleaning': {
+    name: 'Property Photography & Drone Shots',
+    category: 'other',
+    description: 'Professional interior, exterior and aerial drone photography for sales listings, marketing campaigns and property documentation, subject to weather and local flight rules.',
+    estimated_duration_minutes: 120,
+    icon: 'camera',
+  },
 };
+
+const formatServiceTitle = (name = '') =>
+  name.replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 
 const applyServiceCopy = (service) => {
   if (!service || typeof service !== 'object') return service;
   const override = SERVICE_COPY_OVERRIDES[service.name];
-  return override ? { ...service, ...override } : service;
+  const serviceWithOverride = override ? { ...service, ...override } : service;
+  return {
+    ...serviceWithOverride,
+    name: formatServiceTitle(serviceWithOverride.name || ''),
+  };
 };
 
 const applyServiceCopyToList = (data) => {
@@ -73,7 +94,9 @@ export const getServiceCategories = async () => {
     if (category?.label === 'Appliance Repair') {
       return { ...category, label: 'Property Management Abo' };
     }
-    return category;
+    return category?.label
+      ? { ...category, label: formatServiceTitle(category.label) }
+      : category;
   });
 };
 
@@ -93,7 +116,6 @@ export const createServiceBooking = async (bookingData) => {
  */
 export const getServiceBookings = async () => {
   const response = await api.get(SERVICE_ENDPOINTS.BOOKINGS);
-  // Handle paginated response - extract results array
   return response.data.results || response.data;
 };
 
@@ -109,7 +131,7 @@ export const getServiceBookingById = async (bookingId) => {
 
 /**
  * Update a service booking
- * @param {string} bookingId - Service booking UUID
+ * @param {string} bookingId - Booking UUID
  * @param {Object} updateData - Data to update
  * @returns {Promise} Updated booking
  */
@@ -135,7 +157,6 @@ export const getServiceBookingStats = async () => {
  */
 export const getPendingServiceBookings = async () => {
   const response = await api.get(`${SERVICE_ENDPOINTS.BOOKINGS}pending/`);
-  // Handle paginated response - extract results array
   return response.data.results || response.data;
 };
 
