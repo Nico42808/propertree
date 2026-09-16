@@ -1,5 +1,5 @@
 /**
- * Step 2: Place Type Selection
+ * Step 2: Area Type Selection
  */
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -9,19 +9,19 @@ const PLACE_TYPES = [
   {
     value: 'entire_place',
     label: 'Entire Place',
-    description: 'Guests have the whole place to themselves',
+    description: 'We take care of the full property, including all interior areas.',
     icon: Home,
   },
   {
     value: 'private_room',
     label: 'Private Room',
-    description: 'Guests have their own room in a shared house/space',
+    description: 'We take care of a specific room or defined interior area of the property.',
     icon: DoorOpen,
   },
   {
-    value: 'shared_room',
-    label: 'Shared Room',
-    description: 'Guests sleep in a room shared with others',
+    value: 'external_area',
+    label: 'External Area',
+    description: 'We take care of outdoor areas such as gardens, driveways, decks or other exterior spaces.',
     icon: Users,
   },
 ];
@@ -34,7 +34,7 @@ const PlaceTypeStep = ({ formData, updateFormData }) => {
   return (
     <div>
       <p className="text-gray-600 mb-6">
-        What type of place will guests have?
+        What type of place should we take care of?
       </p>
 
       <div className="space-y-4">
@@ -80,4 +80,3 @@ PlaceTypeStep.propTypes = {
 };
 
 export default PlaceTypeStep;
-
