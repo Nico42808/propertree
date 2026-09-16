@@ -32,7 +32,7 @@ const Services = () => {
       <div>
         <h1 className="text-3xl font-bold text-propertree-dark">Property Services</h1>
         <p className="text-gray-600 mt-2">
-          Book professional services for your properties and track service requests
+          Book Professional Services for Your Properties and Track Service Requests
         </p>
       </div>
 
