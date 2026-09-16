@@ -7,6 +7,14 @@ from properties.serializers import PropertyListSerializer
 from users.serializers import UserSerializer
 
 
+PHOTOGRAPHY_SERVICE_ID = '7f5d9890-42da-4ea6-b17c-bd55505cf938'
+PHOTOGRAPHY_SERVICE_NAME = 'Property Photography & Drone Shots'
+PHOTOGRAPHY_SERVICE_DESCRIPTION = (
+    'Professional interior, exterior and aerial drone photography for sales listings, '
+    'marketing campaigns and property documentation, subject to weather and local flight rules.'
+)
+
+
 class ServiceCatalogSerializer(serializers.ModelSerializer):
     """Serializer for service catalog."""
 
@@ -79,6 +87,7 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
         if obj.rental_property:
             return PropertyListSerializer(obj.rental_property).data
         return None
+
     resolution_time = serializers.ReadOnlyField()
     is_overdue = serializers.ReadOnlyField()
 
@@ -86,7 +95,6 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
     service_catalog_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
     assigned_to_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
     rental_property_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
-    
 
     class Meta:
         model = MaintenanceRequest
@@ -105,16 +113,15 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
         data.pop('quote_document', None)
         return data
 
-
     def validate(self, attrs):
         """Validate and handle rental_property from request data."""
         from properties.models import Property
-        
+
         # Get rental_property from initial_data (since it's not in validated_data due to SerializerMethodField)
         rental_property_uuid = None
         if hasattr(self, 'initial_data'):
             rental_property_uuid = self.initial_data.get('rental_property') or self.initial_data.get('rental_property_id')
-        
+
         if rental_property_uuid:
             try:
                 rental_property = Property.objects.get(id=rental_property_uuid)
@@ -129,7 +136,7 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"rental_property": "Property not found."})
         elif self.instance is None:  # Only require for creation, not updates
             raise serializers.ValidationError({"rental_property": "This field is required."})
-        
+
         return attrs
 
     def create(self, validated_data):
@@ -141,28 +148,51 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
         service_catalog = None
         if service_catalog_id:
             try:
-                from .models import ServiceCatalog
                 service_catalog = ServiceCatalog.objects.get(id=service_catalog_id)
-                # Set category from service catalog if not explicitly provided
-                if 'category' not in validated_data or not validated_data.get('category'):
-                    # Map service catalog category to maintenance request category
-                    category_mapping = {
-                        'plumbing': 'plumbing',
-                        'electrical': 'electrical',
-                        'hvac': 'hvac',
-                        'appliance': 'appliance',
-                        'cleaning': 'cleaning',
-                        'painting': 'painting',
-                        'carpentry': 'other',  # MaintenanceRequest doesn't have carpentry
-                        'locksmith': 'locksmith',
-                        'gardening': 'other',  # MaintenanceRequest doesn't have gardening
-                        'pest_control': 'pest_control',
-                        'general_maintenance': 'other',
-                        'other': 'other',
-                    }
-                    validated_data['category'] = category_mapping.get(service_catalog.category, 'other')
             except ServiceCatalog.DoesNotExist:
-                raise serializers.ValidationError({"service_catalog_id": "Service catalog item not found."})
+                # The photography service is always exposed in the frontend so it
+                # remains selectable even when an older production database has
+                # not received its catalog row yet. Resolve that fallback to a
+                # real ServiceCatalog entry before creating the booking.
+                if str(service_catalog_id) == PHOTOGRAPHY_SERVICE_ID:
+                    service_catalog = ServiceCatalog.objects.filter(
+                        name__iexact=PHOTOGRAPHY_SERVICE_NAME
+                    ).first()
+
+                    if service_catalog is None:
+                        service_catalog = ServiceCatalog.objects.create(
+                            id=service_catalog_id,
+                            name=PHOTOGRAPHY_SERVICE_NAME,
+                            category='other',
+                            description=PHOTOGRAPHY_SERVICE_DESCRIPTION,
+                            price=25,
+                            estimated_duration_minutes=120,
+                            icon='camera',
+                            is_active=True,
+                        )
+                    elif not service_catalog.is_active:
+                        service_catalog.is_active = True
+                        service_catalog.save(update_fields=['is_active'])
+                else:
+                    raise serializers.ValidationError({"service_catalog_id": "Service catalog item not found."})
+
+            # Set category from service catalog if not explicitly provided
+            if 'category' not in validated_data or not validated_data.get('category'):
+                category_mapping = {
+                    'plumbing': 'plumbing',
+                    'electrical': 'electrical',
+                    'hvac': 'hvac',
+                    'appliance': 'appliance',
+                    'cleaning': 'cleaning',
+                    'painting': 'painting',
+                    'carpentry': 'other',
+                    'locksmith': 'locksmith',
+                    'gardening': 'other',
+                    'pest_control': 'pest_control',
+                    'general_maintenance': 'other',
+                    'other': 'other',
+                }
+                validated_data['category'] = category_mapping.get(service_catalog.category, 'other')
 
         # Create the maintenance request
         maintenance_request = MaintenanceRequest.objects.create(**validated_data)
