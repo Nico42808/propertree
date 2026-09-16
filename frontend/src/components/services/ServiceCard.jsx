@@ -15,6 +15,7 @@ import {
   Sparkles,
   Home,
   Settings,
+  Camera,
 } from 'lucide-react';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -39,7 +40,8 @@ const SERVICE_ICON_MAP = {
   'interior painting': Paintbrush,
   'touch-up painting': Paintbrush,
   'deep cleaning': Sparkles,
-  'mid-stay cleaning': Sparkles,
+  'property photography & drone shots': Camera,
+  'mid-stay cleaning': Camera,
   'property inspection': Home,
   'safety inspection': Settings,
   'fire safety check': Zap,
