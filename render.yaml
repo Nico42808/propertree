@@ -3,7 +3,7 @@ services:
     name: propertree-backend
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && gunicorn propertree.wsgi:application
+    startCommand: cd backend && python manage.py migrate --noinput && gunicorn propertree.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: propertree.settings
