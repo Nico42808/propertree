@@ -1,6 +1,7 @@
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
@@ -28,18 +29,19 @@ class PropertyDocumentListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         return PropertyDocumentUploadSerializer if self.request.method == 'POST' else PropertyDocumentSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(property=self.get_property(), uploaded_by=self.request.user)
-
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        document = PropertyDocument.objects.get(pk=response.data['id']) if response.data.get('id') else self.get_queryset().first()
-        return type(response)(PropertyDocumentSerializer(document, context={'request': request}).data, status=response.status_code, headers=response.headers)
+        serializer = PropertyDocumentUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        document = serializer.save(property=self.get_property(), uploaded_by=request.user)
+        return Response(
+            PropertyDocumentSerializer(document, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class PropertyDocumentDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = PropertyDocument.objects.all()
+    queryset = PropertyDocument.objects.select_related('property').all()
 
     def perform_destroy(self, instance):
         if not _can_manage_property(self.request.user, instance.property):
@@ -58,4 +60,8 @@ class PropertyDocumentDownloadView(generics.GenericAPIView):
             raise PermissionDenied('You do not have access to this property.')
         if not document.file:
             raise Http404('File not found')
-        return FileResponse(document.file.open('rb'), as_attachment=True, filename=document.file.name.split('/')[-1])
+        return FileResponse(
+            document.file.open('rb'),
+            as_attachment=True,
+            filename=document.file.name.split('/')[-1],
+        )
