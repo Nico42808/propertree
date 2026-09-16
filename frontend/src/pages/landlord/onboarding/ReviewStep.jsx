@@ -7,6 +7,11 @@ import { Alert } from '../../../components/common';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../hooks';
 
+const capitalizeFirst = (value) => {
+  if (typeof value !== 'string' || !value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
 const formatLabelValue = (value) => {
   if (typeof value !== 'string') return value;
   return value
@@ -18,25 +23,24 @@ const ReviewStep = ({ formData }) => {
   const { isAdmin } = useAuth();
   const isAdminUser = isAdmin();
 
+  const descriptionPreview = formData.description
+    ? `${formData.description.substring(0, 140)}${formData.description.length > 140 ? '...' : ''}`
+    : '';
+
   const sections = [
     { title: 'Property Type', value: formatLabelValue(formData.property_type) },
     { title: 'Area To Take Care Of', value: formatLabelValue(formData.place_type) },
     { title: 'Bedrooms', value: formData.bedrooms },
     { title: 'Bathrooms', value: formData.bathrooms },
     { title: 'Beds', value: formData.beds },
-    { title: 'Address', value: formData.address },
+    { title: 'Address', value: capitalizeFirst(formData.address) },
     { title: 'City', value: formatLabelValue(formData.city) },
     { title: 'Province', value: formatLabelValue(formData.state) },
     { title: 'Country', value: formatLabelValue(formData.country) },
     { title: 'Postal Code', value: String(formData.postal_code || '').toUpperCase() },
     { title: 'Photos', value: `${formData.photos?.length || 0} Photos` },
-    { title: 'Property Name', value: formData.title },
-    {
-      title: 'Description Of Your Property',
-      value: formData.description
-        ? `${formData.description.substring(0, 140)}${formData.description.length > 140 ? '...' : ''}`
-        : '',
-    },
+    { title: 'Property Name', value: capitalizeFirst(formData.title) },
+    { title: 'Description Of Your Property', value: capitalizeFirst(descriptionPreview) },
   ];
 
   const isComplete = Boolean(
