@@ -16,6 +16,17 @@ import {
 import { getServiceCatalog } from '../../services/serviceService';
 import ServiceCard from './ServiceCard';
 
+const PHOTOGRAPHY_SERVICE = {
+  id: '7f5d9890-42da-4ea6-b17c-bd55505cf938',
+  name: 'Property Photography & Drone Shots',
+  category: 'other',
+  description:
+    'Professional interior, exterior and aerial drone photography for sales listings, marketing campaigns and property documentation, subject to weather and local flight rules.',
+  estimated_duration_minutes: 120,
+  icon: 'camera',
+  is_active: true,
+};
+
 const SERVICE_SHORTCUTS = [
   { name: 'Property Management Abo', label: 'Property Management Abo', icon: Settings },
   { name: 'Arrival Preparation', label: 'Arrival Preparation', icon: Sparkles },
@@ -69,7 +80,18 @@ const ServiceCatalog = ({ onBookService }) => {
     );
   }
 
-  const servicesList = Array.isArray(services) ? services : [];
+  const apiServices = Array.isArray(services) ? services : [];
+  const hasPhotographyService = apiServices.some(
+    (service) => service.name?.toLowerCase() === PHOTOGRAPHY_SERVICE.name.toLowerCase()
+  );
+
+  // Keep Photography & Drone Shots visible in All Services even if the
+  // production database has not yet received the catalog migration. The
+  // backend booking serializer resolves this fallback ID to a real catalog row.
+  const servicesList = hasPhotographyService
+    ? apiServices
+    : [...apiServices, PHOTOGRAPHY_SERVICE];
+
   const filteredServices =
     selectedShortcut === 'all'
       ? servicesList
