@@ -1,5 +1,5 @@
 /**
- * Step 3: Property Information (Beds, Bathrooms, Guests)
+ * Step 3: Property Information
  */
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -7,15 +7,11 @@ import { Plus, Minus } from 'lucide-react';
 
 const Counter = ({ label, value, onChange, min = 0, max = 50 }) => {
   const handleDecrement = () => {
-    if (value > min) {
-      onChange(value - 1);
-    }
+    if (value > min) onChange(value - 1);
   };
 
   const handleIncrement = () => {
-    if (value < max) {
-      onChange(value + 1);
-    }
+    if (value < max) onChange(value + 1);
   };
 
   return (
@@ -52,51 +48,40 @@ Counter.propTypes = {
   max: PropTypes.number,
 };
 
-const PropertyInfoStep = ({ formData, updateFormData }) => {
-  return (
-    <div>
-      <p className="text-gray-600 mb-6">
-        Share some basic details about your place
-      </p>
+const PropertyInfoStep = ({ formData, updateFormData }) => (
+  <div>
+    <p className="text-gray-600 mb-6">
+      Share some basic details about the property we should take care of.
+    </p>
 
-      <div className="space-y-4">
-        <Counter
-          label="Bedrooms"
-          value={formData.bedrooms}
-          onChange={(val) => updateFormData({ bedrooms: val })}
-          min={0}
-        />
-
-        <Counter
-          label="Bathrooms"
-          value={formData.bathrooms}
-          onChange={(val) => updateFormData({ bathrooms: val })}
-          min={1}
-        />
-
-        <Counter
-          label="Beds"
-          value={formData.beds}
-          onChange={(val) => updateFormData({ beds: val })}
-          min={1}
-        />
-
-        <Counter
-          label="Guests"
-          value={formData.max_guests}
-          onChange={(val) => updateFormData({ max_guests: val })}
-          min={1}
-        />
-      </div>
-
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-blue-800 text-sm">
-          💡 <strong>Tip:</strong> You can always edit this information later
-        </p>
-      </div>
+    <div className="space-y-4">
+      <Counter
+        label="Bedrooms"
+        value={formData.bedrooms}
+        onChange={(val) => updateFormData({ bedrooms: val })}
+        min={0}
+      />
+      <Counter
+        label="Bathrooms"
+        value={formData.bathrooms}
+        onChange={(val) => updateFormData({ bathrooms: val })}
+        min={1}
+      />
+      <Counter
+        label="Beds"
+        value={formData.beds}
+        onChange={(val) => updateFormData({ beds: val })}
+        min={1}
+      />
     </div>
-  );
-};
+
+    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <p className="text-blue-800 text-sm">
+        💡 <strong>Tip:</strong> You can always edit this information later.
+      </p>
+    </div>
+  </div>
+);
 
 PropertyInfoStep.propTypes = {
   formData: PropTypes.object.isRequired,
@@ -104,4 +89,3 @@ PropertyInfoStep.propTypes = {
 };
 
 export default PropertyInfoStep;
-
