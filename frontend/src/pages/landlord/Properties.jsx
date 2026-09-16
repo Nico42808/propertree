@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container } from '../../components/layout';
 import { Card, Button, Badge, EmptyState, Loading } from '../../components/common';
-import { Plus, Home, MapPin, Euro, Bed, Bath, Users, Calendar, Eye, Trash2 } from 'lucide-react';
+import { Plus, Home, MapPin, Euro, Bed, Bath, Users, Eye, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
 
@@ -147,7 +147,7 @@ const Properties = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-propertree-dark">My Properties</h1>
-          <p className="text-gray-600 mt-1">Manage your property listings and view bookings</p>
+          <p className="text-gray-600 mt-1">Manage Your Property Listings</p>
         </div>
         <Link to="/landlord/properties/new">
           <Button variant="primary" leftIcon={<Plus />}>
@@ -191,15 +191,6 @@ const Properties = () => {
           </Card>
         </div>
       )}
-
-      {/* Quick Actions */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <Link to="/landlord/bookings">
-          <Button variant="outline" leftIcon={<Calendar />}>
-            View Bookings
-          </Button>
-        </Link>
-      </div>
 
       {/* Properties List */}
       {properties.length === 0 ? (
