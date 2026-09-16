@@ -4,7 +4,8 @@
 import { format, formatDistance, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const DEFAULT_LOCALE = 'en-US';
+const DEFAULT_LOCALE = 'en-CA';
+const DEFAULT_CURRENCY_PREFIX = 'CAD $';
 
 const toNumber = (value) => {
   if (value === null || value === undefined || value === '') return null;
@@ -89,11 +90,12 @@ export const formatNumber = (
 };
 
 /**
- * Format price/currency with commas and decimals where needed.
+ * Format money consistently as Canadian dollars across Propertree.
+ * A custom prefix can still be supplied for exceptional cases.
  */
 export const formatCurrency = (
   amount,
-  currencySymbol = '€',
+  currencySymbol = DEFAULT_CURRENCY_PREFIX,
   { minimumFractionDigits = 0, maximumFractionDigits = 2 } = {}
 ) => {
   const formatted = formatNumber(amount, { minimumFractionDigits, maximumFractionDigits, useGrouping: true });
@@ -102,12 +104,11 @@ export const formatCurrency = (
 };
 
 /**
- * Format price/currency without thousands separators (no commas).
- * Keeps decimals based on provided fraction digit options.
+ * Format Canadian-dollar amounts without thousands separators.
  */
 export const formatCurrencyNoGrouping = (
   amount,
-  currencySymbol = '€',
+  currencySymbol = DEFAULT_CURRENCY_PREFIX,
   { minimumFractionDigits = 0, maximumFractionDigits = 0 } = {}
 ) => {
   const formatted = formatNumber(amount, { minimumFractionDigits, maximumFractionDigits, useGrouping: false });
@@ -138,7 +139,7 @@ export const truncateText = (text, maxLength = 100) => {
  */
 export const formatPhone = (phone) => {
   if (!phone) return '';
-  const cleaned = phone.replace(/\\D/g, '');
+  const cleaned = phone.replace(/\D/g, '');
 
   if (cleaned.length === 11) {
     return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
