@@ -1,77 +1,73 @@
 /**
- * Step 11: Review and Submit
+ * Step 7: Review and Submit
  */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from '../../../components/common';
 import { AlertCircle } from 'lucide-react';
-import { formatCurrency } from '../../../utils/formatters';
 import { useAuth } from '../../../hooks';
 
-const RENTAL_TERM_LABELS = {
-  short_term: 'Short Term (Up to a month)',
-  mid_term: 'Mid-Term (Up to a year)',
-  long_term: 'Long Term (1 year and above)',
+const formatLabelValue = (value) => {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 };
 
 const ReviewStep = ({ formData }) => {
   const { isAdmin } = useAuth();
   const isAdminUser = isAdmin();
-  const rentalTerms = formData.rental_terms || [];
-  const rentalTermLabels = rentalTerms
-    .map((term) => RENTAL_TERM_LABELS[term] || term)
-    .filter(Boolean);
+
   const sections = [
-    { title: 'Property Type', value: formData.property_type, key: 'property_type' },
-    { title: 'Place Type', value: formData.place_type, key: 'place_type' },
-    { title: 'Bedrooms', value: formData.bedrooms, key: 'bedrooms' },
-    { title: 'Bathrooms', value: formData.bathrooms, key: 'bathrooms' },
-    { title: 'Guests', value: formData.max_guests, key: 'max_guests' },
-    { title: 'Address', value: formData.address, key: 'address' },
-    { title: 'City', value: formData.city, key: 'city' },
-    { title: 'Photos', value: `${formData.photos?.length || 0} photos`, key: 'photos' },
-    { title: 'Amenities', value: `${formData.amenities?.length || 0} selected`, key: 'amenities' },
-    { title: 'Rental Terms', value: rentalTermLabels.join(', '), key: 'rental_terms' },
-    ...(rentalTerms.includes('short_term')
-      ? [
-          { title: 'Short-term Check-in', value: formData.short_term_check_in_time, key: 'short_term_check_in_time' },
-          { title: 'Short-term Check-out', value: formData.short_term_check_out_time, key: 'short_term_check_out_time' },
-        ]
-      : []),
-    { title: 'Base Price', value: formData.base_price ? formatCurrency(formData.base_price) : '', key: 'base_price' },
-    { title: 'Title', value: formData.title, key: 'title' },
-    { title: 'Description', value: formData.description?.substring(0, 100) + '...', key: 'description' },
+    { title: 'Property Type', value: formatLabelValue(formData.property_type) },
+    { title: 'Area To Take Care Of', value: formatLabelValue(formData.place_type) },
+    { title: 'Bedrooms', value: formData.bedrooms },
+    { title: 'Bathrooms', value: formData.bathrooms },
+    { title: 'Beds', value: formData.beds },
+    { title: 'Address', value: formData.address },
+    { title: 'City', value: formatLabelValue(formData.city) },
+    { title: 'Province', value: formatLabelValue(formData.state) },
+    { title: 'Country', value: formatLabelValue(formData.country) },
+    { title: 'Postal Code', value: String(formData.postal_code || '').toUpperCase() },
+    { title: 'Photos', value: `${formData.photos?.length || 0} Photos` },
+    { title: 'Property Name', value: formData.title },
+    {
+      title: 'Description Of Your Property',
+      value: formData.description
+        ? `${formData.description.substring(0, 140)}${formData.description.length > 140 ? '...' : ''}`
+        : '',
+    },
   ];
 
-  const isComplete = formData.property_type && formData.place_type && formData.address && 
-                     formData.city && formData.base_price && formData.title && formData.description;
+  const isComplete = Boolean(
+    formData.property_type &&
+    formData.place_type &&
+    formData.address &&
+    formData.city &&
+    formData.title &&
+    formData.description
+  );
 
   return (
     <div>
       <p className="text-gray-600 mb-6">
-        {isAdminUser
-          ? 'Review all information before creating the property'
-          : 'Review all information before submitting for approval'}
+        Review the property information before submitting it.
       </p>
 
       {!isComplete && (
         <Alert
           type="warning"
           title="Incomplete Information"
-          message={
-            isAdminUser
-              ? 'Please fill in all required fields before creating the property'
-              : 'Please fill in all required fields before submitting'
-          }
+          message="Please fill in all required fields before submitting the property."
           className="mb-6"
         />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {sections.map((section, idx) => (
-          <div key={idx} className="p-4 border border-gray-200 rounded-lg">
+        {sections.map((section) => (
+          <div key={section.title} className="p-4 border border-gray-200 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">{section.title}</p>
-            <p className="font-medium text-gray-900">{section.value || 'Not provided'}</p>
+            <p className="font-medium text-gray-900">{section.value || 'Not Provided'}</p>
           </div>
         ))}
       </div>
@@ -81,12 +77,9 @@ const ReviewStep = ({ formData }) => {
           <div className="flex items-start space-x-3">
             <AlertCircle className="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-rose-900 mb-2">
-                Awaiting Administrator Approval
-              </h3>
+              <h3 className="font-semibold text-rose-900 mb-2">Property Review</h3>
               <p className="text-sm text-rose-800">
-                After submission, your property will be reviewed by our team. You will receive a 
-                notification when it's approved or if we need additional information.
+                After submission, the property will be available to our team for review and property management setup.
               </p>
             </div>
           </div>
