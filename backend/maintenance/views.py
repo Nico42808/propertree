@@ -162,14 +162,14 @@ class ServiceCatalogViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ============================================================
-# Service Bookings
+# Service Requests
 # ============================================================
 
 class ServiceBookingViewSet(viewsets.ModelViewSet):
     """
-    API endpoint for service bookings.
+    API endpoint for service requests.
 
-    Service bookings are maintenance requests created
+    Service requests are maintenance requests created
     from the Propertree service catalog.
     """
 
@@ -188,7 +188,7 @@ class ServiceBookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return service bookings based on user role."""
+        """Return service requests based on user role."""
 
         user = self.request.user
         base_queryset = super().get_queryset()
@@ -207,7 +207,7 @@ class ServiceBookingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Create service booking and notify Propertree
+        Create service request and notify Propertree
         by email.
         """
 
@@ -218,10 +218,6 @@ class ServiceBookingViewSet(viewsets.ModelViewSet):
         landlord = self.request.user
         property_obj = booking.rental_property
         service = booking.service_catalog
-
-        # ----------------------------------------------------
-        # Email notification – to admin AND to the landlord
-        # ----------------------------------------------------
 
         admin_subject = (
             f"New Propertree Service Request – {service.name}"
@@ -251,9 +247,6 @@ Description:
 Please review the request in the Propertree Admin Dashboard.
 """
 
-        # NOTE: the setting is called ADMIN_NOTIFICATION_EMAIL in
-        # propertree/settings.py — using the wrong name here meant
-        # this was always None and no email was ever sent.
         admin_notification_email = getattr(
             settings,
             "ADMIN_NOTIFICATION_EMAIL",
@@ -270,15 +263,11 @@ Please review the request in the Propertree Admin Dashboard.
                     fail_silently=False,
                 )
             except Exception:
-                # Don't let a broken/misconfigured mail server fail the
-                # booking itself — the request is already saved. Log it
-                # so it's visible in Render's logs for debugging.
                 logger.exception(
-                    "Failed to send admin notification email for booking %s",
+                    "Failed to send admin notification email for service request %s",
                     booking.id,
                 )
 
-        # Confirmation email to the landlord who submitted the request
         landlord_subject = (
             f"Your Propertree service request has been received – {service.name}"
         )
@@ -325,17 +314,13 @@ provider has been assigned.
                 )
             except Exception:
                 logger.exception(
-                    "Failed to send landlord confirmation email for booking %s",
+                    "Failed to send landlord confirmation email for service request %s",
                     booking.id,
                 )
 
-    # --------------------------------------------------------
-    # Pending bookings
-    # --------------------------------------------------------
-
     @action(detail=False, methods=["get"])
     def pending(self, request):
-        """Get pending service bookings for admin review."""
+        """Get pending service requests for admin review."""
 
         try:
 
@@ -380,13 +365,9 @@ provider has been assigned.
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    # --------------------------------------------------------
-    # Confirm booking
-    # --------------------------------------------------------
-
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
-        """Admin confirms service booking."""
+        """Admin confirms a service request."""
 
         if (
             not hasattr(request.user, "role")
@@ -404,7 +385,7 @@ provider has been assigned.
         if booking.status != "open":
             return Response(
                 {
-                    "error": "Booking has already been processed"
+                    "error": "Service request has already been processed"
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -444,20 +425,14 @@ provider has been assigned.
 
         return Response(
             {
-                "message": (
-                    "Service booking confirmed successfully"
-                ),
+                "message": "Service request confirmed successfully",
                 "booking": serializer.data,
             }
         )
 
-    # --------------------------------------------------------
-    # Reject booking
-    # --------------------------------------------------------
-
     @action(detail=True, methods=["post"])
     def reject(self, request, pk=None):
-        """Admin rejects service booking."""
+        """Admin rejects a service request."""
 
         if (
             not hasattr(request.user, "role")
@@ -498,18 +473,14 @@ provider has been assigned.
 
         return Response(
             {
-                "message": "Service booking rejected",
+                "message": "Service request rejected",
                 "booking": serializer.data,
             }
         )
 
-    # --------------------------------------------------------
-    # Progress: move a confirmed booking to "in progress"
-    # --------------------------------------------------------
-
     @action(detail=True, methods=["post"])
     def start_progress(self, request, pk=None):
-        """Admin marks a confirmed booking as in progress."""
+        """Admin marks a confirmed service request as in progress."""
 
         if (
             not hasattr(request.user, "role")
@@ -525,9 +496,7 @@ provider has been assigned.
         if booking.status != "assigned":
             return Response(
                 {
-                    "error": (
-                        "Only confirmed bookings can be moved to in progress."
-                    )
+                    "error": "Only confirmed service requests can be moved to in progress."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -543,18 +512,14 @@ provider has been assigned.
 
         return Response(
             {
-                "message": "Booking marked as in progress",
+                "message": "Service request marked as in progress",
                 "booking": serializer.data,
             }
         )
 
-    # --------------------------------------------------------
-    # Complete: mark booking as done and notify the landlord
-    # --------------------------------------------------------
-
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
-        """Admin marks a booking as completed (resolved).
+        """Admin marks a service request as completed (resolved).
 
         Accepts an optional multipart payload with completion photos
         (field name "photos", one or more files) and a completion
@@ -575,10 +540,7 @@ provider has been assigned.
         if booking.status not in ("assigned", "in_progress"):
             return Response(
                 {
-                    "error": (
-                        "Only confirmed or in-progress bookings can be "
-                        "marked as completed."
-                    )
+                    "error": "Only confirmed or in-progress service requests can be marked as completed."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -591,7 +553,6 @@ provider has been assigned.
             booking.resolution_notes = note
         booking.save()
 
-        # Save any completion photos uploaded alongside the request
         photos = request.FILES.getlist("photos")
         for photo in photos:
             MaintenanceImage.objects.create(
@@ -600,9 +561,6 @@ provider has been assigned.
                 caption="Completed work",
             )
 
-        # --------------------------------------------------
-        # Notify the landlord that their service is complete
-        # --------------------------------------------------
         landlord = booking.reported_by
         if landlord and landlord.email:
             subject = f"Your service request is complete – {booking.title}"
@@ -621,7 +579,7 @@ Completion notes:
 {booking.resolution_notes or 'N/A'}
 
 You can view the details and any photos of the completed work in
-your Propertree dashboard under Services > My Bookings.
+your Propertree dashboard under Services > My Services.
 
 — Propertree
 """
@@ -635,7 +593,7 @@ your Propertree dashboard under Services > My Bookings.
                 )
             except Exception:
                 logger.exception(
-                    "Failed to send completion email for booking %s",
+                    "Failed to send completion email for service request %s",
                     booking.id,
                 )
 
@@ -643,14 +601,10 @@ your Propertree dashboard under Services > My Bookings.
 
         return Response(
             {
-                "message": "Booking marked as completed",
+                "message": "Service request marked as completed",
                 "booking": serializer.data,
             }
         )
-
-    # --------------------------------------------------------
-    # Upload additional photos to a booking (any status)
-    # --------------------------------------------------------
 
     @action(
         detail=True,
@@ -658,7 +612,7 @@ your Propertree dashboard under Services > My Bookings.
         parser_classes=[MultiPartParser, FormParser],
     )
     def upload_photos(self, request, pk=None):
-        """Admin uploads one or more photos to a booking."""
+        """Admin uploads one or more photos to a service request."""
 
         if (
             not hasattr(request.user, "role")
@@ -698,10 +652,6 @@ your Propertree dashboard under Services > My Bookings.
             }
         )
 
-    # --------------------------------------------------------
-    # Cost proposal / quote negotiation
-    # --------------------------------------------------------
-
     @action(
         detail=True,
         methods=["post"],
@@ -726,7 +676,7 @@ your Propertree dashboard under Services > My Bookings.
 
         if booking.status in ("resolved", "closed", "cancelled"):
             return Response(
-                {"error": "Cannot send a quote for a closed booking."},
+                {"error": "Cannot send a quote for a closed service request."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -752,14 +702,12 @@ your Propertree dashboard under Services > My Bookings.
         booking.quote_note = note
         booking.quote_status = "pending"
         booking.quoted_at = timezone.now()
-        # Clear any previous landlord response — this is a fresh quote
         booking.landlord_quote_response_note = ""
         booking.quote_responded_at = None
         if document:
             booking.quote_document = document
         booking.save()
 
-        # Notify the landlord that a cost proposal is waiting for them
         landlord = booking.reported_by
         if landlord and landlord.email:
             subject = f"Cost proposal for your service request – {booking.title}"
@@ -772,13 +720,13 @@ Service:
 {booking.title}
 
 Proposed cost:
-EUR {cost:,.2f}
+CAD ${cost:,.2f}
 
 Message from admin:
 {note or 'N/A'}
 
 Please review and respond (approve, reject, or request a revised
-quote) in your Propertree dashboard under Services > My Bookings.
+quote) in your Propertree dashboard under Services > My Services.
 
 — Propertree
 """
@@ -792,7 +740,7 @@ quote) in your Propertree dashboard under Services > My Bookings.
                 )
             except Exception:
                 logger.exception(
-                    "Failed to send quote notification email for booking %s",
+                    "Failed to send quote notification email for service request %s",
                     booking.id,
                 )
 
@@ -822,7 +770,7 @@ Service:
 {booking.title}
 
 Proposed cost:
-EUR {booking.quoted_cost:,.2f}
+CAD ${booking.quoted_cost:,.2f}
 
 Response:
 {action_label.upper()}
@@ -842,7 +790,7 @@ Please review it in the Propertree Admin Dashboard.
             )
         except Exception:
             logger.exception(
-                "Failed to send quote-response notification for booking %s",
+                "Failed to send quote-response notification for service request %s",
                 booking.id,
             )
 
@@ -854,7 +802,7 @@ Please review it in the Propertree Admin Dashboard.
 
         if booking.reported_by_id != request.user.id:
             return Response(
-                {"error": "Only the landlord who booked this service can respond to the quote."},
+                {"error": "Only the landlord who requested this service can respond to the quote."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -871,8 +819,6 @@ Please review it in the Propertree Admin Dashboard.
         booking.landlord_quote_response_note = note
         booking.quote_responded_at = timezone.now()
 
-        # Approving the quote also confirms the booking, if it wasn't
-        # already, so the admin can proceed with the work.
         if booking.status == "open":
             booking.status = "assigned"
             booking.admin_confirmed_at = timezone.now()
@@ -897,7 +843,7 @@ Please review it in the Propertree Admin Dashboard.
 
         if booking.reported_by_id != request.user.id:
             return Response(
-                {"error": "Only the landlord who booked this service can respond to the quote."},
+                {"error": "Only the landlord who requested this service can respond to the quote."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -931,13 +877,13 @@ Please review it in the Propertree Admin Dashboard.
 
     @action(detail=True, methods=["post"])
     def request_quote_revision(self, request, pk=None):
-        """Landlord asks the admin for a revised (e.g. cheaper) quote."""
+        """Landlord asks the admin for a revised quote."""
 
         booking = self.get_object()
 
         if booking.reported_by_id != request.user.id:
             return Response(
-                {"error": "Only the landlord who booked this service can respond to the quote."},
+                {"error": "Only the landlord who requested this service can respond to the quote."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -985,7 +931,7 @@ Please review it in the Propertree Admin Dashboard.
             )
 
         if not booking.quote_document or not booking.quote_document.storage.exists(booking.quote_document.name):
-            raise Http404("No quote document uploaded for this booking.")
+            raise Http404("No quote document uploaded for this service request.")
 
         filename = os.path.basename(booking.quote_document.name)
 
@@ -995,14 +941,10 @@ Please review it in the Propertree Admin Dashboard.
             filename=filename,
         )
 
-    # --------------------------------------------------------
-    # Statistics
-    # --------------------------------------------------------
-
     @action(detail=False, methods=["get"])
     def stats(self, request):
         """
-        Get service booking statistics
+        Get service request statistics
         for landlord dashboard.
         """
 
@@ -1044,10 +986,6 @@ Please review it in the Propertree Admin Dashboard.
             status="resolved"
         ).count()
 
-        # ----------------------------------------------------
-        # Monthly cost
-        # ----------------------------------------------------
-
         from django.db.models import Sum
         from datetime import datetime
 
@@ -1079,15 +1017,10 @@ Please review it in the Propertree Admin Dashboard.
         )
 
 
-# ============================================================
-# Secure file download for uploaded invoices / completion files
-# ============================================================
-
 class MaintenanceImageDownloadView(APIView):
-    """Forces a real download (not an inline preview) of an uploaded
-    invoice/completion file.
+    """Forces a real download of an uploaded invoice/completion file.
 
-    Only the admin or the landlord who owns the booking this file is
+    Only the admin or the landlord who owns the service request this file is
     attached to may download it.
     """
 
