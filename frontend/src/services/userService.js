@@ -70,14 +70,39 @@ const userService = {
    */
   async adminDownloadIdentityDocument(userId, filename = 'identity-document') {
     const response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
+    const disposition = response.headers['content-disposition'] || '';
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    const serverFilename = match?.[1];
+    const fallbackExtension =
+      contentType.includes('pdf') ? '.pdf'
+        : contentType.includes('png') ? '.png'
+          : contentType.includes('jpeg') ? '.jpg'
+            : '';
+    const downloadName = serverFilename || (filename.includes('.') ? filename : `${filename}${fallbackExtension}`);
+
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = downloadName;
+    link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    window.setTimeout(() => {
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+
+    return { reviewed: true, filename: downloadName };
+  },
+
+  async adminPreviewIdentityDocument(userId) {
+    const response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    return { reviewed: true };
   },
 
   /**
