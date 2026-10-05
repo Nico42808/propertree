@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'storages',
 
     # Local apps
     'users',
@@ -116,8 +117,50 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Persistent private object storage for uploaded media.
+# Credentials are intentionally not stored in source code. The storage SDK
+# reads them from the deployment environment / provider credential chain.
+PRIVATE_STORAGE_BUCKET = config('PRIVATE_STORAGE_BUCKET', default='')
+PRIVATE_STORAGE_ENDPOINT_URL = config('PRIVATE_STORAGE_ENDPOINT_URL', default='')
+PRIVATE_STORAGE_REGION = config('PRIVATE_STORAGE_REGION', default='')
+PRIVATE_STORAGE_SIGNED_URL_TTL = config('PRIVATE_STORAGE_SIGNED_URL_TTL', default=900, cast=int)
+
+if PRIVATE_STORAGE_BUCKET:
+    storage_options = {
+        'bucket_name': PRIVATE_STORAGE_BUCKET,
+        'default_acl': None,
+        'file_overwrite': False,
+        'querystring_auth': True,
+        'querystring_expire': PRIVATE_STORAGE_SIGNED_URL_TTL,
+        'object_parameters': {'CacheControl': 'private, no-store'},
+    }
+    if PRIVATE_STORAGE_ENDPOINT_URL:
+        storage_options['endpoint_url'] = PRIVATE_STORAGE_ENDPOINT_URL
+        storage_options['addressing_style'] = 'path'
+    if PRIVATE_STORAGE_REGION:
+        storage_options['region_name'] = PRIVATE_STORAGE_REGION
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': storage_options,
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
