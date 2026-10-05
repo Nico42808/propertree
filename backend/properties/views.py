@@ -150,7 +150,9 @@ class LandlordPropertyUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return PropertyDetailSerializer
     
     def get_queryset(self):
-        """Return only properties owned by the current landlord."""
+        """Return owned properties, or all properties for an admin review."""
+        if getattr(self.request.user, 'role', None) == 'admin':
+            return Property.objects.all()
         return Property.objects.filter(landlord=self.request.user)
     
     def update(self, request, *args, **kwargs):
