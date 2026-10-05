@@ -57,9 +57,11 @@ class RegisterView(generics.CreateAPIView):
                     else:
                         profile_data[field_name] = value
                 
-                # Handle profile photo from files
+                # Handle profile files from multipart registration
                 if 'profile.profile_photo' in request.FILES:
                     profile_data['profile_photo'] = request.FILES['profile.profile_photo']
+                if 'profile.identity_document' in request.FILES:
+                    profile_data['identity_document'] = request.FILES['profile.identity_document']
                 
                 # Convert remaining data to dict
                 user_data = {}
@@ -93,6 +95,25 @@ class RegisterView(generics.CreateAPIView):
             serializer = self.get_serializer(data=data, context={'request': request})
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
+
+            if user.role == 'landlord':
+                admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+                if admin_email:
+                    try:
+                        send_mail(
+                            subject='New Landlord Verification Pending – Propertree',
+                            message=(
+                                f'A new landlord has registered and uploaded an identity document.\n\n'
+                                f'Landlord: {user.email}\n\n'
+                                'Please review the identity document securely in the Propertree Admin Dashboard under Users.'
+                            ),
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[admin_email],
+                            fail_silently=False,
+                        )
+                    except Exception:
+                        import logging
+                        logging.getLogger(__name__).exception('Failed to send landlord verification notification')
 
             return Response({
                 'message': 'User registered successfully',
