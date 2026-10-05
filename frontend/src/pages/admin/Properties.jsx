@@ -121,7 +121,7 @@ const Properties = () => {
       markVerificationReviewed();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.error || 'Failed to Open Property Verification Document');
+      toast.error(error.userMessage || error.response?.data?.error || 'Failed to Open Property Verification Document');
     } finally {
       setVerificationLoading(false);
     }
@@ -135,7 +135,7 @@ const Properties = () => {
       markVerificationReviewed();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.error || 'Failed to Download Property Verification Document');
+      toast.error(error.userMessage || error.response?.data?.error || 'Failed to Download Property Verification Document');
     } finally {
       setVerificationLoading(false);
     }
