@@ -116,6 +116,7 @@ function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="properties" element={<AdminProperties />} />
         <Route path="properties/new" element={<HostOnboarding />} />
+        <Route path="properties/:id" element={<PropertyHub />} />
         <Route path="properties/:id/edit" element={<Navigate to="/admin/properties" replace />} />
         <Route path="service-bookings" element={<AdminServiceBookings />} />
         <Route path="analytics" element={<AdminAnalytics />} />
