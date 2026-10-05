@@ -246,6 +246,12 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         if identity_document_uploaded and instance.role == 'landlord':
             instance.is_verified = False
             instance.save(update_fields=['is_verified'])
+            try:
+                instance.profile.identity_document_reviewed_at = None
+                instance.profile.identity_document_reviewed_by = None
+                instance.profile.save(update_fields=['identity_document_reviewed_at', 'identity_document_reviewed_by'])
+            except Profile.DoesNotExist:
+                pass
             admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
             if admin_email:
                 try:
