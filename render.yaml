@@ -9,6 +9,14 @@ services:
         value: propertree.settings
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: PRIVATE_STORAGE_BUCKET
+        sync: false
+      - key: PRIVATE_STORAGE_ENDPOINT_URL
+        sync: false
+      - key: PRIVATE_STORAGE_REGION
+        sync: false
+      - key: PRIVATE_STORAGE_SIGNED_URL_TTL
+        value: 900
 
   - type: web
     name: propertree-frontend
