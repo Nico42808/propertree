@@ -3,6 +3,20 @@
  */
 import api from './api';
 
+const readBlobError = async (error, fallback) => {
+  const data = error?.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const text = await data.text();
+      const parsed = JSON.parse(text);
+      return parsed.error || parsed.message || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return data?.error || data?.message || fallback;
+};
+
 const userService = {
   /**
    * Get current user profile
@@ -69,7 +83,13 @@ const userService = {
    * [Admin] Download a landlord identity document securely
    */
   async adminDownloadIdentityDocument(userId, filename = 'identity-document') {
-    const response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
+    let response;
+    try {
+      response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
+    } catch (error) {
+      error.userMessage = await readBlobError(error, 'Failed to download identity document.');
+      throw error;
+    }
     const contentType = response.headers['content-type'] || 'application/octet-stream';
     const disposition = response.headers['content-disposition'] || '';
     const match = disposition.match(/filename="?([^";]+)"?/i);
@@ -111,6 +131,7 @@ const userService = {
       return { reviewed: true };
     } catch (error) {
       if (previewWindow) previewWindow.close();
+      error.userMessage = await readBlobError(error, 'Failed to open identity document.');
       throw error;
     }
   },
