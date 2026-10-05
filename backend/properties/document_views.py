@@ -80,21 +80,39 @@ class PropertyDocumentDownloadView(generics.GenericAPIView):
         if not document.file:
             raise Http404('File not found')
 
-        filename = os.path.basename(document.file.name) or 'property-document'
-        content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        filename = (
+            document.verification_filename
+            or os.path.basename(document.file.name)
+            or 'property-document'
+        )
+        content_type = (
+            document.verification_content_type
+            or mimetypes.guess_type(filename)[0]
+            or 'application/octet-stream'
+        )
 
-        try:
-            with document.file.storage.open(document.file.name, 'rb') as source:
-                payload = source.read()
-        except (FileNotFoundError, OSError):
-            raise Http404('Property document file is no longer available in storage.')
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception('Failed to read property document %s', document.id)
-            return Response(
-                {'error': 'Property document could not be read from secure storage.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+        payload = bytes(document.verification_blob) if document.verification_blob else None
+        if payload is None:
+            try:
+                with document.file.storage.open(document.file.name, 'rb') as source:
+                    payload = source.read()
+            except (FileNotFoundError, OSError):
+                return Response(
+                    {
+                        'error': (
+                            'This document was uploaded before persistent verification storage was enabled '
+                            'and the original file is no longer available. Please upload the document again.'
+                        )
+                    },
+                    status=status.HTTP_410_GONE,
+                )
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception('Failed to read property document %s', document.id)
+                return Response(
+                    {'error': 'Property document could not be read from secure storage.'},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
 
         if not payload:
             raise Http404('Property document file is empty.')
