@@ -100,10 +100,17 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     profile = ProfileSerializer(read_only=True)
     admin_profile = AdminProfileSerializer(read_only=True)
+    has_identity_document = serializers.SerializerMethodField()
+
+    def get_has_identity_document(self, obj):
+        try:
+            return bool(obj.profile.identity_document)
+        except Profile.DoesNotExist:
+            return False
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'profile', 'admin_profile', 'created_at']
+        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'has_identity_document', 'profile', 'admin_profile', 'created_at']
         read_only_fields = ['id', 'email', 'created_at']
 
 
