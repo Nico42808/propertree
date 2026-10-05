@@ -2,7 +2,7 @@
  * Admin Users - View and manage all users
  */
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound } from 'lucide-react';
+import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound, FileDown, ShieldCheck } from 'lucide-react';
 import { Container } from '../../components/layout';
 import { Card, Button, Input, Badge, Avatar, Loading, EmptyState, Modal } from '../../components/common';
 import { toast } from 'react-hot-toast';
@@ -40,6 +40,30 @@ const Users = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadIdentity = async (user) => {
+    setActionLoading(true);
+    try {
+      await userService.adminDownloadIdentityDocument(user.id, `${user.full_name || 'landlord'}-identity-document`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to download identity document.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerifyUser = async (user) => {
+    setActionLoading(true);
+    try {
+      const result = await userService.adminVerifyUser(user.id);
+      toast.success(result.message || 'Landlord identity verified.');
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to verify landlord.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -295,8 +319,10 @@ const Users = () => {
                           <Badge variant={user.is_active ? 'success' : 'danger'}>
                             {user.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                          {user.is_verified && (
-                            <Badge variant="info" size="sm">Verified</Badge>
+                          {user.role === 'landlord' && (
+                            <Badge variant={user.is_verified ? 'success' : user.has_identity_document ? 'warning' : 'secondary'} size="sm">
+                              {user.is_verified ? 'ID Verified' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
+                            </Badge>
                           )}
                         </div>
                       </td>
@@ -305,6 +331,28 @@ const Users = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
+                          {user.role === 'landlord' && user.has_identity_document && (
+                            <button
+                              type="button"
+                              title="Download identity document"
+                              onClick={() => handleDownloadIdentity(user)}
+                              disabled={actionLoading}
+                              className="p-2 rounded-lg text-gray-500 hover:text-propertree-green hover:bg-propertree-green-50 transition-colors disabled:opacity-50"
+                            >
+                              <FileDown className="w-4 h-4" />
+                            </button>
+                          )}
+                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && (
+                            <button
+                              type="button"
+                              title="Verify landlord identity"
+                              onClick={() => handleVerifyUser(user)}
+                              disabled={actionLoading}
+                              className="p-2 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
+                            >
+                              <ShieldCheck className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             type="button"
                             title="Reset password"
