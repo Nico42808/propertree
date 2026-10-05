@@ -18,6 +18,9 @@ const Register = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoError, setPhotoError] = useState('');
+  const [identityDocument, setIdentityDocument] = useState(null);
+  const [identityError, setIdentityError] = useState('');
+  const [identityDragging, setIdentityDragging] = useState(false);
 
   // Handle profile photo selection
   const handlePhotoChange = (e) => {
@@ -52,6 +55,24 @@ const Register = () => {
       setPhotoPreview(reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleIdentityDocument = (file) => {
+    setIdentityError('');
+    if (!file) {
+      setIdentityDocument(null);
+      return;
+    }
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setIdentityError('Please upload a PDF, JPG or PNG file');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setIdentityError('ID document must be smaller than 10MB');
+      return;
+    }
+    setIdentityDocument(file);
   };
 
   // Remove selected photo
@@ -99,8 +120,13 @@ const Register = () => {
         setError('');
         setSuccess('');
 
-        // If profile photo is uploaded, use FormData
-        if (profilePhoto) {
+        if (values.role === 'landlord' && !identityDocument) {
+          setIdentityError('A valid ID document is required for landlord registration');
+          return;
+        }
+
+        // Landlord identity verification requires multipart form data.
+        if (profilePhoto || identityDocument) {
           const formData = new FormData();
           formData.append('email', values.email);
           formData.append('password', values.password);
@@ -110,7 +136,8 @@ const Register = () => {
           formData.append('profile.last_name', values.last_name);
           formData.append('profile.phone_number', values.phone_number);
           formData.append('profile.bio', values.bio || '');
-          formData.append('profile.profile_photo', profilePhoto);
+          if (profilePhoto) formData.append('profile.profile_photo', profilePhoto);
+          if (identityDocument) formData.append('profile.identity_document', identityDocument);
 
           // Call register with FormData (don't set Content-Type - browser will set it)
           await register(formData);
@@ -413,6 +440,58 @@ const Register = () => {
                   </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Identity Verification - Required for Landlords */}
+          {formik.values.role === 'landlord' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Identity Verification <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Upload a government-issued photo ID so Propertree can verify the person managing the property account.
+              </p>
+              <label
+                htmlFor="identity_document"
+                onDragOver={(event) => { event.preventDefault(); setIdentityDragging(true); }}
+                onDragLeave={() => setIdentityDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIdentityDragging(false);
+                  handleIdentityDocument(event.dataTransfer.files?.[0]);
+                }}
+                className={`block cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition-colors ${identityDragging ? 'border-propertree-green bg-green-50' : 'border-gray-300 bg-gray-50 hover:border-propertree-green'}`}
+              >
+                <Upload className="w-7 h-7 mx-auto text-gray-400 mb-2" />
+                {identityDocument ? (
+                  <>
+                    <p className="text-sm font-medium text-gray-900">{identityDocument.name}</p>
+                    <p className="text-xs text-green-700 mt-1">Ready for secure verification</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-gray-900">Drag and Drop Your ID Here</p>
+                    <p className="text-xs text-gray-500 mt-1">or click to browse · PDF, JPG or PNG · max. 10MB</p>
+                  </>
+                )}
+              </label>
+              <input
+                id="identity_document"
+                type="file"
+                accept="application/pdf,image/jpeg,image/png"
+                className="hidden"
+                onChange={(event) => handleIdentityDocument(event.target.files?.[0])}
+              />
+              {identityDocument && (
+                <button type="button" onClick={() => setIdentityDocument(null)} className="mt-2 text-xs text-red-600 hover:underline">
+                  Remove ID Document
+                </button>
+              )}
+              {identityError && <p className="mt-1.5 text-sm text-red-600">{identityError}</p>}
+              <p className="mt-2 text-xs text-gray-500">
+                Your ID is stored securely and can only be reviewed by authorized Propertree administrators.
+              </p>
             </div>
           )}
 
