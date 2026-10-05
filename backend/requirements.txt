@@ -29,3 +29,7 @@ gunicorn==21.2.0
 
 # Development
 django-debug-toolbar==4.2.0
+
+# Persistent object storage
+django-storages[s3]==1.14.4
+boto3==1.35.99
