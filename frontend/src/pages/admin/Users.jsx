@@ -17,6 +17,7 @@ const Users = () => {
 
   // Confirmation modal state (used for delete + block/unblock)
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete' | 'toggle', user }
+  const [identityReviewUser, setIdentityReviewUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ const Users = () => {
     try {
       const result = await userService.adminVerifyUser(user.id);
       toast.success(result.message || 'Landlord identity verified.');
+      setIdentityReviewUser(null);
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to verify landlord.');
@@ -331,7 +333,19 @@ const Users = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {user.role === 'landlord' && user.has_identity_document && (
+                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              leftIcon={<ShieldCheck className="w-4 h-4" />}
+                              onClick={() => setIdentityReviewUser(user)}
+                              disabled={actionLoading}
+                            >
+                              Review ID
+                            </Button>
+                          )}
+                          {user.role === 'landlord' && user.has_identity_document && user.is_verified && (
                             <button
                               type="button"
                               title="Download identity document"
@@ -340,17 +354,6 @@ const Users = () => {
                               className="p-2 rounded-lg text-gray-500 hover:text-propertree-green hover:bg-propertree-green-50 transition-colors disabled:opacity-50"
                             >
                               <FileDown className="w-4 h-4" />
-                            </button>
-                          )}
-                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && (
-                            <button
-                              type="button"
-                              title="Verify landlord identity"
-                              onClick={() => handleVerifyUser(user)}
-                              disabled={actionLoading}
-                              className="p-2 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
-                            >
-                              <ShieldCheck className="w-4 h-4" />
                             </button>
                           )}
                           <button
@@ -390,6 +393,72 @@ const Users = () => {
           </Card.Body>
         </Card>
       )}
+
+      <Modal
+        isOpen={!!identityReviewUser}
+        onClose={() => !actionLoading && setIdentityReviewUser(null)}
+        title="Review Landlord Identity"
+        size="sm"
+        closeOnOverlayClick={!actionLoading}
+      >
+        <div className="space-y-5">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="font-medium text-amber-900">ID Verification Review Pending</p>
+            <p className="mt-1 text-sm text-amber-800">
+              Review the uploaded identity document before approving this landlord.
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Landlord</span>
+              <strong className="text-right text-gray-900">
+                {identityReviewUser?.full_name || identityReviewUser?.email}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Email</span>
+              <strong className="text-right text-gray-900">{identityReviewUser?.email}</strong>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            leftIcon={<FileDown className="w-4 h-4" />}
+            onClick={() => handleDownloadIdentity(identityReviewUser)}
+            disabled={actionLoading}
+          >
+            Download ID Document
+          </Button>
+
+          <div className="border-t border-gray-200 pt-4">
+            <p className="mb-4 text-sm text-gray-600">
+              Only approve the landlord after you have reviewed the uploaded document and confirmed that the identity matches the account information.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIdentityReviewUser(null)}
+                disabled={actionLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                leftIcon={<ShieldCheck className="w-4 h-4" />}
+                loading={actionLoading}
+                onClick={() => handleVerifyUser(identityReviewUser)}
+              >
+                Approve Verification
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* Confirmation Modal: Delete or Block/Unblock */}
       <Modal
