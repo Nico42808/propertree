@@ -23,6 +23,17 @@ class ProfileSerializer(serializers.ModelSerializer):
                 representation['profile_photo'] = request.build_absolute_uri(representation['profile_photo'])
         return representation
     
+    def validate_identity_document(self, file):
+        if not file:
+            return file
+        if file.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError('ID document must be smaller than 10 MB.')
+        allowed_types = {'application/pdf', 'image/jpeg', 'image/png'}
+        content_type = getattr(file, 'content_type', '')
+        if content_type not in allowed_types:
+            raise serializers.ValidationError('ID document must be a PDF, JPG or PNG file.')
+        return file
+
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'phone_number', 'profile_photo', 'identity_document', 'bio', 'address']
