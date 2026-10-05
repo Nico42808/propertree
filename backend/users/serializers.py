@@ -12,6 +12,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     """Serializer for Profile model."""
     
     profile_photo = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
+    identity_document = serializers.FileField(required=False, allow_null=True, write_only=True)
     
     def to_representation(self, instance):
         """Return absolute URL for profile photo."""
@@ -24,7 +25,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'phone_number', 'profile_photo', 'bio', 'address']
+        fields = ['first_name', 'last_name', 'phone_number', 'profile_photo', 'identity_document', 'bio', 'address']
 
 
 class AdminProfileSerializer(serializers.ModelSerializer):
@@ -51,6 +52,10 @@ class UserSerializer(serializers.ModelSerializer):
         """Validate that passwords match."""
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+        role = attrs.get('role')
+        profile = attrs.get('profile') or {}
+        if role == 'landlord' and not profile.get('identity_document'):
+            raise serializers.ValidationError({'profile': {'identity_document': 'A valid ID document is required for landlord registration.'}})
         return attrs
     
     def create(self, validated_data):
