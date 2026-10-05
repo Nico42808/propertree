@@ -102,6 +102,9 @@ class Profile(models.Model):
         'self', on_delete=models.SET_NULL, blank=True, null=True,
         related_name='reviewed_identity_documents'
     )
+    identity_document_blob = models.BinaryField(blank=True, null=True, editable=False)
+    identity_document_filename = models.CharField(max_length=255, blank=True)
+    identity_document_content_type = models.CharField(max_length=120, blank=True)
     bio = models.TextField(blank=True)
     address = models.TextField(blank=True)
     
