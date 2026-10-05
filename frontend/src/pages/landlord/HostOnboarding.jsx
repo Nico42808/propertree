@@ -17,6 +17,8 @@ import AddressStep from './onboarding/AddressStep';
 import PhotosStep from './onboarding/PhotosStep';
 import HouseRulesStep from './onboarding/HouseRulesStep';
 import ReviewStep from './onboarding/ReviewStep';
+import PropertyVerificationStep from './onboarding/PropertyVerificationStep';
+import { uploadPropertyDocument } from '../../services/propertyDocumentService';
 
 const BASE_STEPS = [
   { key: 'propertyType', title: 'Property Type', component: PropertyTypeStep },
@@ -24,6 +26,7 @@ const BASE_STEPS = [
   { key: 'propertyInfo', title: 'Property Information', component: PropertyInfoStep },
   { key: 'address', title: 'Address', component: AddressStep },
   { key: 'photos', title: 'Photos', component: PhotosStep },
+  { key: 'verification', title: 'Property Verification', component: PropertyVerificationStep },
   { key: 'description', title: 'Description Of Your Property', component: HouseRulesStep },
   { key: 'review', title: 'Review & Submit', component: ReviewStep },
 ];
@@ -56,6 +59,8 @@ const HostOnboarding = () => {
     country: 'Canada',
     postal_code: '',
     photos: [],
+    verification_relationship: '',
+    verification_document: null,
     title: '',
     description: '',
   });
@@ -133,6 +138,13 @@ const HostOnboarding = () => {
   };
 
   const handleSubmit = async () => {
+    if (!isAdminUser && (!formData.verification_relationship || !formData.verification_document)) {
+      toast.error('Please Upload a Property Verification Document');
+      const verificationStep = steps.find((step) => step.key === 'verification');
+      if (verificationStep) setCurrentStep(verificationStep.id);
+      return;
+    }
+
     try {
       const createResponse = await api.post(
         '/properties/landlord/create/',
@@ -141,10 +153,25 @@ const HostOnboarding = () => {
       const createdProperty = createResponse.data;
 
       if (isAdminUser) {
+        if (formData.verification_relationship && formData.verification_document) {
+          await uploadPropertyDocument(createdProperty.id, {
+            title: formData.verification_relationship === 'owner' ? 'Proof of Ownership' : 'Lease Agreement',
+            category: formData.verification_relationship === 'owner' ? 'proof_of_ownership' : 'lease_agreement',
+            notes: 'Uploaded during property onboarding for verification.',
+            file: formData.verification_document,
+          });
+        }
         toast.success('Property created successfully!');
         navigate('/admin/properties');
         return;
       }
+
+      await uploadPropertyDocument(createdProperty.id, {
+        title: formData.verification_relationship === 'owner' ? 'Proof of Ownership' : 'Lease Agreement',
+        category: formData.verification_relationship === 'owner' ? 'proof_of_ownership' : 'lease_agreement',
+        notes: 'Uploaded during property onboarding for verification.',
+        file: formData.verification_document,
+      });
 
       await api.post(`/properties/landlord/${createdProperty.id}/submit/`);
       toast.success('Property submitted successfully!');
