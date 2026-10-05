@@ -209,6 +209,15 @@ class ProfileView(generics.RetrieveUpdateAPIView):
                         data['profile'][field_name] = value
         
         identity_document_uploaded = 'profile.identity_document' in request.FILES
+        identity_document_payload = None
+        identity_document_filename = ''
+        identity_document_content_type = ''
+        if identity_document_uploaded:
+            uploaded_identity = request.FILES['profile.identity_document']
+            identity_document_payload = uploaded_identity.read()
+            uploaded_identity.seek(0)
+            identity_document_filename = getattr(uploaded_identity, 'name', '') or ''
+            identity_document_content_type = getattr(uploaded_identity, 'content_type', '') or ''
 
         # Handle profile photo from nested FormData (profile.profile_photo)
         if 'profile.profile_photo' in request.FILES:
@@ -249,7 +258,13 @@ class ProfileView(generics.RetrieveUpdateAPIView):
             try:
                 instance.profile.identity_document_reviewed_at = None
                 instance.profile.identity_document_reviewed_by = None
-                instance.profile.save(update_fields=['identity_document_reviewed_at', 'identity_document_reviewed_by'])
+                instance.profile.identity_document_blob = identity_document_payload
+                instance.profile.identity_document_filename = identity_document_filename
+                instance.profile.identity_document_content_type = identity_document_content_type
+                instance.profile.save(update_fields=[
+                    'identity_document_reviewed_at', 'identity_document_reviewed_by',
+                    'identity_document_blob', 'identity_document_filename', 'identity_document_content_type'
+                ])
             except Profile.DoesNotExist:
                 pass
             admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
