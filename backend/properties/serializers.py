@@ -69,6 +69,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
     verification_status = serializers.SerializerMethodField()
     verification_type = serializers.SerializerMethodField()
+    landlord_verified = serializers.SerializerMethodField()
     
     class Meta:
         model = Property
@@ -79,7 +80,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'rental_terms',
             'amenities', 'photos', 'primary_photo', 'status', 'rejection_reason',
             'approved_by', 'approved_at', 'created_at', 'updated_at', 'booked_dates', 'owner_name',
-            'verification_status', 'verification_type'
+            'verification_status', 'verification_type', 'landlord_verified'
         ]
         read_only_fields = ['id', 'landlord', 'approved_by', 'approved_at', 'created_at', 'updated_at']
     
@@ -122,6 +123,9 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     def get_verification_type(self, obj):
         doc = obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).order_by('-created_at').first()
         return doc.category if doc else None
+
+    def get_landlord_verified(self, obj):
+        return bool(getattr(obj.landlord, 'is_verified', False))
     
     def get_booked_dates(self, obj):
         """Get list of booked date ranges for confirmed bookings."""
