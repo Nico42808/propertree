@@ -6,12 +6,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bath, Bed, FileText, Home, MapPin, Plus, Trash2, Wrench } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Container } from '../../components/layout';
+import { useAuth } from '../../hooks';
 import { Badge, Button, Card, EmptyState, Loading } from '../../components/common';
 
 const titleCase = (value = '') => value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const Properties = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canAddProperty = Boolean(user?.is_verified);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, draft: 0, pending: 0, approved: 0, rejected: 0 });
@@ -83,8 +86,20 @@ const Properties = () => {
           <h1 className="text-3xl font-bold text-propertree-dark">My Properties</h1>
           <p className="text-gray-600 mt-1">Manage Your Property Listings</p>
         </div>
-        <Link to="/landlord/properties/new"><Button variant="primary" leftIcon={<Plus />}>Add Property</Button></Link>
+        {canAddProperty ? (
+          <Link to="/landlord/properties/new"><Button variant="primary" leftIcon={<Plus />}>Add Property</Button></Link>
+        ) : (
+          <Button variant="outline" leftIcon={<Plus />} disabled title="Identity verification required">
+            Add Property
+          </Button>
+        )}
       </div>
+
+      {!canAddProperty && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <strong>Identity Verification Required.</strong> Your ID must be reviewed and verified by Propertree before you can add a property.
+        </div>
+      )}
 
       {stats.total > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -101,8 +116,8 @@ const Properties = () => {
           icon={<Home className="w-16 h-16" />}
           title="No Properties Yet"
           message="Add your first property to create its management workspace."
-          action={() => navigate('/landlord/properties/new')}
-          actionLabel="Add First Property"
+          action={canAddProperty ? () => navigate('/landlord/properties/new') : undefined}
+          actionLabel={canAddProperty ? 'Add First Property' : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
