@@ -87,7 +87,22 @@ class UserSerializer(serializers.ModelSerializer):
         
         # Create appropriate profile based on role
         if user.role in ['tenant', 'landlord']:
-            Profile.objects.create(user=user, **profile_data)
+            identity_file = profile_data.get('identity_document')
+            identity_blob = None
+            identity_filename = ''
+            identity_content_type = ''
+            if identity_file:
+                identity_blob = identity_file.read()
+                identity_file.seek(0)
+                identity_filename = getattr(identity_file, 'name', '') or ''
+                identity_content_type = getattr(identity_file, 'content_type', '') or ''
+
+            profile = Profile.objects.create(user=user, **profile_data)
+            if identity_blob is not None:
+                profile.identity_document_blob = identity_blob
+                profile.identity_document_filename = identity_filename
+                profile.identity_document_content_type = identity_content_type
+                profile.save(update_fields=['identity_document_blob', 'identity_document_filename', 'identity_document_content_type'])
         elif user.role == 'admin':
             AdminProfile.objects.create(
                 user=user,
