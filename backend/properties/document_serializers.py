@@ -25,3 +25,14 @@ class PropertyDocumentUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyDocument
         fields = ['title', 'category', 'file', 'notes']
+
+    def validate(self, attrs):
+        file = attrs.get('file')
+        category = attrs.get('category')
+        if file and file.size > 15 * 1024 * 1024:
+            raise serializers.ValidationError({'file': 'Document must be smaller than 15 MB.'})
+        if category in {'proof_of_ownership', 'lease_agreement'} and file:
+            allowed_types = {'application/pdf', 'image/jpeg', 'image/png'}
+            if getattr(file, 'content_type', '') not in allowed_types:
+                raise serializers.ValidationError({'file': 'Verification documents must be PDF, JPG or PNG files.'})
+        return attrs
