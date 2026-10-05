@@ -410,21 +410,35 @@ class AdminIdentityDocumentDownloadView(APIView):
         if not profile.identity_document:
             raise Http404('Identity document not found')
 
-        filename = os.path.basename(profile.identity_document.name) or 'identity-document'
-        content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        filename = profile.identity_document_filename or os.path.basename(profile.identity_document.name) or 'identity-document'
+        content_type = (
+            profile.identity_document_content_type
+            or mimetypes.guess_type(filename)[0]
+            or 'application/octet-stream'
+        )
 
-        try:
-            with profile.identity_document.storage.open(profile.identity_document.name, 'rb') as source:
-                payload = source.read()
-        except (FileNotFoundError, OSError):
-            raise Http404('Identity document file is no longer available in storage.')
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception('Failed to read identity document for %s', user.id)
-            return Response(
-                {'error': 'Identity document could not be read from secure storage.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+        payload = bytes(profile.identity_document_blob) if profile.identity_document_blob else None
+        if payload is None:
+            try:
+                with profile.identity_document.storage.open(profile.identity_document.name, 'rb') as source:
+                    payload = source.read()
+            except (FileNotFoundError, OSError):
+                return Response(
+                    {
+                        'error': (
+                            'This ID was uploaded before persistent verification storage was enabled '
+                            'and the original file is no longer available. Please ask the landlord to re-upload the ID.'
+                        )
+                    },
+                    status=status.HTTP_410_GONE,
+                )
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception('Failed to read identity document for %s', user.id)
+                return Response(
+                    {'error': 'Identity document could not be read from secure storage.'},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
 
         if not payload:
             raise Http404('Identity document file is empty.')
