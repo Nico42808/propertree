@@ -63,14 +63,24 @@ export const downloadPropertyDocument = async (documentId, filename = 'document'
 };
 
 export const previewPropertyDocument = async (documentId) => {
-  const response = await api.get(`/properties/documents/${documentId}/download/`, {
-    responseType: 'blob',
-  });
+  const previewWindow = window.open('', '_blank');
+  try {
+    const response = await api.get(`/properties/documents/${documentId}/download/`, {
+      responseType: 'blob',
+    });
 
-  const contentType = response.headers['content-type'] || 'application/octet-stream';
-  const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
-  window.open(url, '_blank', 'noopener,noreferrer');
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+    if (previewWindow) {
+      previewWindow.location.href = url;
+    } else {
+      window.location.href = url;
+    }
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
 
-  return { reviewed: true };
+    return { reviewed: true };
+  } catch (error) {
+    if (previewWindow) previewWindow.close();
+    throw error;
+  }
 };
