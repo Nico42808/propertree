@@ -127,6 +127,12 @@ class LandlordPropertyCreateView(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         """Create property and return detailed response with ID."""
+        if getattr(request.user, 'role', None) == 'landlord' and not request.user.is_verified:
+            return Response(
+                {'error': 'Your identity must be verified before you can add a property.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -185,6 +191,18 @@ class PropertySubmitForApprovalView(APIView):
             if property_obj.status != 'draft':
                 return Response(
                     {'error': 'Only draft properties can be submitted for approval'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not request.user.is_verified:
+                return Response(
+                    {'error': 'Your identity must be verified before you can submit a property.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if not property_obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).exists():
+                return Response(
+                    {'error': 'A proof of ownership or current lease agreement is required before submission.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
