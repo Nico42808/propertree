@@ -35,6 +35,14 @@ class PropertyDocument(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
     file = models.FileField(upload_to='property_documents/')
     notes = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_property_documents',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
