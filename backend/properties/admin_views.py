@@ -9,6 +9,8 @@ from django.db.models import Count, Sum, Avg, Q
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
+from django.http import FileResponse, Http404
+import os
 
 from .models import Property
 from .serializers import PropertyDetailSerializer
@@ -125,6 +127,12 @@ class ApprovePropertyView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            if not property_obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).exists():
+                return Response(
+                    {'error': 'Property verification document is required before approval.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             property_obj.status = 'approved'
             property_obj.approved_by = request.user
             property_obj.approved_at = timezone.now()
@@ -290,6 +298,7 @@ class AdminUsersListView(generics.ListAPIView):
                 last_name = ''
                 full_name = user.email
                 profile_photo = None
+                has_identity_document = False
                 
                 # Check if profile exists (use try/except to handle RelatedObjectDoesNotExist)
                 try:
@@ -297,6 +306,7 @@ class AdminUsersListView(generics.ListAPIView):
                     first_name = profile.first_name or ''
                     last_name = profile.last_name or ''
                     full_name = profile.get_full_name() or user.email
+                    has_identity_document = bool(profile.identity_document)
                     if profile.profile_photo:
                         try:
                             if profile.profile_photo.url.startswith('http'):
@@ -334,7 +344,8 @@ class AdminUsersListView(generics.ListAPIView):
                     'created_at': user.created_at.isoformat() if user.created_at else None,
                     'profile_photo': profile_photo,
                     'property_count': property_count,
-                    'booking_count': booking_count
+                    'booking_count': booking_count,
+                    'has_identity_document': has_identity_document
                 })
             
             return Response({
@@ -347,6 +358,44 @@ class AdminUsersListView(generics.ListAPIView):
                 {'error': str(e), 'traceback': traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AdminIdentityDocumentDownloadView(APIView):
+    """Securely download a landlord identity document for verification."""
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, pk):
+        try:
+            user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
+            profile = user.profile
+        except (CustomUser.DoesNotExist, Profile.DoesNotExist):
+            raise Http404('Identity document not found')
+
+        if not profile.identity_document:
+            raise Http404('Identity document not found')
+
+        filename = os.path.basename(profile.identity_document.name)
+        return FileResponse(profile.identity_document.open('rb'), as_attachment=True, filename=filename)
+
+
+class AdminVerifyUserView(APIView):
+    """Mark a landlord identity as verified after admin review."""
+
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
+            if not getattr(user.profile, 'identity_document', None):
+                return Response({'error': 'No identity document has been uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.is_verified = True
+            user.save(update_fields=['is_verified'])
+            return Response({'message': 'Landlord identity verified.', 'is_verified': True})
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'Landlord not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Profile.DoesNotExist:
+            return Response({'error': 'Landlord profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class AdminDeletePropertyView(APIView):
