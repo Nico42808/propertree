@@ -1,5 +1,19 @@
 import api from './api';
 
+const readDocumentBlobError = async (error, fallback) => {
+  const data = error?.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const text = await data.text();
+      const parsed = JSON.parse(text);
+      return parsed.error || parsed.message || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return data?.error || data?.message || fallback;
+};
+
 export const getPropertyDocuments = async (propertyId) => {
   const response = await api.get(`/properties/landlord/${propertyId}/documents/`);
   return response.data.results || response.data;
@@ -40,9 +54,15 @@ const resolveDownloadName = (response, fallback) => {
 };
 
 export const downloadPropertyDocument = async (documentId, filename = 'document') => {
-  const response = await api.get(`/properties/documents/${documentId}/download/`, {
-    responseType: 'blob',
-  });
+  let response;
+  try {
+    response = await api.get(`/properties/documents/${documentId}/download/`, {
+      responseType: 'blob',
+    });
+  } catch (error) {
+    error.userMessage = await readDocumentBlobError(error, 'Failed to download document.');
+    throw error;
+  }
 
   const contentType = response.headers['content-type'] || 'application/octet-stream';
   const blob = new Blob([response.data], { type: contentType });
@@ -81,6 +101,7 @@ export const previewPropertyDocument = async (documentId) => {
     return { reviewed: true };
   } catch (error) {
     if (previewWindow) previewWindow.close();
+    error.userMessage = await readDocumentBlobError(error, 'Failed to open document.');
     throw error;
   }
 };
