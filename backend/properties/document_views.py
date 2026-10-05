@@ -33,9 +33,25 @@ class PropertyDocumentListCreateView(generics.ListCreateAPIView):
         return PropertyDocumentUploadSerializer if self.request.method == 'POST' else PropertyDocumentSerializer
 
     def create(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get('file')
+        verification_payload = None
+        verification_filename = ''
+        verification_content_type = ''
+        category = request.data.get('category')
+        if uploaded_file and category in {'proof_of_ownership', 'lease_agreement'}:
+            verification_payload = uploaded_file.read()
+            uploaded_file.seek(0)
+            verification_filename = getattr(uploaded_file, 'name', '') or ''
+            verification_content_type = getattr(uploaded_file, 'content_type', '') or ''
+
         serializer = PropertyDocumentUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         document = serializer.save(property=self.get_property(), uploaded_by=request.user)
+        if verification_payload is not None:
+            document.verification_blob = verification_payload
+            document.verification_filename = verification_filename
+            document.verification_content_type = verification_content_type
+            document.save(update_fields=['verification_blob', 'verification_filename', 'verification_content_type'])
         return Response(
             PropertyDocumentSerializer(document, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
