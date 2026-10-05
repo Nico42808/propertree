@@ -33,8 +33,9 @@ const BASE_STEPS = [
 
 const HostOnboarding = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const isAdminUser = isAdmin();
+  const isLandlordVerified = isAdminUser || Boolean(user?.is_verified);
   const steps = useMemo(
     () => BASE_STEPS.map((step, index) => ({
       ...step,
@@ -74,7 +75,23 @@ const HostOnboarding = () => {
     }
   }, [currentStep, steps.length]);
 
+  useEffect(() => {
+    if (!isLandlordVerified) {
+      toast.error('Your identity must be verified before you can add a property.');
+      navigate('/landlord/properties', { replace: true });
+    }
+  }, [isLandlordVerified, navigate]);
+
   const handleNext = () => {
+    if (
+      !isAdminUser
+      && currentStepComponent?.key === 'verification'
+      && (!formData.verification_relationship || !formData.verification_document)
+    ) {
+      toast.error('Please Upload a Property Verification Document to Continue');
+      return;
+    }
+
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -89,6 +106,18 @@ const HostOnboarding = () => {
   };
 
   const handleStepChange = (stepId) => {
+    const verificationStep = steps.find((step) => step.key === 'verification');
+    if (
+      !isAdminUser
+      && verificationStep
+      && stepId > verificationStep.id
+      && (!formData.verification_relationship || !formData.verification_document)
+    ) {
+      toast.error('Complete Property Verification Before Continuing');
+      setCurrentStep(verificationStep.id);
+      return;
+    }
+
     setCurrentStep(stepId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -124,6 +153,11 @@ const HostOnboarding = () => {
   };
 
   const handleSaveDraft = async () => {
+    if (!isLandlordVerified) {
+      toast.error('Your identity must be verified before you can add a property.');
+      return;
+    }
+
     try {
       const response = await api.post(
         '/properties/landlord/create/',
@@ -138,6 +172,12 @@ const HostOnboarding = () => {
   };
 
   const handleSubmit = async () => {
+    if (!isLandlordVerified) {
+      toast.error('Your identity must be verified before you can add a property.');
+      navigate('/landlord/properties');
+      return;
+    }
+
     if (!isAdminUser && (!formData.verification_relationship || !formData.verification_document)) {
       toast.error('Please Upload a Property Verification Document');
       const verificationStep = steps.find((step) => step.key === 'verification');
