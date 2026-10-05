@@ -67,6 +67,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     primary_photo = serializers.SerializerMethodField()
     booked_dates = serializers.SerializerMethodField()
     owner_name = serializers.SerializerMethodField()
+    verification_status = serializers.SerializerMethodField()
+    verification_type = serializers.SerializerMethodField()
     
     class Meta:
         model = Property
@@ -76,7 +78,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'bedrooms', 'bathrooms', 'max_guests', 'price_per_night', 'monthly_price', 'approval_type',
             'rental_terms',
             'amenities', 'photos', 'primary_photo', 'status', 'rejection_reason',
-            'approved_by', 'approved_at', 'created_at', 'updated_at', 'booked_dates', 'owner_name'
+            'approved_by', 'approved_at', 'created_at', 'updated_at', 'booked_dates', 'owner_name',
+            'verification_status', 'verification_type'
         ]
         read_only_fields = ['id', 'landlord', 'approved_by', 'approved_at', 'created_at', 'updated_at']
     
@@ -112,6 +115,13 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     def get_owner_name(self, obj):
         """Get owner name (alias for landlord_name for consistency)."""
         return self.get_landlord_name(obj)
+
+    def get_verification_status(self, obj):
+        return 'submitted' if obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).exists() else 'missing'
+
+    def get_verification_type(self, obj):
+        doc = obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).order_by('-created_at').first()
+        return doc.category if doc else None
     
     def get_booked_dates(self, obj):
         """Get list of booked date ranges for confirmed bookings."""
