@@ -1,20 +1,24 @@
 /**
  * Landlord Properties Page - Owner-focused property management overview
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bath, Bed, FileText, Home, MapPin, Plus, Trash2, Wrench } from 'lucide-react';
+import { Bath, Bed, FileText, Home, MapPin, Plus, Trash2, Upload, Wrench } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Container } from '../../components/layout';
 import { useAuth } from '../../hooks';
+import api from '../../services/api';
 import { Badge, Button, Card, EmptyState, Loading } from '../../components/common';
 
 const titleCase = (value = '') => value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const Properties = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const canAddProperty = Boolean(user?.is_verified);
+  const hasIdentityDocument = Boolean(user?.has_identity_document);
+  const identityInputRef = useRef(null);
+  const [uploadingIdentity, setUploadingIdentity] = useState(false);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, draft: 0, pending: 0, approved: 0, rejected: 0 });
@@ -47,6 +51,39 @@ const Properties = () => {
   };
 
   useEffect(() => { fetchProperties(); }, []);
+
+  const handleIdentityUpload = async (file) => {
+    if (!file) return;
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please Upload a PDF, JPG or PNG File');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('ID Document Must Be Smaller Than 10 MB');
+      return;
+    }
+
+    setUploadingIdentity(true);
+    try {
+      const formData = new FormData();
+      formData.append('profile.identity_document', file);
+      const response = await api.patch('/auth/profile/', formData);
+      updateUser(response.data);
+      toast.success('ID Uploaded Successfully. Propertree Will Review It Shortly.');
+    } catch (error) {
+      console.error(error);
+      const message =
+        error.response?.data?.profile?.identity_document?.[0]
+        || error.response?.data?.error
+        || 'Failed to Upload ID Document';
+      toast.error(message);
+    } finally {
+      setUploadingIdentity(false);
+      if (identityInputRef.current) identityInputRef.current.value = '';
+    }
+  };
 
   const handleDeleteProperty = async (propertyId) => {
     if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) return;
@@ -97,7 +134,32 @@ const Properties = () => {
 
       {!canAddProperty && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <strong>Identity Verification Required.</strong> Your ID must be reviewed and verified by Propertree before you can add a property.
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <strong>{hasIdentityDocument ? 'Identity Verification Pending.' : 'Identity Verification Required.'}</strong>{' '}
+              {hasIdentityDocument
+                ? 'Your ID has been submitted and is waiting for Propertree review. You can replace it if needed.'
+                : 'Please upload your ID so Propertree can verify your account before you add another property.'}
+            </div>
+            <div className="flex-shrink-0">
+              <input
+                ref={identityInputRef}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png"
+                className="hidden"
+                onChange={(event) => handleIdentityUpload(event.target.files?.[0])}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Upload className="w-4 h-4" />}
+                loading={uploadingIdentity}
+                onClick={() => identityInputRef.current?.click()}
+              >
+                {hasIdentityDocument ? 'Replace ID' : 'Upload ID'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
