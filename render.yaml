@@ -15,6 +15,9 @@ services:
     env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_GOOGLE_MAPS_API_KEY
+        sync: false
     routes:
       - type: rewrite
         source: /*
