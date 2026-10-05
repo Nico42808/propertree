@@ -2,7 +2,7 @@
  * Admin Users - View and manage all users
  */
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound, FileDown, ShieldCheck } from 'lucide-react';
+import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound, FileDown, ShieldCheck, Eye } from 'lucide-react';
 import { Container } from '../../components/layout';
 import { Card, Button, Input, Badge, Avatar, Loading, EmptyState, Modal } from '../../components/common';
 import { toast } from 'react-hot-toast';
@@ -44,12 +44,30 @@ const Users = () => {
     }
   };
 
+  const markIdentityReviewed = (userId) => {
+    setUsers((current) => current.map((item) => item.id === userId ? { ...item, identity_document_reviewed: true } : item));
+    setIdentityReviewUser((current) => current?.id === userId ? { ...current, identity_document_reviewed: true } : current);
+  };
+
   const handleDownloadIdentity = async (user) => {
     setActionLoading(true);
     try {
       await userService.adminDownloadIdentityDocument(user.id, `${user.full_name || 'landlord'}-identity-document`);
+      markIdentityReviewed(user.id);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to download identity document.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePreviewIdentity = async (user) => {
+    setActionLoading(true);
+    try {
+      await userService.adminPreviewIdentityDocument(user.id);
+      markIdentityReviewed(user.id);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to open identity document.');
     } finally {
       setActionLoading(false);
     }
@@ -323,7 +341,7 @@ const Users = () => {
                           </Badge>
                           {user.role === 'landlord' && (
                             <Badge variant={user.is_verified ? 'success' : user.has_identity_document ? 'warning' : 'secondary'} size="sm">
-                              {user.is_verified ? 'ID Verified' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
+                              {user.is_verified ? 'ID Verified' : user.identity_document_reviewed ? 'ID Reviewed – Approval Pending' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
                             </Badge>
                           )}
                         </div>
@@ -422,20 +440,30 @@ const Users = () => {
             </div>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            leftIcon={<FileDown className="w-4 h-4" />}
-            onClick={() => handleDownloadIdentity(identityReviewUser)}
-            disabled={actionLoading}
-          >
-            Download ID Document
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              leftIcon={<Eye className="w-4 h-4" />}
+              onClick={() => handlePreviewIdentity(identityReviewUser)}
+              disabled={actionLoading}
+            >
+              View ID Document
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              leftIcon={<FileDown className="w-4 h-4" />}
+              onClick={() => handleDownloadIdentity(identityReviewUser)}
+              disabled={actionLoading}
+            >
+              Download ID Document
+            </Button>
+          </div>
 
           <div className="border-t border-gray-200 pt-4">
             <p className="mb-4 text-sm text-gray-600">
-              Only approve the landlord after you have reviewed the uploaded document and confirmed that the identity matches the account information.
+              Open or download the ID first. Approval is enabled only after the document has been successfully retrieved from secure storage and marked as reviewed.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -451,6 +479,7 @@ const Users = () => {
                 variant="primary"
                 leftIcon={<ShieldCheck className="w-4 h-4" />}
                 loading={actionLoading}
+                disabled={!identityReviewUser?.identity_document_reviewed}
                 onClick={() => handleVerifyUser(identityReviewUser)}
               >
                 Approve Verification
