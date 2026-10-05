@@ -13,6 +13,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     profile_photo = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
     identity_document = serializers.FileField(required=False, allow_null=True, write_only=True)
+    identity_document_reviewed = serializers.SerializerMethodField(read_only=True)
     
     def to_representation(self, instance):
         """Return absolute URL for profile photo."""
@@ -23,6 +24,9 @@ class ProfileSerializer(serializers.ModelSerializer):
                 representation['profile_photo'] = request.build_absolute_uri(representation['profile_photo'])
         return representation
     
+    def get_identity_document_reviewed(self, obj):
+        return bool(obj.identity_document_reviewed_at)
+
     def validate_identity_document(self, file):
         if not file:
             return file
@@ -36,7 +40,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'phone_number', 'profile_photo', 'identity_document', 'bio', 'address']
+        fields = ['first_name', 'last_name', 'phone_number', 'profile_photo', 'identity_document', 'identity_document_reviewed', 'bio', 'address']
 
 
 class AdminProfileSerializer(serializers.ModelSerializer):
@@ -101,6 +105,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     admin_profile = AdminProfileSerializer(read_only=True)
     has_identity_document = serializers.SerializerMethodField()
+    identity_document_reviewed = serializers.SerializerMethodField()
 
     def get_has_identity_document(self, obj):
         try:
@@ -108,9 +113,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
         except Profile.DoesNotExist:
             return False
 
+    def get_identity_document_reviewed(self, obj):
+        try:
+            return bool(obj.profile.identity_document_reviewed_at)
+        except Profile.DoesNotExist:
+            return False
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'has_identity_document', 'profile', 'admin_profile', 'created_at']
+        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'has_identity_document', 'identity_document_reviewed', 'profile', 'admin_profile', 'created_at']
         read_only_fields = ['id', 'email', 'created_at']
 
 
