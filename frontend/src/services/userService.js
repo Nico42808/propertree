@@ -66,6 +66,29 @@ const userService = {
   },
 
   /**
+   * [Admin] Download a landlord identity document securely
+   */
+  async adminDownloadIdentityDocument(userId, filename = 'identity-document') {
+    const response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  /**
+   * [Admin] Verify a landlord after reviewing the uploaded ID
+   */
+  async adminVerifyUser(userId) {
+    const response = await api.post(`/admin/users/${userId}/verify/`);
+    return response.data;
+  },
+
+  /**
    * [Admin] Permanently delete a user account
    */
   async adminDeleteUser(userId) {
