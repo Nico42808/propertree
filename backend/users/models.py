@@ -96,6 +96,7 @@ class Profile(models.Model):
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=20, blank=True)
     profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    identity_document = models.FileField(upload_to='identity_documents/', blank=True, null=True)
     bio = models.TextField(blank=True)
     address = models.TextField(blank=True)
     
