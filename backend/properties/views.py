@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.conf import settings
 from datetime import datetime
 
 from .models import Property, PropertyExpense, Favorite
@@ -187,6 +189,27 @@ class PropertySubmitForApprovalView(APIView):
                 )
             
             property_obj.submit_for_approval()
+
+            admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+            if admin_email:
+                try:
+                    verification_doc = property_obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).order_by('-created_at').first()
+                    send_mail(
+                        subject=f'Property Verification Ready – {property_obj.title}',
+                        message=(
+                            f'A property has been submitted for review.\n\n'
+                            f'Property: {property_obj.title}\n'
+                            f'Landlord: {request.user.email}\n'
+                            f'Verification: {verification_doc.get_category_display() if verification_doc else "Missing"}\n\n'
+                            'Review the property and verification document securely in the Propertree Admin Dashboard.'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[admin_email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception('Failed to send property verification notification')
             
             return Response({
                 'message': 'Property submitted for approval',
