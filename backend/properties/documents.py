@@ -43,6 +43,9 @@ class PropertyDocument(models.Model):
         blank=True,
         related_name='reviewed_property_documents',
     )
+    verification_blob = models.BinaryField(blank=True, null=True, editable=False)
+    verification_filename = models.CharField(max_length=255, blank=True)
+    verification_content_type = models.CharField(max_length=120, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
