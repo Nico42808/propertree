@@ -137,6 +137,21 @@ class ApprovePropertyView(APIView):
             property_obj.approved_by = request.user
             property_obj.approved_at = timezone.now()
             property_obj.save()
+
+            try:
+                from django.core.mail import send_mail
+                send_mail(
+                    subject=f'Your Property Has Been Verified – {property_obj.title}',
+                    message=(
+                        f'Hi,\n\nYour property "{property_obj.title}" has been reviewed and approved by Propertree. '
+                        'You can now manage it from your Property Workspace.\n\n— Propertree'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[property_obj.landlord.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
             
             return Response({
                 'message': 'Property approved successfully',
@@ -391,6 +406,17 @@ class AdminVerifyUserView(APIView):
                 return Response({'error': 'No identity document has been uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
             user.is_verified = True
             user.save(update_fields=['is_verified'])
+            try:
+                from django.core.mail import send_mail
+                send_mail(
+                    'Your Propertree Identity Has Been Verified',
+                    'Hi,\n\nYour identity has been successfully verified by Propertree.\n\n— Propertree',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
             return Response({'message': 'Landlord identity verified.', 'is_verified': True})
         except CustomUser.DoesNotExist:
             return Response({'error': 'Landlord not found'}, status=status.HTTP_404_NOT_FOUND)
