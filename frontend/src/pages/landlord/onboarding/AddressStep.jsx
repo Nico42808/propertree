@@ -25,7 +25,6 @@ const AddressStep = ({ formData, updateFormData }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
-  const inputRef = useRef(null);
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
@@ -37,14 +36,15 @@ const AddressStep = ({ formData, updateFormData }) => {
     if (!apiKey) return undefined;
 
     const initializeAutocomplete = () => {
-      if (!window.google?.maps?.places || !inputRef.current || autocompleteRef.current) return;
+      const addressInput = document.getElementById('address');
+      if (!window.google?.maps?.places || !addressInput || autocompleteRef.current) return;
 
       const bounds = new window.google.maps.LatLngBounds(
         { lat: NOVA_SCOTIA_BOUNDS.south, lng: NOVA_SCOTIA_BOUNDS.west },
         { lat: NOVA_SCOTIA_BOUNDS.north, lng: NOVA_SCOTIA_BOUNDS.east }
       );
 
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+      const autocomplete = new window.google.maps.places.Autocomplete(addressInput, {
         bounds,
         strictBounds: true,
         componentRestrictions: { country: 'ca' },
@@ -181,7 +181,7 @@ const AddressStep = ({ formData, updateFormData }) => {
 
       <div className="space-y-4">
         <div className="relative">
-          <div ref={inputRef}>
+          <div>
             <Input
               label="Address"
               name="address"
