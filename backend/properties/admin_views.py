@@ -9,8 +9,9 @@ from django.db.models import Count, Sum, Avg, Q
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import HttpResponse, Http404
 import os
+import mimetypes
 
 from .models import Property
 from .serializers import PropertyDetailSerializer
@@ -133,9 +134,19 @@ class ApprovePropertyView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if not property_obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).exists():
+            verification_document = property_obj.documents.filter(
+                category__in=['proof_of_ownership', 'lease_agreement']
+            ).order_by('-created_at').first()
+
+            if not verification_document:
                 return Response(
                     {'error': 'Property verification document is required before approval.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not verification_document.reviewed_at:
+                return Response(
+                    {'error': 'Download and review the latest property verification document before approval.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -320,6 +331,7 @@ class AdminUsersListView(generics.ListAPIView):
                 full_name = user.email
                 profile_photo = None
                 has_identity_document = False
+                identity_document_reviewed = False
                 
                 # Check if profile exists (use try/except to handle RelatedObjectDoesNotExist)
                 try:
@@ -328,6 +340,7 @@ class AdminUsersListView(generics.ListAPIView):
                     last_name = profile.last_name or ''
                     full_name = profile.get_full_name() or user.email
                     has_identity_document = bool(profile.identity_document)
+                    identity_document_reviewed = bool(profile.identity_document_reviewed_at)
                     if profile.profile_photo:
                         try:
                             if profile.profile_photo.url.startswith('http'):
@@ -366,7 +379,8 @@ class AdminUsersListView(generics.ListAPIView):
                     'profile_photo': profile_photo,
                     'property_count': property_count,
                     'booking_count': booking_count,
-                    'has_identity_document': has_identity_document
+                    'has_identity_document': has_identity_document,
+                    'identity_document_reviewed': identity_document_reviewed
                 })
             
             return Response({
@@ -396,8 +410,34 @@ class AdminIdentityDocumentDownloadView(APIView):
         if not profile.identity_document:
             raise Http404('Identity document not found')
 
-        filename = os.path.basename(profile.identity_document.name)
-        return FileResponse(profile.identity_document.open('rb'), as_attachment=True, filename=filename)
+        filename = os.path.basename(profile.identity_document.name) or 'identity-document'
+        content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+        try:
+            with profile.identity_document.storage.open(profile.identity_document.name, 'rb') as source:
+                payload = source.read()
+        except (FileNotFoundError, OSError):
+            raise Http404('Identity document file is no longer available in storage.')
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Failed to read identity document for %s', user.id)
+            return Response(
+                {'error': 'Identity document could not be read from secure storage.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if not payload:
+            raise Http404('Identity document file is empty.')
+
+        profile.identity_document_reviewed_at = timezone.now()
+        profile.identity_document_reviewed_by = request.user
+        profile.save(update_fields=['identity_document_reviewed_at', 'identity_document_reviewed_by'])
+
+        response = HttpResponse(payload, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class AdminVerifyUserView(APIView):
@@ -410,6 +450,11 @@ class AdminVerifyUserView(APIView):
             user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
             if not getattr(user.profile, 'identity_document', None):
                 return Response({'error': 'No identity document has been uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+            if not user.profile.identity_document_reviewed_at:
+                return Response(
+                    {'error': 'Download and review the identity document before approving this landlord.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             user.is_verified = True
             user.save(update_fields=['is_verified'])
             try:
