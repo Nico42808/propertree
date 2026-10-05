@@ -1,5 +1,8 @@
-from django.http import FileResponse, Http404
+import os
+import mimetypes
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -60,8 +63,36 @@ class PropertyDocumentDownloadView(generics.GenericAPIView):
             raise PermissionDenied('You do not have access to this property.')
         if not document.file:
             raise Http404('File not found')
-        return FileResponse(
-            document.file.open('rb'),
-            as_attachment=True,
-            filename=document.file.name.split('/')[-1],
-        )
+
+        filename = os.path.basename(document.file.name) or 'property-document'
+        content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+        try:
+            with document.file.storage.open(document.file.name, 'rb') as source:
+                payload = source.read()
+        except (FileNotFoundError, OSError):
+            raise Http404('Property document file is no longer available in storage.')
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Failed to read property document %s', document.id)
+            return Response(
+                {'error': 'Property document could not be read from secure storage.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if not payload:
+            raise Http404('Property document file is empty.')
+
+        if (
+            getattr(request.user, 'role', None) == 'admin'
+            and document.category in {'proof_of_ownership', 'lease_agreement'}
+        ):
+            document.reviewed_at = timezone.now()
+            document.reviewed_by = request.user
+            document.save(update_fields=['reviewed_at', 'reviewed_by'])
+
+        response = HttpResponse(payload, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
