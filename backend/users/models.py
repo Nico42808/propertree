@@ -97,6 +97,11 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
     identity_document = models.FileField(upload_to='identity_documents/', blank=True, null=True)
+    identity_document_reviewed_at = models.DateTimeField(blank=True, null=True)
+    identity_document_reviewed_by = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True,
+        related_name='reviewed_identity_documents'
+    )
     bio = models.TextField(blank=True)
     address = models.TextField(blank=True)
     
