@@ -208,11 +208,18 @@ class ProfileView(generics.RetrieveUpdateAPIView):
                     else:
                         data['profile'][field_name] = value
         
+        identity_document_uploaded = 'profile.identity_document' in request.FILES
+
         # Handle profile photo from nested FormData (profile.profile_photo)
         if 'profile.profile_photo' in request.FILES:
             if 'profile' not in data:
                 data['profile'] = {}
             data['profile']['profile_photo'] = request.FILES['profile.profile_photo']
+        if identity_document_uploaded and instance.role == 'landlord':
+            if 'profile' not in data:
+                data['profile'] = {}
+            data['profile']['identity_document'] = request.FILES['profile.identity_document']
+
         # Also handle direct profile_photo upload (for backward compatibility)
         elif 'profile_photo' in request.FILES and instance.role in ['tenant', 'landlord']:
             if 'profile' not in data:
@@ -235,6 +242,27 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         serializer = self.get_serializer(instance, data=data, partial=partial, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+        if identity_document_uploaded and instance.role == 'landlord':
+            instance.is_verified = False
+            instance.save(update_fields=['is_verified'])
+            admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+            if admin_email:
+                try:
+                    send_mail(
+                        subject='Landlord ID Verification Pending – Propertree',
+                        message=(
+                            f'A landlord has uploaded an identity document for verification.\n\n'
+                            f'Landlord: {instance.email}\n\n'
+                            'Please review the document securely in the Propertree Admin Dashboard under Users.'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[admin_email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
 
         # Refresh instance to get updated data
         instance.refresh_from_db()
