@@ -39,6 +39,7 @@ const ReviewStep = ({ formData }) => {
     { title: 'Country', value: formatLabelValue(formData.country) },
     { title: 'Postal Code', value: String(formData.postal_code || '').toUpperCase() },
     { title: 'Photos', value: `${formData.photos?.length || 0} Photos` },
+    { title: 'Property Verification', value: formData.verification_relationship ? `${formatLabelValue(formData.verification_relationship)} · ${formData.verification_document?.name || 'Document Missing'}` : 'Not Provided' },
     { title: 'Property Name', value: capitalizeFirst(formData.title) },
     { title: 'Description Of Your Property', value: capitalizeFirst(descriptionPreview) },
   ];
@@ -49,7 +50,8 @@ const ReviewStep = ({ formData }) => {
     formData.address &&
     formData.city &&
     formData.title &&
-    formData.description
+    formData.description &&
+    (isAdminUser || (formData.verification_relationship && formData.verification_document))
   );
 
   return (
