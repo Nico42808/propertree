@@ -127,6 +127,12 @@ class ApprovePropertyView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            if not property_obj.landlord.is_verified:
+                return Response(
+                    {'error': 'Landlord identity must be verified before property approval.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             if not property_obj.documents.filter(category__in=['proof_of_ownership', 'lease_agreement']).exists():
                 return Response(
                     {'error': 'Property verification document is required before approval.'},
