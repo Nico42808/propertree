@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { User, Mail, Phone, Edit2, Save, X, Camera, MapPin, FileText } from 'lucide-react';
+import { User, Mail, Phone, Edit2, Save, X, Camera, MapPin, FileText, Upload, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import userService from '../services/userService';
 import { Alert } from '../components/common';
@@ -18,7 +18,9 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingIdentity, setUploadingIdentity] = useState(false);
   const fileInputRef = useRef(null);
+  const identityInputRef = useRef(null);
 
   // Formik setup with dynamic validation based on role
   const formik = useFormik({
@@ -189,6 +191,50 @@ const Profile = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleIdentityUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please upload a PDF, JPG or PNG file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('ID document must be smaller than 10MB');
+      return;
+    }
+
+    try {
+      setUploadingIdentity(true);
+      setError('');
+      setSuccess('');
+
+      const formData = new FormData();
+      formData.append('profile.identity_document', file);
+
+      const updatedData = await userService.updateProfile(formData);
+      setProfileData(updatedData);
+      updateUser(updatedData);
+      setSuccess('ID document submitted successfully. Propertree will review it shortly.');
+      toast.success('ID document submitted for verification');
+      await fetchProfile();
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.profile?.identity_document?.[0]
+        || err.response?.data?.message
+        || err.response?.data?.error
+        || 'Failed to upload ID document';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Identity upload error:', err);
+    } finally {
+      setUploadingIdentity(false);
+      if (identityInputRef.current) identityInputRef.current.value = '';
     }
   };
 
@@ -552,6 +598,67 @@ const Profile = () => {
                           {profileData.role === 'landlord' ? 'Landlord' : 'Tenant'}
                         </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {profileData.role === 'landlord' && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Identity Verification
+                  </h3>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 rounded-full p-2 ${profileData.is_verified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {profileData.is_verified
+                              ? 'Identity Verified'
+                              : profileData.has_identity_document
+                              ? 'Verification Pending'
+                              : 'ID Document Required'}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-600">
+                            {profileData.is_verified
+                              ? 'Your identity has been verified by Propertree.'
+                              : profileData.has_identity_document
+                              ? 'Your ID is on file and waiting for review. You can replace it if necessary.'
+                              : 'Upload a government-issued photo ID before you can add another property.'}
+                          </p>
+                          {!profileData.is_verified && (
+                            <p className="mt-1 text-xs text-gray-500">PDF, JPG or PNG · max. 10MB</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {!profileData.is_verified && (
+                        <div className="flex-shrink-0">
+                          <input
+                            ref={identityInputRef}
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png"
+                            className="hidden"
+                            onChange={handleIdentityUpload}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => identityInputRef.current?.click()}
+                            disabled={uploadingIdentity}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                            {uploadingIdentity
+                              ? 'Uploading...'
+                              : profileData.has_identity_document
+                              ? 'Replace ID'
+                              : 'Upload ID'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
