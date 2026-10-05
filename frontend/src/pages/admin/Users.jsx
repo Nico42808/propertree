@@ -55,7 +55,7 @@ const Users = () => {
       await userService.adminDownloadIdentityDocument(user.id, `${user.full_name || 'landlord'}-identity-document`);
       markIdentityReviewed(user.id);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to download identity document.');
+      toast.error(error.userMessage || error.response?.data?.error || 'Failed to download identity document.');
     } finally {
       setActionLoading(false);
     }
@@ -67,7 +67,7 @@ const Users = () => {
       await userService.adminPreviewIdentityDocument(user.id);
       markIdentityReviewed(user.id);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to open identity document.');
+      toast.error(error.userMessage || error.response?.data?.error || 'Failed to open identity document.');
     } finally {
       setActionLoading(false);
     }
