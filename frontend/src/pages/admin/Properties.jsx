@@ -4,11 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Home, Search, CheckCircle, XCircle, Eye, MapPin, Trash2, Plus, X,
+  Home, Search, CheckCircle, XCircle, Eye, MapPin, Trash2, Plus, X, FileDown, ShieldCheck,
 } from 'lucide-react';
 import { Container } from '../../components/layout';
 import { Card, Button, Input, Badge, Modal, Loading, EmptyState, Select } from '../../components/common';
 import { toast } from 'react-hot-toast';
+import { getPropertyDocuments, downloadPropertyDocument, previewPropertyDocument } from '../../services/propertyDocumentService';
 
 const Properties = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [verificationReviewProperty, setVerificationReviewProperty] = useState(null);
+  const [verificationDocument, setVerificationDocument] = useState(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
@@ -87,6 +91,56 @@ const Properties = () => {
     }
   };
 
+  const openVerificationReview = async (property) => {
+    setVerificationReviewProperty(property);
+    setVerificationDocument(null);
+    setVerificationLoading(true);
+    try {
+      const documents = await getPropertyDocuments(property.id);
+      const verificationDocs = (Array.isArray(documents) ? documents : [])
+        .filter((document) => ['proof_of_ownership', 'lease_agreement'].includes(document.category))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setVerificationDocument(verificationDocs[0] || null);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to Load Property Verification Document');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const markVerificationReviewed = () => {
+    setVerificationDocument((current) => current ? { ...current, reviewed_at: current.reviewed_at || new Date().toISOString() } : current);
+  };
+
+  const handlePreviewVerification = async () => {
+    if (!verificationDocument) return;
+    setVerificationLoading(true);
+    try {
+      await previewPropertyDocument(verificationDocument.id);
+      markVerificationReviewed();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.error || 'Failed to Open Property Verification Document');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleDownloadVerification = async () => {
+    if (!verificationDocument) return;
+    setVerificationLoading(true);
+    try {
+      await downloadPropertyDocument(verificationDocument.id, verificationDocument.title || 'property-verification');
+      markVerificationReviewed();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.error || 'Failed to Download Property Verification Document');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
   const handleApprove = async (propertyId) => {
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
@@ -96,9 +150,12 @@ const Properties = () => {
       });
       if (response.ok) {
         toast.success('Property Approved Successfully!');
+        setVerificationReviewProperty(null);
+        setVerificationDocument(null);
         fetchProperties();
       } else {
-        toast.error('Failed to Approve Property');
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.error || 'Failed to Approve Property');
       }
     } catch (error) {
       console.error('Error approving property:', error);
@@ -302,7 +359,14 @@ const Properties = () => {
                         <Button variant="outline" size="sm" leftIcon={<Eye />} onClick={() => navigate(`/admin/properties/${property.id}`)}>View</Button>
                         {property.status === 'pending_approval' && (
                           <>
-                            <Button variant="success" size="sm" leftIcon={<CheckCircle />} onClick={() => handleApprove(property.id)}>Approve</Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              leftIcon={<ShieldCheck className="w-4 h-4" />}
+                              onClick={() => openVerificationReview(property)}
+                            >
+                              Review Verification
+                            </Button>
                             <Button variant="danger" size="sm" leftIcon={<XCircle />} onClick={() => { setSelectedProperty(property); setShowRejectModal(true); }}>Reject</Button>
                           </>
                         )}
@@ -316,6 +380,127 @@ const Properties = () => {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!verificationReviewProperty}
+        onClose={() => {
+          if (!verificationLoading) {
+            setVerificationReviewProperty(null);
+            setVerificationDocument(null);
+          }
+        }}
+        title="Review Property Verification"
+        size="sm"
+        closeOnOverlayClick={!verificationLoading}
+      >
+        <div className="space-y-5">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="font-medium text-amber-900">Property Verification Review</p>
+            <p className="mt-1 text-sm text-amber-800">
+              Review the latest ownership or lease document before approving this property.
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Property</span>
+              <strong className="text-right text-gray-900">{verificationReviewProperty?.title}</strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Landlord</span>
+              <strong className="text-right text-gray-900">
+                {verificationReviewProperty?.owner_name || verificationReviewProperty?.landlord_name || 'N/A'}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Landlord ID</span>
+              <Badge variant={verificationReviewProperty?.landlord_verified ? 'success' : 'warning'}>
+                {verificationReviewProperty?.landlord_verified ? 'Verified' : 'Not Verified'}
+              </Badge>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-gray-500">Property Document</span>
+              <Badge variant={verificationDocument ? (verificationDocument.reviewed_at ? 'success' : 'warning') : 'danger'}>
+                {verificationDocument
+                  ? verificationDocument.reviewed_at
+                    ? 'Reviewed'
+                    : 'Review Pending'
+                  : 'Missing'}
+              </Badge>
+            </div>
+          </div>
+
+          {verificationLoading && !verificationDocument ? (
+            <div className="py-6"><Loading /></div>
+          ) : verificationDocument ? (
+            <>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="font-medium text-gray-900">{verificationDocument.title}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {verificationDocument.category_display || verificationDocument.category?.replaceAll('_', ' ')}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  leftIcon={<Eye className="w-4 h-4" />}
+                  onClick={handlePreviewVerification}
+                  loading={verificationLoading}
+                >
+                  View Document
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  leftIcon={<FileDown className="w-4 h-4" />}
+                  onClick={handleDownloadVerification}
+                  loading={verificationLoading}
+                >
+                  Download Document
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              No proof of ownership or current lease agreement is available for this property.
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 pt-4">
+            <p className="mb-4 text-sm text-gray-600">
+              Approval is enabled only after the landlord identity is verified and the latest property verification document has been successfully opened or downloaded.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setVerificationReviewProperty(null);
+                  setVerificationDocument(null);
+                }}
+                disabled={verificationLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="success"
+                leftIcon={<CheckCircle className="w-4 h-4" />}
+                disabled={
+                  verificationLoading
+                  || !verificationReviewProperty?.landlord_verified
+                  || !verificationDocument?.reviewed_at
+                }
+                onClick={() => handleApprove(verificationReviewProperty.id)}
+              >
+                Approve Property
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <Modal isOpen={showRejectModal} onClose={() => { setShowRejectModal(false); setRejectionReason(''); setSelectedProperty(null); }} title="Reject Property">
         <div className="space-y-4">
