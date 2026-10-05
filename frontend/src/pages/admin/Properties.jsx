@@ -277,7 +277,12 @@ const Properties = () => {
                         <h3 className="text-xl font-semibold text-gray-900 mb-1">{property.title}</h3>
                         <p className="text-sm text-gray-600 flex items-center gap-1"><MapPin className="w-4 h-4" />{property.city}, {property.state}, {property.country}</p>
                       </div>
-                      {getStatusBadge(property.status)}
+                      <div className="flex flex-col items-end gap-2">
+                        {getStatusBadge(property.status)}
+                        <Badge variant={property.verification_status === 'submitted' ? 'success' : 'warning'}>
+                          {property.verification_status === 'submitted' ? 'Property Verification Submitted' : 'Verification Missing'}
+                        </Badge>
+                      </div>
                     </div>
 
                     <p className="text-gray-700 mb-4 line-clamp-2">{property.description}</p>
@@ -294,7 +299,7 @@ const Properties = () => {
                         <p>Submitted: {new Date(property.created_at).toLocaleDateString('en-CA')}</p>
                       </div>
                       <div className="flex gap-2 flex-wrap">
-                        <Button variant="outline" size="sm" leftIcon={<Eye />} onClick={() => window.open(`/properties/${property.id}`, '_blank')}>View</Button>
+                        <Button variant="outline" size="sm" leftIcon={<Eye />} onClick={() => navigate(`/admin/properties/${property.id}`)}>View</Button>
                         {property.status === 'pending_approval' && (
                           <>
                             <Button variant="success" size="sm" leftIcon={<CheckCircle />} onClick={() => handleApprove(property.id)}>Approve</Button>
