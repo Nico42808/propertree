@@ -16,6 +16,7 @@ import {
   downloadPropertyDocument,
 } from '../../services/propertyDocumentService';
 import { formatCurrency } from '../../utils/formatters';
+import { useAuth } from '../../hooks';
 
 const STATUS_CONFIG = {
   draft: { label: 'Draft', variant: 'secondary' },
@@ -60,6 +61,8 @@ const serviceProgress = (service) => {
 const PropertyHub = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+  const isAdminUser = isAdmin();
   const [property, setProperty] = useState(null);
   const [services, setServices] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -144,8 +147,8 @@ const PropertyHub = () => {
 
   return (
     <Container className="py-8">
-      <button type="button" onClick={() => navigate('/landlord/properties')} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-propertree-green mb-5">
-        <ArrowLeft className="w-4 h-4" /> Back to My Properties
+      <button type="button" onClick={() => navigate(isAdminUser ? '/admin/properties' : '/landlord/properties')} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-propertree-green mb-5">
+        <ArrowLeft className="w-4 h-4" /> {isAdminUser ? 'Back to Properties' : 'Back to My Properties'}
       </button>
 
       <div className="overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-sm mb-8">
@@ -160,10 +163,12 @@ const PropertyHub = () => {
               <p className="mt-3 flex items-center gap-2 text-gray-600"><MapPin className="w-4 h-4" />{property.address}, {property.city}, {property.state}, {property.country}</p>
               {property.description && <p className="mt-5 text-gray-700 max-w-3xl">{property.description}</p>}
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link to={`/landlord/services?property=${property.id}`}><Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>Book a Service</Button></Link>
-              <Link to={`/landlord/properties/${property.id}/edit`}><Button variant="outline" leftIcon={<Pencil className="w-4 h-4" />}>Edit Property</Button></Link>
-            </div>
+            {!isAdminUser && (
+              <div className="flex flex-wrap gap-3">
+                <Link to={`/landlord/services?property=${property.id}`}><Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>Book a Service</Button></Link>
+                <Link to={`/landlord/properties/${property.id}/edit`}><Button variant="outline" leftIcon={<Pencil className="w-4 h-4" />}>Edit Property</Button></Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -207,6 +212,8 @@ const PropertyHub = () => {
             <div className="flex justify-between gap-4"><span className="text-gray-500">Bedrooms</span><strong className="flex items-center gap-1"><Bed className="w-4 h-4" />{property.bedrooms}</strong></div>
             <div className="flex justify-between gap-4"><span className="text-gray-500">Bathrooms</span><strong className="flex items-center gap-1"><Bath className="w-4 h-4" />{property.bathrooms}</strong></div>
             <div className="flex justify-between gap-4"><span className="text-gray-500">Postal Code</span><strong>{property.postal_code || '—'}</strong></div>
+            <div className="flex justify-between gap-4"><span className="text-gray-500">Landlord ID</span><Badge variant={property.landlord_verified ? 'success' : 'warning'}>{property.landlord_verified ? 'Verified' : 'Pending'}</Badge></div>
+            <div className="flex justify-between gap-4"><span className="text-gray-500">Property Verification</span><Badge variant={property.verification_status === 'submitted' ? 'success' : 'warning'}>{property.verification_status === 'submitted' ? titleCase(property.verification_type || 'Submitted') : 'Missing'}</Badge></div>
             <div className="flex justify-between gap-4"><span className="text-gray-500">Last Updated</span><strong>{property.updated_at ? new Date(property.updated_at).toLocaleDateString('en-CA') : '—'}</strong></div>
           </div></Card.Body>
         </Card>
