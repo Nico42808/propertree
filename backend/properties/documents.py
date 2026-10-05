@@ -13,6 +13,8 @@ class PropertyDocument(models.Model):
         ('permits', 'Permits'),
         ('warranties', 'Warranties'),
         ('invoices', 'Invoices'),
+        ('proof_of_ownership', 'Proof of Ownership'),
+        ('lease_agreement', 'Lease Agreement'),
         ('other', 'Other'),
     ]
 
