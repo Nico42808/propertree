@@ -333,6 +333,7 @@ class AdminUsersListView(generics.ListAPIView):
                 profile_photo = None
                 has_identity_document = False
                 identity_document_reviewed = False
+                identity_document_reupload_required = False
                 
                 # Check if profile exists (use try/except to handle RelatedObjectDoesNotExist)
                 try:
@@ -340,7 +341,15 @@ class AdminUsersListView(generics.ListAPIView):
                     first_name = profile.first_name or ''
                     last_name = profile.last_name or ''
                     full_name = profile.get_full_name() or user.email
-                    has_identity_document = bool(profile.identity_document_blob) or bool(profile.identity_document)
+                    if profile.identity_document_blob:
+                        has_identity_document = True
+                    elif profile.identity_document:
+                        try:
+                            has_identity_document = profile.identity_document.storage.exists(profile.identity_document.name)
+                            identity_document_reupload_required = not has_identity_document
+                        except Exception:
+                            has_identity_document = False
+                            identity_document_reupload_required = True
                     identity_document_reviewed = bool(profile.identity_document_reviewed_at)
                     if profile.profile_photo:
                         try:
@@ -381,7 +390,8 @@ class AdminUsersListView(generics.ListAPIView):
                     'property_count': property_count,
                     'booking_count': booking_count,
                     'has_identity_document': has_identity_document,
-                    'identity_document_reviewed': identity_document_reviewed
+                    'identity_document_reviewed': identity_document_reviewed,
+                    'identity_document_reupload_required': identity_document_reupload_required
                 })
             
             return Response({
