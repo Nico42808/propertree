@@ -197,3 +197,15 @@ class VerificationFlowTests(TestCase):
         self.assertEqual(response.data['filename'], 'proof.pdf')
         self.assertEqual(response.data['content_type'], 'application/pdf')
         self.assertTrue(response.data['content_base64'])
+
+
+    def test_missing_legacy_id_requires_reupload(self):
+        self.profile.identity_document_blob = None
+        self.profile.identity_document = 'identity_documents/missing-legacy-id.pdf'
+        self.profile.save(update_fields=['identity_document_blob', 'identity_document'])
+
+        response = self.client.get('/api/admin/users/')
+        self.assertEqual(response.status_code, 200)
+        landlord = next(item for item in response.data['results'] if item['id'] == str(self.landlord.id))
+        self.assertFalse(landlord['has_identity_document'])
+        self.assertTrue(landlord['identity_document_reupload_required'])
