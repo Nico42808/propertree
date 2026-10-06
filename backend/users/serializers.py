@@ -124,7 +124,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     def get_has_identity_document(self, obj):
         try:
-            return bool(obj.profile.identity_document)
+            return bool(obj.profile.identity_document_blob) or bool(obj.profile.identity_document)
         except Profile.DoesNotExist:
             return False
 
