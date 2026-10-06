@@ -46,6 +46,13 @@ const userService = {
     return response.data;
   },
 
+  async uploadIdentityDocument(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/auth/identity-document/', formData);
+    return response.data;
+  },
+
   /**
    * Upload profile photo
    */
