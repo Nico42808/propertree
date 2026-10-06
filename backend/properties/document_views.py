@@ -88,7 +88,7 @@ class PropertyDocumentDownloadView(generics.GenericAPIView):
         document = get_object_or_404(PropertyDocument.objects.select_related('property'), pk=pk)
         if not _can_manage_property(request.user, document.property):
             raise PermissionDenied('You do not have access to this property.')
-        if not document.file:
+        if not document.verification_blob and not document.file:
             raise Http404('File not found')
 
         filename = (
