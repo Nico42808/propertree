@@ -10,6 +10,7 @@ from .views import (
     ProfileView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
+    IdentityDocumentUploadView,
 )
 
 app_name = 'users'
@@ -27,4 +28,5 @@ urlpatterns = [
 
     # Profile
     path('profile/', ProfileView.as_view(), name='profile'),
+    path('identity-document/', IdentityDocumentUploadView.as_view(), name='identity_document_upload'),
 ]
