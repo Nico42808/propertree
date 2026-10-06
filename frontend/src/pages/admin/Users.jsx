@@ -351,7 +351,7 @@ const Users = () => {
                           </Badge>
                           {user.role === 'landlord' && (
                             <Badge variant={user.is_verified ? 'success' : user.has_identity_document ? 'warning' : 'secondary'} size="sm">
-                              {user.is_verified ? 'ID Verified' : user.identity_document_reviewed ? 'ID Reviewed – Approval Pending' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
+                              {user.is_verified ? 'ID Verified' : user.identity_document_reupload_required ? 'ID Re-upload Required' : user.identity_document_reviewed ? 'ID Reviewed – Approval Pending' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
                             </Badge>
                           )}
                         </div>
@@ -361,7 +361,7 @@ const Users = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && (
+                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && !user.identity_document_reupload_required && (
                             <Button
                               type="button"
                               size="sm"
@@ -372,6 +372,11 @@ const Users = () => {
                             >
                               Review ID
                             </Button>
+                          )}
+                          {user.role === 'landlord' && user.identity_document_reupload_required && !user.is_verified && (
+                            <span className="text-xs font-medium text-red-600">
+                              Ask Landlord to Re-upload ID
+                            </span>
                           )}
                           {user.role === 'landlord' && user.has_identity_document && user.is_verified && (
                             <button
