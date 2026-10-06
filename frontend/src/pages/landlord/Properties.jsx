@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Container } from '../../components/layout';
 import { useAuth } from '../../hooks';
 import api from '../../services/api';
+import userService from '../../services/userService';
 import { Badge, Button, Card, EmptyState, Loading } from '../../components/common';
 
 const titleCase = (value = '') => value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -67,10 +68,8 @@ const Properties = () => {
 
     setUploadingIdentity(true);
     try {
-      const formData = new FormData();
-      formData.append('profile.identity_document', file);
-      const response = await api.patch('/auth/profile/', formData);
-      updateUser(response.data);
+      const updatedUser = await userService.uploadIdentityDocument(file);
+      updateUser(updatedUser);
       toast.success('ID Uploaded Successfully. Propertree Will Review It Shortly.');
     } catch (error) {
       console.error(error);
