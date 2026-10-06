@@ -21,6 +21,8 @@ const Properties = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [verificationReviewProperty, setVerificationReviewProperty] = useState(null);
   const [verificationDocument, setVerificationDocument] = useState(null);
+  const [verificationPreview, setVerificationPreview] = useState(null);
+  const [verificationError, setVerificationError] = useState('');
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,6 +95,9 @@ const Properties = () => {
 
   const openVerificationReview = async (property) => {
     setVerificationReviewProperty(property);
+    if (verificationPreview?.url) window.URL.revokeObjectURL(verificationPreview.url);
+    setVerificationPreview(null);
+    setVerificationError('');
     setVerificationDocument(null);
     setVerificationLoading(true);
     try {
@@ -117,11 +122,16 @@ const Properties = () => {
     if (!verificationDocument) return;
     setVerificationLoading(true);
     try {
-      await previewPropertyDocument(verificationDocument.id);
+      if (verificationPreview?.url) window.URL.revokeObjectURL(verificationPreview.url);
+      const preview = await previewPropertyDocument(verificationDocument.id);
+      setVerificationPreview(preview);
+      setVerificationError('');
       markVerificationReviewed();
     } catch (error) {
       console.error(error);
-      toast.error(error.userMessage || error.response?.data?.error || 'Failed to Open Property Verification Document');
+      const message = error.userMessage || error.response?.data?.error || 'Failed to Open Property Verification Document';
+      setVerificationError(message);
+      toast.error(message);
     } finally {
       setVerificationLoading(false);
     }
@@ -130,12 +140,15 @@ const Properties = () => {
   const handleDownloadVerification = async () => {
     if (!verificationDocument) return;
     setVerificationLoading(true);
+    setVerificationError('');
     try {
       await downloadPropertyDocument(verificationDocument.id, verificationDocument.title || 'property-verification');
       markVerificationReviewed();
     } catch (error) {
       console.error(error);
-      toast.error(error.userMessage || error.response?.data?.error || 'Failed to Download Property Verification Document');
+      const message = error.userMessage || error.response?.data?.error || 'Failed to Download Property Verification Document';
+      setVerificationError(message);
+      toast.error(message);
     } finally {
       setVerificationLoading(false);
     }
@@ -385,6 +398,9 @@ const Properties = () => {
         isOpen={!!verificationReviewProperty}
         onClose={() => {
           if (!verificationLoading) {
+            if (verificationPreview?.url) window.URL.revokeObjectURL(verificationPreview.url);
+            setVerificationPreview(null);
+            setVerificationError('');
             setVerificationReviewProperty(null);
             setVerificationDocument(null);
           }
@@ -468,6 +484,33 @@ const Properties = () => {
             </div>
           )}
 
+          {verificationError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              {verificationError}
+            </div>
+          )}
+
+          {verificationPreview?.url && (
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+              {verificationPreview.contentType?.startsWith('image/') ? (
+                <img
+                  src={verificationPreview.url}
+                  alt="Property verification document"
+                  className="max-h-[420px] w-full object-contain"
+                />
+              ) : (
+                <iframe
+                  src={verificationPreview.url}
+                  title="Property verification document"
+                  className="h-[420px] w-full bg-white"
+                />
+              )}
+              <div className="border-t border-gray-200 px-3 py-2 text-xs text-gray-500">
+                {verificationPreview.filename || verificationDocument?.title || 'Property Verification Document'}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-gray-200 pt-4">
             <p className="mb-4 text-sm text-gray-600">
               Approval is enabled only after the landlord identity is verified and the latest property verification document has been successfully opened or downloaded.
@@ -477,6 +520,9 @@ const Properties = () => {
                 type="button"
                 variant="outline"
                 onClick={() => {
+                  if (verificationPreview?.url) window.URL.revokeObjectURL(verificationPreview.url);
+                  setVerificationPreview(null);
+                  setVerificationError('');
                   setVerificationReviewProperty(null);
                   setVerificationDocument(null);
                 }}
