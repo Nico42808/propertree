@@ -1,5 +1,6 @@
 import os
 import mimetypes
+import base64
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -124,6 +125,14 @@ class PropertyDocumentDownloadView(generics.GenericAPIView):
             document.reviewed_at = timezone.now()
             document.reviewed_by = request.user
             document.save(update_fields=['reviewed_at', 'reviewed_by'])
+
+        if request.query_params.get('format') == 'json':
+            return Response({
+                'filename': filename,
+                'content_type': content_type,
+                'content_base64': base64.b64encode(payload).decode('ascii'),
+                'reviewed': True,
+            })
 
         response = HttpResponse(payload, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
