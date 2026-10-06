@@ -121,6 +121,9 @@ class VerificationFlowTests(TestCase):
         landlord_client.force_authenticate(user=self.landlord)
         upload = SimpleUploadedFile('fresh-id.pdf', PDF_BYTES, content_type='application/pdf')
 
+        self.profile.identity_document = None
+        self.profile.save(update_fields=['identity_document'])
+
         uploaded = landlord_client.post(
             '/api/auth/identity-document/',
             {'file': upload},
@@ -179,6 +182,13 @@ class VerificationFlowTests(TestCase):
         document = PropertyDocument.objects.get(pk=created.data['id'])
         self.assertEqual(bytes(document.verification_blob), PDF_BYTES)
         self.assertFalse(bool(document.file))
+
+        binary_response = self.client.get(
+            f'/api/properties/documents/{document.id}/download/'
+        )
+        self.assertEqual(binary_response.status_code, 200)
+        self.assertEqual(binary_response.content, PDF_BYTES)
+        self.assertEqual(binary_response['Content-Type'], 'application/pdf')
 
         response = self.client.get(
             f'/api/properties/documents/{document.id}/download/?format=json'
