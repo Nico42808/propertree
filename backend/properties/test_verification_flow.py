@@ -1,7 +1,8 @@
 from decimal import Decimal
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core import mail
 from rest_framework.test import APIClient
 
 from users.models import CustomUser, Profile
@@ -209,3 +210,30 @@ class VerificationFlowTests(TestCase):
         landlord = next(item for item in response.data['results'] if item['id'] == str(self.landlord.id))
         self.assertFalse(landlord['has_identity_document'])
         self.assertTrue(landlord['identity_document_reupload_required'])
+
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        ADMIN_NOTIFICATION_EMAIL='admin-verification@propertree.site',
+        DEFAULT_FROM_EMAIL='noreply@propertree.site',
+    )
+    def test_landlord_id_upload_email_contains_attachment(self):
+        landlord_client = APIClient()
+        landlord_client.force_authenticate(user=self.landlord)
+        upload = SimpleUploadedFile('mail-backup-id.pdf', PDF_BYTES, content_type='application/pdf')
+
+        response = landlord_client.post(
+            '/api/auth/identity-document/',
+            {'file': upload},
+            format='multipart',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ['admin-verification@propertree.site'])
+        self.assertEqual(len(email.attachments), 1)
+        attachment = email.attachments[0]
+        self.assertEqual(attachment[0], 'mail-backup-id.pdf')
+        self.assertEqual(attachment[1], PDF_BYTES)
+        self.assertEqual(attachment[2], 'application/pdf')
