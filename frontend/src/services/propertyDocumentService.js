@@ -14,6 +14,18 @@ const readDocumentBlobError = async (error, fallback) => {
   return data?.error || data?.message || fallback;
 };
 
+const base64ToBlob = (base64, contentType = 'application/octet-stream') => {
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: contentType });
+};
+
+const fetchPropertyDocumentContent = async (documentId) => {
+  const response = await api.get(`/properties/documents/${documentId}/download/?format=json`);
+  return response.data;
+};
+
 export const getPropertyDocuments = async (propertyId) => {
   const response = await api.get(`/properties/landlord/${propertyId}/documents/`);
   return response.data.results || response.data;
@@ -54,54 +66,40 @@ const resolveDownloadName = (response, fallback) => {
 };
 
 export const downloadPropertyDocument = async (documentId, filename = 'document') => {
-  let response;
   try {
-    response = await api.get(`/properties/documents/${documentId}/download/`, {
-      responseType: 'blob',
-    });
+    const data = await fetchPropertyDocumentContent(documentId);
+    const blob = base64ToBlob(data.content_base64, data.content_type);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = data.filename || filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    window.setTimeout(() => {
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+    return { reviewed: true, filename: data.filename || filename };
   } catch (error) {
-    error.userMessage = await readDocumentBlobError(error, 'Failed to download document.');
+    error.userMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to download document.';
     throw error;
   }
-
-  const contentType = response.headers['content-type'] || 'application/octet-stream';
-  const blob = new Blob([response.data], { type: contentType });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = resolveDownloadName(response, filename);
-  link.style.display = 'none';
-  document.body.appendChild(link);
-  link.click();
-
-  window.setTimeout(() => {
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  }, 1000);
-
-  return { reviewed: true };
 };
 
 export const previewPropertyDocument = async (documentId) => {
-  const previewWindow = window.open('', '_blank');
   try {
-    const response = await api.get(`/properties/documents/${documentId}/download/`, {
-      responseType: 'blob',
-    });
-
-    const contentType = response.headers['content-type'] || 'application/octet-stream';
-    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
-    if (previewWindow) {
-      previewWindow.location.href = url;
-    } else {
-      window.location.href = url;
-    }
-    window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-
-    return { reviewed: true };
+    const data = await fetchPropertyDocumentContent(documentId);
+    const blob = base64ToBlob(data.content_base64, data.content_type);
+    const url = window.URL.createObjectURL(blob);
+    return {
+      reviewed: true,
+      url,
+      filename: data.filename,
+      contentType: data.content_type,
+    };
   } catch (error) {
-    if (previewWindow) previewWindow.close();
-    error.userMessage = await readDocumentBlobError(error, 'Failed to open document.');
+    error.userMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to open document.';
     throw error;
   }
 };
