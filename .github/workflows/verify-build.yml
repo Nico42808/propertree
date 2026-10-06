@@ -39,3 +39,8 @@ jobs:
       - name: Run Django system checks
         working-directory: backend
         run: python manage.py check
+      - name: Run verification flow regression tests
+        working-directory: backend
+        env:
+          USE_SQLITE_FOR_TESTS: "true"
+        run: python manage.py test properties.test_verification_flow --verbosity 2
