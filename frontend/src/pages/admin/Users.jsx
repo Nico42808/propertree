@@ -18,6 +18,8 @@ const Users = () => {
   // Confirmation modal state (used for delete + block/unblock)
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete' | 'toggle', user }
   const [identityReviewUser, setIdentityReviewUser] = useState(null);
+  const [identityPreview, setIdentityPreview] = useState(null);
+  const [identityReviewError, setIdentityReviewError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -51,11 +53,14 @@ const Users = () => {
 
   const handleDownloadIdentity = async (user) => {
     setActionLoading(true);
+    setIdentityReviewError('');
     try {
       await userService.adminDownloadIdentityDocument(user.id, `${user.full_name || 'landlord'}-identity-document`);
       markIdentityReviewed(user.id);
     } catch (error) {
-      toast.error(error.userMessage || error.response?.data?.error || 'Failed to download identity document.');
+      const message = error.userMessage || error.response?.data?.error || 'Failed to download identity document.';
+      setIdentityReviewError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
@@ -63,11 +68,16 @@ const Users = () => {
 
   const handlePreviewIdentity = async (user) => {
     setActionLoading(true);
+    setIdentityReviewError('');
     try {
-      await userService.adminPreviewIdentityDocument(user.id);
+      if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url);
+      const preview = await userService.adminPreviewIdentityDocument(user.id);
+      setIdentityPreview(preview);
       markIdentityReviewed(user.id);
     } catch (error) {
-      toast.error(error.userMessage || error.response?.data?.error || 'Failed to open identity document.');
+      const message = error.userMessage || error.response?.data?.error || 'Failed to open identity document.';
+      setIdentityReviewError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
@@ -357,7 +367,7 @@ const Users = () => {
                               size="sm"
                               variant="outline"
                               leftIcon={<ShieldCheck className="w-4 h-4" />}
-                              onClick={() => setIdentityReviewUser(user)}
+                              onClick={() => { setIdentityReviewUser(user); setIdentityPreview(null); setIdentityReviewError(''); }}
                               disabled={actionLoading}
                             >
                               Review ID
@@ -414,7 +424,7 @@ const Users = () => {
 
       <Modal
         isOpen={!!identityReviewUser}
-        onClose={() => !actionLoading && setIdentityReviewUser(null)}
+        onClose={() => { if (!actionLoading) { if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url); setIdentityPreview(null); setIdentityReviewError(''); setIdentityReviewUser(null); } }}
         title="Review Landlord Identity"
         size="sm"
         closeOnOverlayClick={!actionLoading}
@@ -461,6 +471,33 @@ const Users = () => {
             </Button>
           </div>
 
+          {identityReviewError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              {identityReviewError}
+            </div>
+          )}
+
+          {identityPreview?.url && (
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+              {identityPreview.contentType?.startsWith('image/') ? (
+                <img
+                  src={identityPreview.url}
+                  alt="Landlord identity document"
+                  className="max-h-[420px] w-full object-contain"
+                />
+              ) : (
+                <iframe
+                  src={identityPreview.url}
+                  title="Landlord identity document"
+                  className="h-[420px] w-full bg-white"
+                />
+              )}
+              <div className="border-t border-gray-200 px-3 py-2 text-xs text-gray-500">
+                {identityPreview.filename || 'Identity Document'}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-gray-200 pt-4">
             <p className="mb-4 text-sm text-gray-600">
               Open or download the ID first. Approval is enabled only after the document has been successfully retrieved from secure storage and marked as reviewed.
@@ -469,7 +506,7 @@ const Users = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIdentityReviewUser(null)}
+                onClick={() => { if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url); setIdentityPreview(null); setIdentityReviewError(''); setIdentityReviewUser(null); }}
                 disabled={actionLoading}
               >
                 Cancel
