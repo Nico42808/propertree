@@ -615,6 +615,8 @@ const Profile = () => {
                           <p className="font-medium text-gray-900">
                             {profileData.is_verified
                               ? 'Identity Verified'
+                              : profileData.identity_document_reupload_required
+                              ? 'ID Re-upload Required'
                               : profileData.has_identity_document
                               ? 'Verification Pending'
                               : 'ID Document Required'}
@@ -622,6 +624,8 @@ const Profile = () => {
                           <p className="mt-1 text-sm text-gray-600">
                             {profileData.is_verified
                               ? 'Your identity has been verified by Propertree.'
+                              : profileData.identity_document_reupload_required
+                              ? 'Your previous ID file is no longer available. Please upload the document again for review.'
                               : profileData.has_identity_document
                               ? 'Your ID is on file and waiting for review. You can replace it if necessary.'
                               : 'Upload a government-issued photo ID before you can add another property.'}
@@ -650,6 +654,8 @@ const Profile = () => {
                             <Upload className="w-4 h-4" />
                             {uploadingIdentity
                               ? 'Uploading...'
+                              : profileData.identity_document_reupload_required
+                              ? 'Re-upload ID'
                               : profileData.has_identity_document
                               ? 'Replace ID'
                               : 'Upload ID'}
