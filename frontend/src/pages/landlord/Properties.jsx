@@ -18,6 +18,7 @@ const Properties = () => {
   const { user, updateUser } = useAuth();
   const canAddProperty = Boolean(user?.is_verified);
   const hasIdentityDocument = Boolean(user?.has_identity_document);
+  const identityReuploadRequired = Boolean(user?.identity_document_reupload_required);
   const identityInputRef = useRef(null);
   const [uploadingIdentity, setUploadingIdentity] = useState(false);
   const [properties, setProperties] = useState([]);
@@ -135,8 +136,10 @@ const Properties = () => {
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <strong>{hasIdentityDocument ? 'Identity Verification Pending.' : 'Identity Verification Required.'}</strong>{' '}
-              {hasIdentityDocument
+              <strong>{identityReuploadRequired ? 'ID Re-upload Required.' : hasIdentityDocument ? 'Identity Verification Pending.' : 'Identity Verification Required.'}</strong>{' '}
+              {identityReuploadRequired
+                ? 'Your previous ID file is no longer available. Please upload it again so Propertree can complete verification.'
+                : hasIdentityDocument
                 ? 'Your ID has been submitted and is waiting for Propertree review. You can replace it if needed.'
                 : 'Please upload your ID so Propertree can verify your account before you add another property.'}
             </div>
@@ -155,7 +158,7 @@ const Properties = () => {
                 loading={uploadingIdentity}
                 onClick={() => identityInputRef.current?.click()}
               >
-                {hasIdentityDocument ? 'Replace ID' : 'Upload ID'}
+                {identityReuploadRequired ? 'Re-upload ID' : hasIdentityDocument ? 'Replace ID' : 'Upload ID'}
               </Button>
             </div>
           </div>
