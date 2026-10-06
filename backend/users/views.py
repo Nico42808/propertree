@@ -402,3 +402,73 @@ class PasswordResetConfirmView(APIView):
             {'message': 'Password has been reset successfully.'},
             status=status.HTTP_200_OK
         )
+
+
+class IdentityDocumentUploadView(APIView):
+    """Upload/replace a landlord identity document using durable DB storage."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        if request.user.role != 'landlord':
+            return Response({'error': 'Only landlords can upload an identity document.'}, status=status.HTTP_403_FORBIDDEN)
+
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return Response({'error': 'Identity document is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if uploaded.size > 10 * 1024 * 1024:
+            return Response({'error': 'ID document must be smaller than 10 MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        allowed_types = {'application/pdf', 'image/jpeg', 'image/png'}
+        content_type = getattr(uploaded, 'content_type', '') or ''
+        if content_type not in allowed_types:
+            return Response({'error': 'ID document must be a PDF, JPG or PNG file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        payload = uploaded.read()
+        if not payload:
+            return Response({'error': 'The uploaded document is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        profile, _ = Profile.objects.get_or_create(
+            user=request.user,
+            defaults={'first_name': '', 'last_name': ''},
+        )
+        profile.identity_document_blob = payload
+        profile.identity_document_filename = getattr(uploaded, 'name', '') or 'identity-document'
+        profile.identity_document_content_type = content_type
+        profile.identity_document_reviewed_at = None
+        profile.identity_document_reviewed_by = None
+        profile.save(update_fields=[
+            'identity_document_blob',
+            'identity_document_filename',
+            'identity_document_content_type',
+            'identity_document_reviewed_at',
+            'identity_document_reviewed_by',
+        ])
+
+        request.user.is_verified = False
+        request.user.save(update_fields=['is_verified'])
+
+        admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+        if admin_email:
+            try:
+                send_mail(
+                    subject='Landlord ID Verification Pending – Propertree',
+                    message=(
+                        f'A landlord has uploaded an identity document for verification.\n\n'
+                        f'Landlord: {request.user.email}\n\n'
+                        'Please review the document securely in the Propertree Admin Dashboard under Users.'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[admin_email],
+                    fail_silently=False,
+                )
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
+
+        return Response(
+            UserDetailSerializer(request.user, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
