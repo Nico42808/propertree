@@ -340,7 +340,7 @@ class AdminUsersListView(generics.ListAPIView):
                     first_name = profile.first_name or ''
                     last_name = profile.last_name or ''
                     full_name = profile.get_full_name() or user.email
-                    has_identity_document = bool(profile.identity_document)
+                    has_identity_document = bool(profile.identity_document_blob) or bool(profile.identity_document)
                     identity_document_reviewed = bool(profile.identity_document_reviewed_at)
                     if profile.profile_photo:
                         try:
@@ -408,10 +408,11 @@ class AdminIdentityDocumentDownloadView(APIView):
         except (CustomUser.DoesNotExist, Profile.DoesNotExist):
             raise Http404('Identity document not found')
 
-        if not profile.identity_document:
+        if not profile.identity_document_blob and not profile.identity_document:
             raise Http404('Identity document not found')
 
-        filename = profile.identity_document_filename or os.path.basename(profile.identity_document.name) or 'identity-document'
+        file_name = profile.identity_document.name if profile.identity_document else ''
+        filename = profile.identity_document_filename or os.path.basename(file_name) or 'identity-document'
         content_type = (
             profile.identity_document_content_type
             or mimetypes.guess_type(filename)[0]
@@ -419,7 +420,7 @@ class AdminIdentityDocumentDownloadView(APIView):
         )
 
         payload = bytes(profile.identity_document_blob) if profile.identity_document_blob else None
-        if payload is None:
+        if payload is None and profile.identity_document:
             try:
                 with profile.identity_document.storage.open(profile.identity_document.name, 'rb') as source:
                     payload = source.read()
@@ -471,7 +472,7 @@ class AdminVerifyUserView(APIView):
     def post(self, request, pk):
         try:
             user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
-            if not getattr(user.profile, 'identity_document', None):
+            if not user.profile.identity_document_blob and not getattr(user.profile, 'identity_document', None):
                 return Response({'error': 'No identity document has been uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
             if not user.profile.identity_document_reviewed_at:
                 return Response(
