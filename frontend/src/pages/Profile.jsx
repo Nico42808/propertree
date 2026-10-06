@@ -214,10 +214,7 @@ const Profile = () => {
       setError('');
       setSuccess('');
 
-      const formData = new FormData();
-      formData.append('profile.identity_document', file);
-
-      const updatedData = await userService.updateProfile(formData);
+      const updatedData = await userService.uploadIdentityDocument(file);
       setProfileData(updatedData);
       updateUser(updatedData);
       setSuccess('ID document submitted successfully. Propertree will review it shortly.');
