@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
 from .models import Profile
@@ -23,6 +23,32 @@ from .serializers import (
 )
 
 User = get_user_model()
+
+
+def _send_landlord_verification_email(user, payload=None, filename='', content_type='application/octet-stream'):
+    """Notify Propertree admin and attach the uploaded ID as a review backup."""
+    admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+    if not admin_email:
+        return
+
+    email = EmailMessage(
+        subject='Landlord ID Verification Pending – Propertree',
+        body=(
+            'A landlord has uploaded an identity document for verification.\n\n'
+            f'Landlord: {user.email}\n\n'
+            'The uploaded document is attached to this email as a backup copy. '
+            'Please review the landlord in the Propertree Admin Dashboard before approving the account.'
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[admin_email],
+    )
+
+    if payload:
+        safe_filename = filename or 'identity-document'
+        email.attach(safe_filename, bytes(payload), content_type or 'application/octet-stream')
+
+    email.send(fail_silently=False)
+
 
 
 class RegisterView(generics.CreateAPIView):
@@ -97,23 +123,17 @@ class RegisterView(generics.CreateAPIView):
             user = serializer.save()
 
             if user.role == 'landlord':
-                admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
-                if admin_email:
-                    try:
-                        send_mail(
-                            subject='New Landlord Verification Pending – Propertree',
-                            message=(
-                                f'A new landlord has registered and uploaded an identity document.\n\n'
-                                f'Landlord: {user.email}\n\n'
-                                'Please review the identity document securely in the Propertree Admin Dashboard under Users.'
-                            ),
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            recipient_list=[admin_email],
-                            fail_silently=False,
-                        )
-                    except Exception:
-                        import logging
-                        logging.getLogger(__name__).exception('Failed to send landlord verification notification')
+                try:
+                    profile = user.profile
+                    _send_landlord_verification_email(
+                        user,
+                        payload=profile.identity_document_blob,
+                        filename=profile.identity_document_filename,
+                        content_type=profile.identity_document_content_type,
+                    )
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception('Failed to send landlord verification notification')
 
             return Response({
                 'message': 'User registered successfully',
@@ -267,23 +287,16 @@ class ProfileView(generics.RetrieveUpdateAPIView):
                 ])
             except Profile.DoesNotExist:
                 pass
-            admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
-            if admin_email:
-                try:
-                    send_mail(
-                        subject='Landlord ID Verification Pending – Propertree',
-                        message=(
-                            f'A landlord has uploaded an identity document for verification.\n\n'
-                            f'Landlord: {instance.email}\n\n'
-                            'Please review the document securely in the Propertree Admin Dashboard under Users.'
-                        ),
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[admin_email],
-                        fail_silently=False,
-                    )
-                except Exception:
-                    import logging
-                    logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
+            try:
+                _send_landlord_verification_email(
+                    instance,
+                    payload=identity_document_payload,
+                    filename=identity_document_filename,
+                    content_type=identity_document_content_type,
+                )
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
 
         # Refresh instance to get updated data
         instance.refresh_from_db()
@@ -450,23 +463,16 @@ class IdentityDocumentUploadView(APIView):
         request.user.is_verified = False
         request.user.save(update_fields=['is_verified'])
 
-        admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
-        if admin_email:
-            try:
-                send_mail(
-                    subject='Landlord ID Verification Pending – Propertree',
-                    message=(
-                        f'A landlord has uploaded an identity document for verification.\n\n'
-                        f'Landlord: {request.user.email}\n\n'
-                        'Please review the document securely in the Propertree Admin Dashboard under Users.'
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[admin_email],
-                    fail_silently=False,
-                )
-            except Exception:
-                import logging
-                logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
+        try:
+            _send_landlord_verification_email(
+                request.user,
+                payload=payload,
+                filename=profile.identity_document_filename,
+                content_type=profile.identity_document_content_type,
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Failed to send landlord ID upload notification')
 
         return Response(
             UserDetailSerializer(request.user, context={'request': request}).data,
