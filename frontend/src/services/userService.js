@@ -17,6 +17,18 @@ const readBlobError = async (error, fallback) => {
   return data?.error || data?.message || fallback;
 };
 
+const base64ToBlob = (base64, contentType = 'application/octet-stream') => {
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: contentType });
+};
+
+const fetchIdentityContent = async (userId) => {
+  const response = await api.get(`/admin/users/${userId}/identity-document/?format=json`);
+  return response.data;
+};
+
 const userService = {
   /**
    * Get current user profile
@@ -83,55 +95,40 @@ const userService = {
    * [Admin] Download a landlord identity document securely
    */
   async adminDownloadIdentityDocument(userId, filename = 'identity-document') {
-    let response;
     try {
-      response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
+      const data = await fetchIdentityContent(userId);
+      const blob = base64ToBlob(data.content_base64, data.content_type);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = data.filename || filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      window.setTimeout(() => {
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+      return { reviewed: true, filename: data.filename || filename };
     } catch (error) {
-      error.userMessage = await readBlobError(error, 'Failed to download identity document.');
+      error.userMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to download identity document.';
       throw error;
     }
-    const contentType = response.headers['content-type'] || 'application/octet-stream';
-    const disposition = response.headers['content-disposition'] || '';
-    const match = disposition.match(/filename="?([^";]+)"?/i);
-    const serverFilename = match?.[1];
-    const fallbackExtension =
-      contentType.includes('pdf') ? '.pdf'
-        : contentType.includes('png') ? '.png'
-          : contentType.includes('jpeg') ? '.jpg'
-            : '';
-    const downloadName = serverFilename || (filename.includes('.') ? filename : `${filename}${fallbackExtension}`);
-
-    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = downloadName;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    window.setTimeout(() => {
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    }, 1000);
-
-    return { reviewed: true, filename: downloadName };
   },
 
   async adminPreviewIdentityDocument(userId) {
-    const previewWindow = window.open('', '_blank');
     try {
-      const response = await api.get(`/admin/users/${userId}/identity-document/`, { responseType: 'blob' });
-      const contentType = response.headers['content-type'] || 'application/octet-stream';
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
-      if (previewWindow) {
-        previewWindow.location.href = url;
-      } else {
-        window.location.href = url;
-      }
-      window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-      return { reviewed: true };
+      const data = await fetchIdentityContent(userId);
+      const blob = base64ToBlob(data.content_base64, data.content_type);
+      const url = window.URL.createObjectURL(blob);
+      return {
+        reviewed: true,
+        url,
+        filename: data.filename,
+        contentType: data.content_type,
+      };
     } catch (error) {
-      if (previewWindow) previewWindow.close();
-      error.userMessage = await readBlobError(error, 'Failed to open identity document.');
+      error.userMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to open identity document.';
       throw error;
     }
   },
