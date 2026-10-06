@@ -121,10 +121,33 @@ class UserDetailSerializer(serializers.ModelSerializer):
     admin_profile = AdminProfileSerializer(read_only=True)
     has_identity_document = serializers.SerializerMethodField()
     identity_document_reviewed = serializers.SerializerMethodField()
+    identity_document_reupload_required = serializers.SerializerMethodField()
 
     def get_has_identity_document(self, obj):
         try:
-            return bool(obj.profile.identity_document_blob) or bool(obj.profile.identity_document)
+            profile = obj.profile
+            if profile.identity_document_blob:
+                return True
+            if profile.identity_document:
+                try:
+                    return profile.identity_document.storage.exists(profile.identity_document.name)
+                except Exception:
+                    return False
+            return False
+        except Profile.DoesNotExist:
+            return False
+
+    def get_identity_document_reupload_required(self, obj):
+        try:
+            profile = obj.profile
+            if profile.identity_document_blob:
+                return False
+            if profile.identity_document:
+                try:
+                    return not profile.identity_document.storage.exists(profile.identity_document.name)
+                except Exception:
+                    return True
+            return False
         except Profile.DoesNotExist:
             return False
 
@@ -136,7 +159,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'has_identity_document', 'identity_document_reviewed', 'profile', 'admin_profile', 'created_at']
+        fields = ['id', 'email', 'role', 'is_active', 'is_verified', 'has_identity_document', 'identity_document_reviewed', 'identity_document_reupload_required', 'profile', 'admin_profile', 'created_at']
         read_only_fields = ['id', 'email', 'created_at']
 
 
