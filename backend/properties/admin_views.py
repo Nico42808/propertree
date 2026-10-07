@@ -475,39 +475,46 @@ class AdminIdentityDocumentDownloadView(APIView):
 
 
 class AdminVerifyUserView(APIView):
-    """Mark a landlord identity as verified after admin review of the emailed ID."""
+    """Approve a landlord after the admin reviewed the ID attachment received by email."""
 
     permission_classes = [IsAdminUser]
 
     def post(self, request, pk):
         try:
-            user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
-
-            # The verification document is delivered to the admin by email when uploaded.
-            # Approval is therefore an explicit admin decision and does not depend on
-            # opening/downloading the file again from application storage.
-            user.profile.identity_document_reviewed_at = timezone.now()
-            user.profile.identity_document_reviewed_by = request.user
-            user.profile.save(update_fields=['identity_document_reviewed_at', 'identity_document_reviewed_by'])
-
-            user.is_verified = True
-            user.save(update_fields=['is_verified'])
-            try:
-                from django.core.mail import send_mail
-                send_mail(
-                    'Your Propertree Identity Has Been Verified',
-                    'Hi,\n\nYour identity has been successfully verified by Propertree.\n\n— Propertree',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-            except Exception:
-                pass
-            return Response({'message': 'Landlord identity verified.', 'is_verified': True})
+            user = CustomUser.objects.get(pk=pk, role='landlord')
         except CustomUser.DoesNotExist:
             return Response({'error': 'Landlord not found'}, status=status.HTTP_404_NOT_FOUND)
-        except Profile.DoesNotExist:
-            return Response({'error': 'Landlord profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_verified:
+            return Response({
+                'message': 'Landlord identity is already verified.',
+                'is_verified': True,
+            })
+
+        # ID review happens from the verification email attachment.
+        # Do not depend on application file storage or legacy profile fields here.
+        user.is_verified = True
+        user.save(update_fields=['is_verified'])
+
+        try:
+            from django.core.mail import send_mail
+            send_mail(
+                'Your Propertree Identity Has Been Verified',
+                'Hi,\n\nYour identity has been successfully verified by Propertree.\n\n— Propertree',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'Failed to send landlord verification confirmation to %s', user.email
+            )
+
+        return Response({
+            'message': 'Landlord identity verified.',
+            'is_verified': True,
+        })
 
 
 class AdminDeletePropertyView(APIView):
