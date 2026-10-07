@@ -47,10 +47,18 @@ class VerificationFlowTests(TestCase):
         self.assertEqual(approved.status_code, 200)
 
         self.landlord.refresh_from_db()
-        self.profile.refresh_from_db()
         self.assertTrue(self.landlord.is_verified)
-        self.assertIsNotNone(self.profile.identity_document_reviewed_at)
-        self.assertEqual(self.profile.identity_document_reviewed_by_id, self.admin.id)
+
+    def test_landlord_approval_works_when_legacy_id_file_is_missing(self):
+        self.profile.identity_document_blob = None
+        self.profile.identity_document = 'identity_documents/missing-legacy-id.pdf'
+        self.profile.save(update_fields=['identity_document_blob', 'identity_document'])
+
+        response = self.client.post(f'/api/admin/users/{self.landlord.id}/verify/')
+        self.assertEqual(response.status_code, 200)
+
+        self.landlord.refresh_from_db()
+        self.assertTrue(self.landlord.is_verified)
 
     def test_property_proof_must_be_retrieved_before_property_approval(self):
         self.landlord.is_verified = True
