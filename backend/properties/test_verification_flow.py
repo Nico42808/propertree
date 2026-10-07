@@ -40,28 +40,17 @@ class VerificationFlowTests(TestCase):
         )
         self.client.force_authenticate(user=self.admin)
 
-    def test_landlord_id_must_be_retrieved_before_approval(self):
+    def test_landlord_can_be_approved_after_email_review_without_app_download(self):
         verify_url = f'/api/admin/users/{self.landlord.id}/verify/'
-        download_url = f'/api/admin/users/{self.landlord.id}/identity-document/'
-
-        blocked = self.client.post(verify_url)
-        self.assertEqual(blocked.status_code, 400)
-        self.assertFalse(self.landlord.is_verified)
-
-        response = self.client.get(download_url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, PDF_BYTES)
-        self.assertEqual(response['Content-Type'], 'application/pdf')
-
-        self.profile.refresh_from_db()
-        self.assertIsNotNone(self.profile.identity_document_reviewed_at)
-        self.assertEqual(self.profile.identity_document_reviewed_by_id, self.admin.id)
 
         approved = self.client.post(verify_url)
         self.assertEqual(approved.status_code, 200)
 
         self.landlord.refresh_from_db()
+        self.profile.refresh_from_db()
         self.assertTrue(self.landlord.is_verified)
+        self.assertIsNotNone(self.profile.identity_document_reviewed_at)
+        self.assertEqual(self.profile.identity_document_reviewed_by_id, self.admin.id)
 
     def test_property_proof_must_be_retrieved_before_property_approval(self):
         self.landlord.is_verified = True
