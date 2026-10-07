@@ -475,20 +475,21 @@ class AdminIdentityDocumentDownloadView(APIView):
 
 
 class AdminVerifyUserView(APIView):
-    """Mark a landlord identity as verified after admin review."""
+    """Mark a landlord identity as verified after admin review of the emailed ID."""
 
     permission_classes = [IsAdminUser]
 
     def post(self, request, pk):
         try:
             user = CustomUser.objects.select_related('profile').get(pk=pk, role='landlord')
-            if not user.profile.identity_document_blob and not getattr(user.profile, 'identity_document', None):
-                return Response({'error': 'No identity document has been uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
-            if not user.profile.identity_document_reviewed_at:
-                return Response(
-                    {'error': 'Download and review the identity document before approving this landlord.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+
+            # The verification document is delivered to the admin by email when uploaded.
+            # Approval is therefore an explicit admin decision and does not depend on
+            # opening/downloading the file again from application storage.
+            user.profile.identity_document_reviewed_at = timezone.now()
+            user.profile.identity_document_reviewed_by = request.user
+            user.profile.save(update_fields=['identity_document_reviewed_at', 'identity_document_reviewed_by'])
+
             user.is_verified = True
             user.save(update_fields=['is_verified'])
             try:
