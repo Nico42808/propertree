@@ -2,7 +2,7 @@
  * Admin Users - View and manage all users
  */
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound, FileDown, ShieldCheck, Eye } from 'lucide-react';
+import { Users as UsersIcon, Search, Mail, Home, Calendar, Trash2, Ban, CheckCircle, KeyRound, ShieldCheck } from 'lucide-react';
 import { Container } from '../../components/layout';
 import { Card, Button, Input, Badge, Avatar, Loading, EmptyState, Modal } from '../../components/common';
 import { toast } from 'react-hot-toast';
@@ -18,8 +18,6 @@ const Users = () => {
   // Confirmation modal state (used for delete + block/unblock)
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete' | 'toggle', user }
   const [identityReviewUser, setIdentityReviewUser] = useState(null);
-  const [identityPreview, setIdentityPreview] = useState(null);
-  const [identityReviewError, setIdentityReviewError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -43,43 +41,6 @@ const Users = () => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const markIdentityReviewed = (userId) => {
-    setUsers((current) => current.map((item) => item.id === userId ? { ...item, identity_document_reviewed: true } : item));
-    setIdentityReviewUser((current) => current?.id === userId ? { ...current, identity_document_reviewed: true } : current);
-  };
-
-  const handleDownloadIdentity = async (user) => {
-    setActionLoading(true);
-    setIdentityReviewError('');
-    try {
-      await userService.adminDownloadIdentityDocument(user.id, `${user.full_name || 'landlord'}-identity-document`);
-      markIdentityReviewed(user.id);
-    } catch (error) {
-      const message = error.userMessage || error.response?.data?.error || 'Failed to download identity document.';
-      setIdentityReviewError(message);
-      toast.error(message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handlePreviewIdentity = async (user) => {
-    setActionLoading(true);
-    setIdentityReviewError('');
-    try {
-      if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url);
-      const preview = await userService.adminPreviewIdentityDocument(user.id);
-      setIdentityPreview(preview);
-      markIdentityReviewed(user.id);
-    } catch (error) {
-      const message = error.userMessage || error.response?.data?.error || 'Failed to open identity document.';
-      setIdentityReviewError(message);
-      toast.error(message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -351,7 +312,7 @@ const Users = () => {
                           </Badge>
                           {user.role === 'landlord' && (
                             <Badge variant={user.is_verified ? 'success' : user.has_identity_document ? 'warning' : 'secondary'} size="sm">
-                              {user.is_verified ? 'ID Verified' : user.identity_document_reupload_required ? 'ID Re-upload Required' : user.identity_document_reviewed ? 'ID Reviewed – Approval Pending' : user.has_identity_document ? 'ID Review Pending' : 'ID Missing'}
+                              {user.is_verified ? 'ID Verified' : 'ID Verification Pending'}
                             </Badge>
                           )}
                         </div>
@@ -361,33 +322,17 @@ const Users = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {user.role === 'landlord' && user.has_identity_document && !user.is_verified && !user.identity_document_reupload_required && (
+                          {user.role === 'landlord' && !user.is_verified && (
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
                               leftIcon={<ShieldCheck className="w-4 h-4" />}
-                              onClick={() => { setIdentityReviewUser(user); setIdentityPreview(null); setIdentityReviewError(''); }}
+                              onClick={() => setIdentityReviewUser(user)}
                               disabled={actionLoading}
                             >
-                              Review ID
+                              Approve ID
                             </Button>
-                          )}
-                          {user.role === 'landlord' && user.identity_document_reupload_required && !user.is_verified && (
-                            <span className="text-xs font-medium text-red-600">
-                              Ask Landlord to Re-upload ID
-                            </span>
-                          )}
-                          {user.role === 'landlord' && user.has_identity_document && user.is_verified && (
-                            <button
-                              type="button"
-                              title="Download identity document"
-                              onClick={() => handleDownloadIdentity(user)}
-                              disabled={actionLoading}
-                              className="p-2 rounded-lg text-gray-500 hover:text-propertree-green hover:bg-propertree-green-50 transition-colors disabled:opacity-50"
-                            >
-                              <FileDown className="w-4 h-4" />
-                            </button>
                           )}
                           <button
                             type="button"
@@ -429,16 +374,16 @@ const Users = () => {
 
       <Modal
         isOpen={!!identityReviewUser}
-        onClose={() => { if (!actionLoading) { if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url); setIdentityPreview(null); setIdentityReviewError(''); setIdentityReviewUser(null); } }}
-        title="Review Landlord Identity"
+        onClose={() => !actionLoading && setIdentityReviewUser(null)}
+        title="Approve Landlord Identity"
         size="sm"
         closeOnOverlayClick={!actionLoading}
       >
         <div className="space-y-5">
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="font-medium text-amber-900">ID Verification Review Pending</p>
+            <p className="font-medium text-amber-900">ID Verification Pending</p>
             <p className="mt-1 text-sm text-amber-800">
-              Review the uploaded identity document before approving this landlord.
+              The landlord's ID was sent to the Propertree admin email when it was uploaded. Approve the account after reviewing the email attachment.
             </p>
           </div>
 
@@ -455,63 +400,15 @@ const Users = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              leftIcon={<Eye className="w-4 h-4" />}
-              onClick={() => handlePreviewIdentity(identityReviewUser)}
-              disabled={actionLoading}
-            >
-              View ID Document
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              leftIcon={<FileDown className="w-4 h-4" />}
-              onClick={() => handleDownloadIdentity(identityReviewUser)}
-              disabled={actionLoading}
-            >
-              Download ID Document
-            </Button>
-          </div>
-
-          {identityReviewError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-              {identityReviewError}
-            </div>
-          )}
-
-          {identityPreview?.url && (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-              {identityPreview.contentType?.startsWith('image/') ? (
-                <img
-                  src={identityPreview.url}
-                  alt="Landlord identity document"
-                  className="max-h-[420px] w-full object-contain"
-                />
-              ) : (
-                <iframe
-                  src={identityPreview.url}
-                  title="Landlord identity document"
-                  className="h-[420px] w-full bg-white"
-                />
-              )}
-              <div className="border-t border-gray-200 px-3 py-2 text-xs text-gray-500">
-                {identityPreview.filename || 'Identity Document'}
-              </div>
-            </div>
-          )}
-
           <div className="border-t border-gray-200 pt-4">
             <p className="mb-4 text-sm text-gray-600">
-              Open or download the ID first. Approval is enabled only after the document has been successfully retrieved from secure storage and marked as reviewed.
+              By approving, you confirm that you reviewed the ID received by email and verified the landlord's identity.
             </p>
             <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => { if (identityPreview?.url) window.URL.revokeObjectURL(identityPreview.url); setIdentityPreview(null); setIdentityReviewError(''); setIdentityReviewUser(null); }}
+                onClick={() => setIdentityReviewUser(null)}
                 disabled={actionLoading}
               >
                 Cancel
@@ -521,7 +418,6 @@ const Users = () => {
                 variant="primary"
                 leftIcon={<ShieldCheck className="w-4 h-4" />}
                 loading={actionLoading}
-                disabled={!identityReviewUser?.identity_document_reviewed}
                 onClick={() => handleVerifyUser(identityReviewUser)}
               >
                 Approve Verification
